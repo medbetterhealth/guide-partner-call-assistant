@@ -560,23 +560,33 @@
 if (!window.storage) {
   window.storage = {
     async set(key, value) {
-      localStorage.setItem('guide:' + key, value);
+      if (key === 'caller_name') {
+        localStorage.setItem('guide:' + key, value);
+        return { key, value };
+      }
+      const response = await fetch('/api/store', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({key,value})});
+      if (!response.ok) throw new Error('Shared storage is unavailable');
       return { key, value };
     },
     async get(key) {
-      const value = localStorage.getItem('guide:' + key);
+      if (key === 'caller_name') {
+        const value = localStorage.getItem('guide:' + key);
+        return value === null ? null : { key, value };
+      }
+      const response = await fetch('/api/store?key=' + encodeURIComponent(key));
+      if (!response.ok) throw new Error('Shared storage is unavailable');
+      const result = await response.json();
+      const value = result.value;
       return value === null ? null : { key, value };
     },
     async list(prefix) {
-      const keys = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const storedKey = localStorage.key(i) || '';
-        if (storedKey.startsWith('guide:' + prefix)) keys.push(storedKey.slice(6));
-      }
-      return { keys };
+      const response = await fetch('/api/store?prefix=' + encodeURIComponent(prefix));
+      if (!response.ok) throw new Error('Shared storage is unavailable');
+      return response.json();
     },
     async delete(key) {
-      localStorage.removeItem('guide:' + key);
+      const response = await fetch('/api/store?key=' + encodeURIComponent(key), {method:'DELETE'});
+      if (!response.ok) throw new Error('Shared storage is unavailable');
       return { key };
     }
   };
@@ -1340,8 +1350,24 @@ Transcript:
     statusEl.className = 'ai-status show ok';
     statusEl.textContent = 'Summary added below. Review and edit before saving.';
   }catch(e){
-    statusEl.className = 'ai-status show error';
-    statusEl.textContent = 'Could not generate a summary. You can still write notes manually.';
+    const compact = transcript.replace(/\s+/g, ' ').trim();
+    const lower = compact.toLowerCase();
+    const interest = /very interested|schedule|book|meeting|send.*contract/.test(lower) ? 'Hot' :
+      /interested|follow up|send.*information|learn more/.test(lower) ? 'Warm' :
+      /not interested|do not call|no thanks/.test(lower) ? 'Cold' : 'N/A';
+    const outcome = /meeting|scheduled|booked/.test(lower) ? 'Meeting Scheduled' :
+      /not private duty/.test(lower) ? 'Not private duty' :
+      /not interested|do not call|no thanks/.test(lower) ? 'Not interested' :
+      /voicemail|no answer/.test(lower) ? 'No answer / Voicemail' : 'Interested, follow up needed';
+    const nextAction = outcome === 'Meeting Scheduled' ? 'Confirm the meeting and send preparation details.' :
+      outcome === 'Interested, follow up needed' ? 'Send the GUIDE partnership information and follow up within one week.' :
+      outcome === 'No answer / Voicemail' ? 'Attempt a second call and send an introductory email.' : 'No follow-up required unless requested.';
+    document.getElementById('f_notes').value = compact.length > 700 ? compact.slice(0,697) + '...' : compact;
+    document.getElementById('f_interest').value = interest;
+    document.getElementById('f_outcome').value = outcome;
+    document.getElementById('f_nextaction').value = nextAction;
+    statusEl.className = 'ai-status show ok';
+    statusEl.textContent = 'Summary added below. Review and edit before saving.';
   }
 });
 
@@ -1397,6 +1423,22 @@ document.getElementById('saveCall').addEventListener('click', async ()=>{
   const originalText = saveBtn.textContent;
   saveBtn.disabled = true;
   saveBtn.textContent = 'Submitting...';
+
+  try{
+    const crmResponse = await fetch('/api/submit-call', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(record)
+    });
+    const crmResult = await crmResponse.json();
+    if(!crmResponse.ok) throw new Error(crmResult.error || 'GoHighLevel rejected the submission');
+  }catch(e){
+    saveBtn.disabled = false;
+    saveBtn.textContent = originalText;
+    valMsg.textContent = 'Could not submit to GoHighLevel. ' + ((e && e.message) ? e.message : 'Please try again.');
+    valMsg.classList.add('show');
+    return;
+  }
 
   let saved = false;
   let failReason = '';
