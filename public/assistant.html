@@ -320,6 +320,7 @@
     <button class="tab-btn active" data-view="call">New Call</button>
     <button class="tab-btn" data-view="log">Call Log</button>
     <button class="tab-btn" data-view="pipeline">Pipeline</button>
+    <button class="tab-btn" data-view="partners">Partners</button>
     <button class="tab-btn" data-view="dashboard">Team Dashboard</button>
   </div>
   <button class="btn btn-red" id="scheduleTopBtn" type="button" style="white-space:nowrap;" title="Copies the contact's email to your clipboard, then opens the calendar in a small window">Schedule with Dr. Erik</button>
@@ -371,6 +372,10 @@
         <div class="field">
           <label>Email address</label>
           <input type="email" id="f_email" placeholder="name@agency.com">
+        </div>
+        <div class="row2">
+          <div class="field"><label>Agency address</label><input type="text" id="f_address" placeholder="Street, city, state"></div>
+          <div class="field"><label>Website</label><input type="url" id="f_website" placeholder="https://agency.com"></div>
         </div>
         <input type="hidden" id="f_counties">
         <input type="hidden" id="f_privateduty">
@@ -507,6 +512,32 @@
     </div>
 
     <div class="kanban-board" id="kanbanBoard"></div>
+  </div>
+
+  <!-- PARTNERS VIEW -->
+  <div class="view" id="view-partners">
+    <div class="stats" id="partnerStats"></div>
+    <div class="log-controls">
+      <input type="text" id="partnerSearch" placeholder="Search agency, contact, phone, or email">
+      <select id="partnerStage"><option value="">All pipeline stages</option></select>
+      <select id="partnerStatus">
+        <option value="">All partner statuses</option>
+        <option value="active">Active partners</option>
+        <option value="pending">Pending partners</option>
+        <option value="followup">Follow-up overdue</option>
+        <option value="inactive">No recent activity</option>
+      </select>
+      <button class="btn btn-ghost btn-sm" id="refreshPartners">Refresh</button>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden;">
+      <div class="dash-table-wrap">
+        <table class="dash-table">
+          <thead><tr><th>Agency</th><th>Contact</th><th>Salesperson</th><th>Stage</th><th>Partner status</th><th>Referrals</th><th>Approval rate</th><th>Last contact</th><th>Next follow-up</th></tr></thead>
+          <tbody id="partnersTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <p class="footnote">Approval rate = approved referrals ÷ valid submitted referrals. Incomplete or invalid records are excluded.</p>
   </div>
 
   <!-- TEAM DASHBOARD VIEW -->
@@ -726,15 +757,22 @@ const STEPS = [
 
 // ---------- Pipeline stages ----------
 const STAGES = [
-  {key:'email_sent', label:'Email Sent'},
+  {key:'new_lead', label:'New Lead'},
+  {key:'outreach_attempted', label:'Outreach Attempted'},
+  {key:'contacted', label:'Contacted'},
+  {key:'qualified', label:'Qualified'},
   {key:'meeting_scheduled', label:'Meeting Booked'},
   {key:'meeting_held', label:'Meeting Held'},
-  {key:'pathway_emailed', label:'Partnership Pathway Emailed'},
+  {key:'pathway_pending', label:'Partnership Pathway Pending'},
+  {key:'pathway_completed', label:'Partnership Pathway Completed'},
+  {key:'contract_pending', label:'Contract Pending'},
   {key:'contract_signed', label:'Contract Signed'},
   {key:'submitted_medicare', label:'Submitted to Medicare'},
-  {key:'medicare_approved', label:'Medicare Approved', terminal:'win'},
-  {key:'unable_to_reach', label:'Unable to Reach', side:true},
-  {key:'closed_lost', label:'Closed, Not Interested', side:true, terminal:'loss'}
+  {key:'medicare_approved', label:'Medicare Approved'},
+  {key:'active_partner', label:'Active Referral Partner', terminal:'win'},
+  {key:'not_interested', label:'Not Interested', side:true, terminal:'loss'},
+  {key:'no_response', label:'No Response', side:true},
+  {key:'disqualified', label:'Disqualified', side:true, terminal:'loss'}
 ];
 const STAGE_RANK = {};
 STAGES.forEach((s,i)=>{ STAGE_RANK[s.key] = i; });
@@ -742,11 +780,11 @@ STAGES.forEach((s,i)=>{ STAGE_RANK[s.key] = i; });
 function mapOutcomeToStage(outcome){
   switch(outcome){
     case 'Meeting Scheduled': return 'meeting_scheduled';
-    case 'Interested, follow up needed': return 'email_sent';
-    case 'Not interested': return 'closed_lost';
-    case 'No answer / Voicemail': return 'unable_to_reach';
-    case 'Not private duty': return 'closed_lost';
-    default: return 'email_sent';
+    case 'Interested, follow up needed': return 'contacted';
+    case 'Not interested': return 'not_interested';
+    case 'No answer / Voicemail': return 'outreach_attempted';
+    case 'Not private duty': return 'disqualified';
+    default: return 'new_lead';
   }
 }
 
@@ -784,8 +822,8 @@ async function upsertDealFromCall(callRecord){
       const currentIsSide = stageInfo && stageInfo.side;
       let newStage = existingDeal.stage;
       if(!isTerminal){
-        if(suggestedStage === 'closed_lost'){
-          newStage = 'closed_lost';
+        if(suggestedStage === 'not_interested' || suggestedStage === 'disqualified'){
+          newStage = suggestedStage;
         } else if(suggestedInfo.side){
           if(currentIsSide){ newStage = suggestedStage; }
         } else if(currentIsSide){
@@ -797,6 +835,11 @@ async function upsertDealFromCall(callRecord){
       existingDeal.contact = callRecord.contact || existingDeal.contact;
       existingDeal.phone = callRecord.phone || existingDeal.phone;
       existingDeal.email = callRecord.email || existingDeal.email;
+      existingDeal.address = callRecord.address || existingDeal.address;
+      existingDeal.website = callRecord.website || existingDeal.website;
+      existingDeal.assignedSalesperson = callRecord.loggedBy || existingDeal.assignedSalesperson;
+      existingDeal.lastContactDate = now;
+      existingDeal.nextFollowUpDate = callRecord.nextFollowUpDate || existingDeal.nextFollowUpDate;
       existingDeal.counties = callRecord.counties || existingDeal.counties;
       existingDeal.stage = newStage;
       existingDeal.updatedAt = now;
@@ -812,6 +855,12 @@ async function upsertDealFromCall(callRecord){
         contact: callRecord.contact,
         phone: callRecord.phone,
         email: callRecord.email,
+        address: callRecord.address,
+        website: callRecord.website,
+        assignedSalesperson: callRecord.loggedBy,
+        leadSource: 'GUIDE Model Outreach',
+        lastContactDate: now,
+        nextFollowUpDate: callRecord.nextFollowUpDate || '',
         counties: callRecord.counties,
         stage: suggestedStage,
         createdAt: now,
@@ -857,10 +906,10 @@ async function loadDeals(){
 
 function renderPipelineStats(){
   const passedOrAt = (keys)=> allDeals.filter(d=> keys.includes(d.stage)).length;
-  const emails = passedOrAt(['email_sent','meeting_scheduled','meeting_held','pathway_emailed','contract_signed','submitted_medicare','medicare_approved']);
-  const meetings = passedOrAt(['meeting_scheduled','meeting_held','pathway_emailed','contract_signed','submitted_medicare','medicare_approved']);
-  const contracts = passedOrAt(['contract_signed','submitted_medicare','medicare_approved']);
-  const signed = passedOrAt(['medicare_approved']);
+  const emails = passedOrAt(['contacted','qualified','meeting_scheduled','meeting_held','pathway_pending','pathway_completed','contract_pending','contract_signed','submitted_medicare','medicare_approved','active_partner']);
+  const meetings = passedOrAt(['meeting_scheduled','meeting_held','pathway_pending','pathway_completed','contract_pending','contract_signed','submitted_medicare','medicare_approved','active_partner']);
+  const contracts = passedOrAt(['contract_signed','submitted_medicare','medicare_approved','active_partner']);
+  const signed = passedOrAt(['medicare_approved','active_partner']);
   document.getElementById('statEmails').textContent = emails;
   document.getElementById('statMeetings').textContent = meetings;
   document.getElementById('statContracts').textContent = contracts;
@@ -1160,12 +1209,14 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
     document.getElementById('view-' + btn.dataset.view).classList.add('active');
     if(btn.dataset.view === 'log') loadLog();
     if(btn.dataset.view === 'pipeline') loadDeals();
+    if(btn.dataset.view === 'partners') loadPartners();
     if(btn.dataset.view === 'dashboard') loadDashboard();
   });
 });
 
 // ---------- Scheduling ----------
-const SCHEDULE_URL = "https://bookings.cloud.microsoft/book/VirtualMeetingWithDrErik15Mins@MedBetterHealthorg.onmicrosoft.com/s/u7xNOVg5z0GPG1odRVrt9w2?ismsaljsauthenabled=true";
+let SCHEDULE_URL = '';
+fetch('/api/config').then(r=>r.json()).then(config=>{ SCHEDULE_URL = config.calendarUrl || ''; }).catch(()=>{});
 
 let toastTimer;
 function showToast(msg, duration = 3600){
@@ -1177,6 +1228,10 @@ function showToast(msg, duration = 3600){
 }
 
 async function openScheduler(){
+  if(!SCHEDULE_URL){
+    showToast('The GoHighLevel sales calendar is not configured yet. Ask a manager to finish the Outlook calendar sync.');
+    return;
+  }
   const emailField = document.getElementById('f_email');
   const email = emailField ? emailField.value.trim() : '';
 
@@ -1378,12 +1433,15 @@ function collectForm(){
     contact: document.getElementById('f_contact').value.trim(),
     phone: document.getElementById('f_phone').value.trim(),
     email: document.getElementById('f_email').value.trim(),
+    address: document.getElementById('f_address').value.trim(),
+    website: document.getElementById('f_website').value.trim(),
     counties: document.getElementById('f_counties').value.trim(),
     privateDuty: document.getElementById('f_privateduty').value,
     interest: document.getElementById('f_interest').value,
     outcome: document.getElementById('f_outcome').value,
     meeting: document.getElementById('f_meeting').value,
     nextAction: document.getElementById('f_nextaction').value.trim(),
+    nextFollowUpDate: document.getElementById('f_meeting').value || '',
     notes: document.getElementById('f_notes').value.trim(),
     transcript: finalTranscript.trim(),
     loggedBy: callerInput.value.trim(),
@@ -1392,7 +1450,7 @@ function collectForm(){
 }
 
 function clearForm(){
-  ['f_agency','f_contact','f_phone','f_email','f_counties','f_nextaction','f_notes'].forEach(id=>{
+  ['f_agency','f_contact','f_phone','f_email','f_address','f_website','f_counties','f_nextaction','f_notes'].forEach(id=>{
     document.getElementById(id).value = '';
   });
   ['f_privateduty','f_interest','f_outcome'].forEach(id=>{
@@ -1617,17 +1675,21 @@ document.getElementById('saveNewLead').addEventListener('click', async ()=>{
     phone: '',
     email: '',
     counties: counties,
-    stage: 'unable_to_reach',
+    stage: 'new_lead',
     createdAt: now,
     updatedAt: now,
-    history: [{ts: now, stage:'unable_to_reach', note:'Added directly to the pipeline, not yet reached.'}]
+    assignedSalesperson: callerInput.value.trim(),
+    leadSource: 'Manual entry',
+    lastContactDate: '',
+    nextFollowUpDate: '',
+    history: [{ts: now, stage:'new_lead', note:'Lead created' + (callerInput.value.trim() ? ' by ' + callerInput.value.trim() : '') + '.'}]
   };
   try{
     await store.set('deals:' + id, JSON.stringify(deal));
     document.getElementById('newLeadAgency').value = '';
     document.getElementById('newLeadCounties').value = '';
     document.getElementById('addLeadForm').style.display = 'none';
-    showToast(agency + ' added to Unable to Reach.');
+    showToast(agency + ' added as a New Lead.');
     await loadDeals();
   }catch(e){
     showToast('Could not add the lead. Try again.');
@@ -1677,6 +1739,68 @@ function exportCsvForGoHighLevel(){
 }
 
 document.getElementById('exportCsvBtn').addEventListener('click', exportCsvForGoHighLevel);
+
+// ---------- Partners ----------
+function partnerStatusFor(deal){
+  const now = Date.now();
+  const followUp = deal.nextFollowUpDate ? new Date(deal.nextFollowUpDate).getTime() : 0;
+  const last = deal.lastContactDate || deal.updatedAt;
+  const inactive = last && (now - new Date(last).getTime()) > 30 * 86400000;
+  if(deal.stage === 'active_partner' || deal.stage === 'medicare_approved') return {key:'active', label:'Active', cls:'ok'};
+  if(followUp && followUp < now) return {key:'followup', label:'Follow-up overdue', cls:'warn'};
+  if(inactive) return {key:'inactive', label:'No recent activity', cls:'warn'};
+  return {key:'pending', label:'In progress', cls:''};
+}
+
+async function loadPartners(){
+  const body = document.getElementById('partnersTableBody');
+  body.innerHTML = '<tr><td colspan="9" class="dash-empty">Loading partners...</td></tr>';
+  await loadDeals();
+  renderPartners();
+}
+
+function renderPartners(){
+  const search = document.getElementById('partnerSearch').value.toLowerCase();
+  const stageFilter = document.getElementById('partnerStage').value;
+  const statusFilter = document.getElementById('partnerStatus').value;
+  const filtered = allDeals.filter(d=>{
+    const status = partnerStatusFor(d);
+    const haystack = [d.agency,d.contact,d.phone,d.email].join(' ').toLowerCase();
+    return (!search || haystack.includes(search)) && (!stageFilter || d.stage === stageFilter) && (!statusFilter || status.key === statusFilter);
+  });
+  const active = allDeals.filter(d=>partnerStatusFor(d).key === 'active').length;
+  const overdue = allDeals.filter(d=>partnerStatusFor(d).key === 'followup').length;
+  document.getElementById('partnerStats').innerHTML =
+    '<div class="stat"><div class="num">' + allDeals.length + '</div><div class="lbl">Agencies</div></div>' +
+    '<div class="stat"><div class="num">' + active + '</div><div class="lbl">Active partners</div></div>' +
+    '<div class="stat"><div class="num">' + overdue + '</div><div class="lbl">Follow-ups overdue</div></div>';
+  const body = document.getElementById('partnersTableBody');
+  if(!filtered.length){ body.innerHTML = '<tr><td colspan="9" class="dash-empty">No partners match these filters.</td></tr>'; return; }
+  body.innerHTML = filtered.map(d=>{
+    const status = partnerStatusFor(d);
+    const total = Number(d.totalReferrals || 0);
+    const submitted = Number(d.submittedReferrals || 0);
+    const approved = Number(d.approvedReferrals || 0);
+    const rate = submitted > 0 ? Math.round((approved / submitted) * 100) + '%' : '—';
+    const stage = (STAGES.find(s=>s.key === d.stage) || {}).label || d.stage || 'New Lead';
+    const date = value=> value ? new Date(value).toLocaleDateString() : '—';
+    return '<tr>' +
+      '<td><strong>' + escapeHtml(d.agency || 'Unnamed agency') + '</strong><br><span class="muted">' + escapeHtml(d.phone || d.email || '') + '</span></td>' +
+      '<td>' + escapeHtml(d.contact || '—') + '</td>' +
+      '<td>' + escapeHtml(d.assignedSalesperson || 'Unassigned') + '</td>' +
+      '<td>' + escapeHtml(stage) + '</td>' +
+      '<td><span class="rate-pill">' + escapeHtml(status.label) + '</span></td>' +
+      '<td>' + total + '</td><td>' + rate + '</td>' +
+      '<td>' + date(d.lastContactDate || d.updatedAt) + '</td><td>' + date(d.nextFollowUpDate) + '</td></tr>';
+  }).join('');
+}
+
+const partnerStage = document.getElementById('partnerStage');
+STAGES.forEach(s=>{ const option=document.createElement('option'); option.value=s.key; option.textContent=s.label; partnerStage.appendChild(option); });
+document.getElementById('partnerSearch').addEventListener('input', renderPartners);
+document.getElementById('partnerStage').addEventListener('change', renderPartners);
+document.getElementById('partnerStatus').addEventListener('change', renderPartners);
+document.getElementById('refreshPartners').addEventListener('click', loadPartners);
 
 // ---------- Team Dashboard ----------
 let dashRange = 'today';
@@ -1753,7 +1877,7 @@ async function loadDashboard(){
     (d.history || []).forEach(h=>{
       if(!inRange(h.ts, bounds)) return;
       const who = h.by || '';
-      if(h.stage === 'email_sent'){ rep(who).emails++; }
+      if(h.stage === 'contacted'){ rep(who).emails++; }
       if(h.stage === 'contract_signed'){ rep(who).contracts++; }
     });
   });

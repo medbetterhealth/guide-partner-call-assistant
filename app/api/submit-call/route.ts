@@ -1,6 +1,18 @@
 import { env } from "cloudflare:workers";
 
 const API = "https://services.leadconnectorhq.com";
+const PIPELINE_NAME = "GUIDE Partner Call Assistant";
+
+function stageForOutcome(outcome?: string) {
+  switch (outcome) {
+    case "Meeting Scheduled": return "Meeting Booked";
+    case "Interested, follow up needed": return "Contacted";
+    case "Not interested": return "Not Interested";
+    case "No answer / Voicemail": return "Outreach Attempted";
+    case "Not private duty": return "Disqualified";
+    default: return "New Lead";
+  }
+}
 
 async function ghl(path:string, init:RequestInit = {}) {
   const response = await fetch(API + path, {
@@ -28,6 +40,8 @@ export async function POST(request:Request) {
       firstName:names[0] || call.agency,
       lastName:names.slice(1).join(" "),
       companyName:call.agency,
+      address1:call.address || undefined,
+      website:call.website || undefined,
       phone:call.phone || undefined,
       email:call.email || undefined,
       source:"GUIDE Partner Call Assistant",
@@ -38,11 +52,9 @@ export async function POST(request:Request) {
 
     const pipelineResult=await ghl(`/opportunities/pipelines?locationId=${encodeURIComponent(env.GHL_LOCATION_ID)}`);
     const pipelines=(pipelineResult.pipelines || []) as Array<{id:string;name:string;stages:Array<{id:string;name:string}>}>;
-    const pipeline=pipelines.find(p=>p.name==="GUIDE Partner Call Assistant");
-    if(!pipeline) throw new Error("GUIDE Partner Call Assistant pipeline was not found");
-    const stageName=call.outcome==="Meeting Scheduled" ? "Meeting Booked" :
-      call.outcome==="Not interested" ? "Closed, Not Interested" :
-      call.outcome==="No answer / Voicemail" ? "Unable to Reach" : "Email Sent";
+    const pipeline=pipelines.find(p=>p.name===PIPELINE_NAME);
+    if(!pipeline) throw new Error(`${PIPELINE_NAME} pipeline was not found`);
+    const stageName=stageForOutcome(call.outcome);
     const stage=pipeline.stages.find(s=>s.name===stageName) || pipeline.stages[0];
     await ghl("/opportunities/upsert",{method:"POST",body:JSON.stringify({
       locationId:env.GHL_LOCATION_ID,
@@ -50,7 +62,7 @@ export async function POST(request:Request) {
       pipelineId:pipeline.id,
       pipelineStageId:stage.id,
       name:`${call.agency} — GUIDE Partnership`,
-      status:stageName==="Closed, Not Interested" ? "lost" : "open"
+      status:["Not Interested","Disqualified"].includes(stageName) ? "lost" : "open"
     })});
 
     if(call.nextAction) {
