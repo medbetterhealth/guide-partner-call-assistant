@@ -1,0 +1,1812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>GUIDE Partner Call Assistant</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0F2A46;
+    --navy-dark:#0A1D33;
+    --red:#C6202E;
+    --red-dark:#9E1A26;
+    --bg:#F3F5F8;
+    --card:#FFFFFF;
+    --ink:#16202B;
+    --muted:#5B6B7F;
+    --border:#DFE4EA;
+    --success:#1E8E5A;
+    --success-bg:#E7F5EE;
+    --warn-bg:#FBF0DD;
+    --warn-ink:#8A5A00;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{font-family:'Manrope',system-ui,sans-serif;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+
+  /* Header */
+  .topbar{
+    background:linear-gradient(135deg,var(--navy) 0%,var(--navy-dark) 100%);
+    color:#fff;
+    padding:20px 28px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:14px;
+  }
+  .brand{display:flex;align-items:center;gap:14px;}
+  .brand-mark{
+    width:42px;height:42px;border-radius:10px;
+    background:var(--red);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Manrope';font-weight:800;font-size:15px;
+    letter-spacing:0.5px;
+    flex-shrink:0;
+  }
+  .brand-text h1{margin:0;font-size:19px;font-weight:800;letter-spacing:0.2px;}
+  .brand-text p{margin:2px 0 0;font-size:12.5px;color:#B9C6D6;}
+  .tabs{display:flex;gap:6px;background:rgba(255,255,255,0.08);padding:4px;border-radius:10px;}
+  .tab-btn{
+    border:none;background:transparent;color:#CFDAE6;
+    padding:9px 16px;border-radius:8px;font-size:13.5px;font-weight:600;
+    cursor:pointer;font-family:'Inter';transition:all .15s;
+  }
+  .tab-btn.active{background:#fff;color:var(--navy);}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:24px 20px 60px;}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  .grid{display:grid;grid-template-columns:1.05fr 1fr;gap:20px;align-items:start;}
+  @media(max-width:900px){.grid{grid-template-columns:1fr;}}
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:22px 22px 24px;
+    margin-bottom:20px;
+  }
+  .card h2{margin:0 0 4px;font-size:15px;letter-spacing:0.3px;color:var(--navy);}
+  .card .sub{margin:0 0 18px;font-size:12.5px;color:var(--muted);}
+
+  /* Stepper */
+  .step-dots{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap;}
+  .dot{
+    width:26px;height:26px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:700;font-family:'Manrope';
+    background:#EDF1F5;color:var(--muted);
+    border:1.5px solid transparent;
+    cursor:pointer;flex-shrink:0;
+    transition:all .15s;
+  }
+  .dot.done{background:var(--success-bg);color:var(--success);}
+  .dot.current{background:var(--red);color:#fff;border-color:var(--red-dark);}
+
+  .step-title{font-size:16px;font-weight:800;margin:0 0 12px;color:var(--ink);}
+  .say-line{
+    background:#F7F4EC;
+    border-left:3px solid var(--red);
+    padding:12px 14px;
+    border-radius:0 8px 8px 0;
+    font-size:14.5px;
+    line-height:1.55;
+    margin-bottom:10px;
+    font-style:italic;
+    color:#2A2113;
+  }
+  .note-line{
+    font-size:12.5px;
+    color:var(--muted);
+    margin:-2px 0 10px 2px;
+  }
+  .step-nav{display:flex;justify-content:space-between;margin-top:18px;gap:10px;}
+  .btn{
+    border:none;border-radius:9px;padding:10px 18px;font-size:13.5px;font-weight:700;
+    cursor:pointer;font-family:'Inter';transition:opacity .15s,transform .1s;
+  }
+  .btn:active{transform:scale(0.98);}
+  .btn:disabled{opacity:0.35;cursor:not-allowed;}
+  .btn-primary{background:var(--navy);color:#fff;}
+  .btn-red{background:var(--red);color:#fff;}
+  .btn-ghost{background:#EDF1F5;color:var(--navy);}
+  .btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--muted);}
+  .btn-sm{padding:7px 12px;font-size:12.5px;}
+
+  /* Form */
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12px;font-weight:700;color:var(--navy);margin-bottom:5px;letter-spacing:0.2px;}
+  .field input, .field select, .field textarea{
+    width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;
+    font-size:13.5px;font-family:'Inter';color:var(--ink);background:#fff;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{
+    outline:none;border-color:var(--navy);
+  }
+  .field textarea{resize:vertical;min-height:70px;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media(max-width:520px){.row2{grid-template-columns:1fr;}}
+
+  /* Transcription */
+  .rec-row{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+  .rec-dot{
+    width:11px;height:11px;border-radius:50%;background:#C7CFD8;flex-shrink:0;
+  }
+  .rec-dot.live{background:var(--red);animation:pulse 1.3s infinite;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(198,32,46,0.5);}70%{box-shadow:0 0 0 9px rgba(198,32,46,0);}100%{box-shadow:0 0 0 0 rgba(198,32,46,0);}}
+  .rec-status{font-size:12.5px;color:var(--muted);font-weight:600;}
+  .transcript-box{
+    background:#FAFBFC;border:1.5px solid var(--border);border-radius:10px;
+    padding:12px 14px;min-height:90px;max-height:220px;overflow-y:auto;
+    font-size:13px;line-height:1.6;color:#2E3B47;white-space:pre-wrap;
+  }
+  .transcript-box .placeholder{color:#A6B1BC;font-style:italic;}
+  .interim{color:#A6B1BC;}
+  .ai-status{font-size:12.5px;margin-top:10px;padding:8px 12px;border-radius:8px;display:none;}
+  .ai-status.show{display:block;}
+  .ai-status.loading{background:#EEF2FA;color:var(--navy);}
+  .ai-status.error{background:#FCEAEA;color:var(--red-dark);}
+  .ai-status.ok{background:var(--success-bg);color:var(--success);}
+
+  .support-note{font-size:12px;color:var(--muted);background:var(--warn-bg);color:var(--warn-ink);padding:9px 12px;border-radius:8px;margin-bottom:14px;display:none;}
+  .support-note.show{display:block;}
+
+  .form-actions{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;}
+  .validation{font-size:12.5px;color:var(--red-dark);margin-top:8px;display:none;}
+  .validation.show{display:block;}
+
+  /* Log view */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+  @media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr);}}
+  .stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;}
+  .stat .num{font-family:'Manrope';font-weight:800;font-size:26px;color:var(--navy);}
+  .stat .lbl{font-size:11.5px;color:var(--muted);font-weight:600;letter-spacing:0.3px;text-transform:uppercase;margin-top:2px;}
+
+  .log-controls{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+  .log-controls input, .log-controls select{
+    padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:'Inter';
+  }
+  .log-controls input{flex:1;min-width:180px;}
+
+  .log-empty{
+    text-align:center;padding:50px 20px;color:var(--muted);
+    background:var(--card);border:1.5px dashed var(--border);border-radius:14px;font-size:14px;
+  }
+
+  .log-item{
+    background:var(--card);border:1px solid var(--border);border-radius:12px;
+    padding:16px 18px;margin-bottom:10px;cursor:pointer;
+  }
+  .log-item .top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;}
+  .log-item .agency{font-weight:800;font-family:'Manrope';font-size:15px;color:var(--ink);}
+  .log-item .meta{font-size:12.5px;color:var(--muted);margin-top:3px;}
+  .badge{
+    font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;letter-spacing:0.2px;white-space:nowrap;
+  }
+  .badge.hot{background:#FCEAEA;color:var(--red-dark);}
+  .badge.warm{background:var(--warn-bg);color:var(--warn-ink);}
+  .badge.cold{background:#EDF1F5;color:var(--muted);}
+  .badge.na{background:#EDF1F5;color:var(--muted);}
+  .log-item .details{
+    margin-top:12px;padding-top:12px;border-top:1px solid var(--border);
+    font-size:13px;display:none;
+  }
+  .log-item.open .details{display:block;}
+  .detail-row{display:flex;gap:8px;margin-bottom:6px;}
+  .detail-row .k{color:var(--muted);min-width:110px;font-weight:600;font-size:12px;}
+  .detail-row .v{color:var(--ink);}
+  .log-item .footer-row{display:flex;justify-content:flex-end;margin-top:10px;}
+
+  .caller-bar{display:flex;align-items:center;gap:10px;margin-bottom:18px;font-size:12.5px;color:var(--muted);flex-wrap:wrap;}
+  .caller-bar input{padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:12.5px;width:170px;}
+  .caller-bar .saved-tick{color:var(--success);font-weight:700;display:none;}
+  .caller-bar .saved-tick.show{display:inline;}
+
+  .footnote{font-size:11.5px;color:var(--muted);text-align:center;margin-top:30px;line-height:1.6;}
+
+  .toast{
+    position:fixed;bottom:26px;left:50%;
+    transform:translateX(-50%) translateY(16px);
+    background:var(--navy);color:#fff;padding:12px 20px;border-radius:10px;
+    font-size:13px;font-weight:600;opacity:0;pointer-events:none;
+    transition:opacity .2s ease, transform .2s ease;
+    box-shadow:0 10px 28px rgba(0,0,0,0.22);
+    z-index:999;max-width:360px;text-align:center;line-height:1.4;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  .kanban-board{display:flex;flex-wrap:wrap;gap:12px;padding-bottom:10px;align-items:flex-start;}
+  .kanban-col{
+    flex:1 1 200px;
+    min-width:180px;
+    max-width:none;
+    background:#EEF1F5;
+    border-radius:12px;
+    padding:12px;
+    display:flex;
+    flex-direction:column;
+  }
+  .kanban-col.side{background:#F3ECEC;border:1px solid #E8D5D5;}
+  .kanban-col-header{
+    display:flex;justify-content:space-between;align-items:center;
+    font-family:'Manrope';font-weight:800;font-size:12px;color:var(--navy);
+    margin-bottom:10px;padding:0 2px;
+  }
+  .kanban-col-header .count{
+    background:#fff;border-radius:20px;padding:2px 9px;font-size:11px;color:var(--muted);
+  }
+  .kanban-col.win{background:var(--success-bg);border:1px solid #B9E3CD;}
+  .kanban-col.win .kanban-col-header{color:var(--success);}
+  .kanban-col.side .kanban-col-header{color:var(--red-dark);}
+  .kanban-cards{min-height:56px;max-height:420px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-right:2px;border-radius:8px;}
+  .kanban-col{transition:background .12s, box-shadow .12s;}
+  .kanban-col.drop-active{box-shadow:0 0 0 2px var(--navy) inset;background:#DCE6F5;}
+  .card-move{margin-top:8px;}
+  .card-move-label{display:block;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.3px;margin-bottom:3px;}
+  .card-move-select{width:100%;padding:5px 7px;font-size:12px;border:1.5px solid var(--border);border-radius:6px;font-family:'Inter';background:#fff;color:var(--ink);cursor:pointer;}
+  .card-move-select:focus{outline:none;border-color:var(--navy);}
+  .deal-card{
+    background:#fff;border:1px solid var(--border);border-radius:10px;padding:11px 12px;cursor:grab;
+  }
+  .deal-card:active{cursor:grabbing;}
+  .deal-card.dragging{opacity:0.5;}
+  .deal-card.just-added{animation:cardPop 2.6s ease;}
+  @keyframes cardPop{
+    0%{background:#FBE3B6;border-color:var(--red);box-shadow:0 0 0 3px rgba(198,32,46,0.25);}
+    70%{background:#FBE3B6;border-color:var(--red);box-shadow:0 0 0 3px rgba(198,32,46,0.15);}
+    100%{background:#fff;border-color:var(--border);box-shadow:none;}
+  }
+  .deal-card .drag-grip{color:var(--muted);font-size:11px;letter-spacing:-1px;margin-right:2px;}
+  .deal-card .agency{font-family:'Manrope';font-weight:800;font-size:13px;color:var(--ink);}
+  .deal-card .meta{font-size:11.5px;color:var(--muted);margin-top:2px;}
+  .deal-card .expand{
+    margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:12px;display:none;
+  }
+  .deal-card.open .expand{display:block;}
+  .history-line{color:var(--muted);margin-bottom:4px;line-height:1.5;}
+  .kanban-empty{font-size:12px;color:var(--muted);text-align:center;padding:16px 4px;border:1px dashed var(--border);border-radius:8px;}
+
+  .dash-controls{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-bottom:20px;}
+  .dash-range-btns{display:flex;gap:4px;background:#EDF1F5;padding:4px;border-radius:9px;}
+  .dash-range{background:transparent;}
+  .dash-range.active{background:#fff;color:var(--navy);}
+  .dash-custom{display:flex;align-items:center;gap:8px;}
+  .dash-custom input{padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:12.5px;font-family:'Inter';}
+  .dash-quota{display:flex;align-items:center;gap:8px;}
+  .dash-quota input{padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:'Inter';}
+  .dash-table-wrap{overflow-x:auto;}
+  .dash-table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  .dash-table th{
+    text-align:left;padding:13px 16px;font-size:11px;font-weight:700;letter-spacing:0.3px;
+    text-transform:uppercase;color:var(--muted);border-bottom:1.5px solid var(--border);white-space:nowrap;
+  }
+  .dash-table th:not(:first-child), .dash-table td:not(:first-child){text-align:center;}
+  .dash-table td{padding:13px 16px;border-bottom:1px solid var(--border);color:var(--ink);}
+  .dash-table tbody tr:last-child td{border-bottom:none;}
+  .dash-table .rep-name{font-weight:700;font-family:'Manrope';color:var(--navy);}
+  .dash-table .big{font-family:'Manrope';font-weight:800;font-size:16px;}
+  .dash-table tr.team-total{background:#F7F9FB;}
+  .dash-table tr.team-total td{font-weight:700;border-top:2px solid var(--border);}
+  .quota-cell{display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .quota-bar{width:90px;height:6px;background:#E5E9EF;border-radius:3px;overflow:hidden;}
+  .quota-fill{height:100%;border-radius:3px;background:var(--navy);}
+  .quota-fill.met{background:var(--success);}
+  .rate-pill{display:inline-block;padding:3px 10px;border-radius:20px;font-weight:700;font-size:12.5px;}
+  .dash-empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:14px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark">MBH</div>
+    <div class="brand-text">
+      <h1>GUIDE Partner Call Assistant</h1>
+      <p>Home care agency outreach, live on the call</p>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn active" data-view="call">New Call</button>
+    <button class="tab-btn" data-view="log">Call Log</button>
+    <button class="tab-btn" data-view="pipeline">Pipeline</button>
+    <button class="tab-btn" data-view="dashboard">Team Dashboard</button>
+  </div>
+  <button class="btn btn-red" id="scheduleTopBtn" type="button" style="white-space:nowrap;" title="Copies the contact's email to your clipboard, then opens the calendar in a small window">Schedule with Dr. Erik</button>
+</div>
+
+<div class="wrap">
+
+  <!-- NEW CALL VIEW -->
+  <div class="view active" id="view-call">
+
+    <div class="caller-bar">
+      <span>Logged by</span>
+      <input type="text" id="callerName" placeholder="Your name">
+      <span class="saved-tick" id="callerSavedTick">saved</span>
+    </div>
+
+    <div class="grid">
+      <!-- Script panel -->
+      <div class="card">
+        <h2>Call Script</h2>
+        <p class="sub">Step <span id="stepNum">1</span> of 8</p>
+        <div class="step-dots" id="stepDots"></div>
+        <div id="stepContent"></div>
+        <div class="step-nav">
+          <button class="btn btn-outline" id="prevStep">Back</button>
+          <button class="btn btn-primary" id="nextStep">Next step</button>
+        </div>
+      </div>
+
+      <!-- Data capture panel -->
+      <div class="card">
+        <h2>Call Details</h2>
+        <p class="sub">Captured as you go. Nothing is saved until you tap Submit call to pipeline.</p>
+
+        <div class="field">
+          <label>Agency name</label>
+          <input type="text" id="f_agency" placeholder="e.g. Comfort Keepers of Broward">
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>Contact full name</label>
+            <input type="text" id="f_contact" placeholder="First and last name">
+          </div>
+          <div class="field">
+            <label>Phone number</label>
+            <input type="tel" id="f_phone" placeholder="(954) 000 0000">
+          </div>
+        </div>
+        <div class="field">
+          <label>Email address</label>
+          <input type="email" id="f_email" placeholder="name@agency.com">
+        </div>
+        <input type="hidden" id="f_counties">
+        <input type="hidden" id="f_privateduty">
+        <div class="row2">
+          <div class="field">
+            <label>Interest level</label>
+            <select id="f_interest">
+              <option value="">Select one</option>
+              <option value="Hot">Hot</option>
+              <option value="Warm">Warm</option>
+              <option value="Cold">Cold</option>
+              <option value="N/A">N/A</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Call outcome</label>
+            <select id="f_outcome">
+              <option value="">Select one</option>
+              <option value="Meeting Scheduled">Meeting scheduled</option>
+              <option value="Interested, follow up needed">Interested, follow up needed</option>
+              <option value="Not interested">Not interested</option>
+              <option value="No answer / Voicemail">No answer / Voicemail</option>
+              <option value="Not private duty">Not private duty</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Meeting date and time</label>
+          <input type="datetime-local" id="f_meeting">
+        </div>
+        <div class="field">
+          <label>Next follow up action</label>
+          <input type="text" id="f_nextaction" placeholder="e.g. Second email in one week">
+        </div>
+
+        <div class="validation" id="validationMsg">Add at least an agency name and a phone number or email before submitting.</div>
+        <div class="form-actions">
+          <button class="btn btn-red" id="saveCall" style="flex:1;">Submit call to pipeline</button>
+          <button class="btn btn-outline" id="clearForm">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transcription + notes -->
+    <div class="card">
+      <h2>Live Notes</h2>
+      <p class="sub">Free, browser based transcription. Works best in Chrome, on speaker or a headset that also picks up the caller.</p>
+
+      <div class="support-note" id="supportNote">
+        Live transcription is not available in this browser. It works in desktop Chrome. You can still type notes directly below.
+      </div>
+
+      <div class="rec-row">
+        <button class="btn btn-red" id="recToggle">Start listening</button>
+        <span class="rec-dot" id="recDot"></span>
+        <span class="rec-status" id="recStatus">Not listening</span>
+        <button class="btn btn-ghost btn-sm" id="clearTranscript">Clear transcript</button>
+      </div>
+
+      <div class="transcript-box" id="transcriptBox"><span class="placeholder">Transcript will appear here once you start listening.</span></div>
+
+      <div class="form-actions">
+        <button class="btn btn-primary" id="genSummary">Generate AI summary from transcript</button>
+      </div>
+      <div class="ai-status" id="aiStatus"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label>Notes</label>
+        <textarea id="f_notes" placeholder="AI summary will appear here. You can edit it before saving."></textarea>
+      </div>
+    </div>
+
+    <p class="footnote">
+      Submitted calls are saved so the team can see the pipeline. If shared storage is unavailable, they are saved to this device instead. Live transcription runs through your browser's built in speech service and is not stored by MedBetterHealth beyond what appears here, but audio is processed off device, so avoid it for anything containing patient health information.
+    </p>
+  </div>
+
+  <!-- CALL LOG VIEW -->
+  <div class="view" id="view-log">
+    <div class="stats">
+      <div class="stat"><div class="num" id="statTotal">0</div><div class="lbl">Calls logged</div></div>
+      <div class="stat"><div class="num" id="logStatMeetings">0</div><div class="lbl">Meetings scheduled</div></div>
+      <div class="stat"><div class="num" id="statHot">0</div><div class="lbl">Hot leads</div></div>
+      <div class="stat"><div class="num" id="statFollow">0</div><div class="lbl">Need follow up</div></div>
+    </div>
+
+    <div class="log-controls">
+      <input type="text" id="logSearch" placeholder="Search agency, contact, or county">
+      <select id="logFilter">
+        <option value="">All outcomes</option>
+        <option value="Meeting Scheduled">Meeting scheduled</option>
+        <option value="Interested, follow up needed">Interested, follow up needed</option>
+        <option value="Not interested">Not interested</option>
+        <option value="No answer / Voicemail">No answer / Voicemail</option>
+        <option value="Not private duty">Not private duty</option>
+      </select>
+      <button class="btn btn-ghost btn-sm" id="refreshLog">Refresh</button>
+      <button class="btn btn-ghost btn-sm" id="exportCsvBtn">Export CSV for GoHighLevel</button>
+    </div>
+
+    <div id="logList"></div>
+  </div>
+
+  <!-- PIPELINE VIEW -->
+  <div class="view" id="view-pipeline">
+    <div class="stats" id="pipelineStats">
+      <div class="stat"><div class="num" id="statEmails">0</div><div class="lbl">Emails sent</div></div>
+      <div class="stat"><div class="num" id="statMeetings">0</div><div class="lbl">Meetings booked or held</div></div>
+      <div class="stat"><div class="num" id="statContracts">0</div><div class="lbl">Contracts signed</div></div>
+      <div class="stat"><div class="num" id="statSigned">0</div><div class="lbl">Medicare approved</div></div>
+    </div>
+
+    <div class="log-controls">
+      <input type="text" id="pipelineSearch" placeholder="Search agency or contact">
+      <button class="btn btn-ghost btn-sm" id="refreshPipeline">Refresh</button>
+      <button class="btn btn-red btn-sm" id="toggleAddLead">Add lead</button>
+    </div>
+
+    <div class="card" id="addLeadForm" style="display:none;">
+      <div class="row2">
+        <div class="field">
+          <label>Agency name</label>
+          <input type="text" id="newLeadAgency" placeholder="e.g. Comfort Keepers of Broward">
+        </div>
+        <div class="field">
+          <label>Counties served</label>
+          <input type="text" id="newLeadCounties" placeholder="e.g. Broward, Palm Beach">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary btn-sm" id="saveNewLead">Add to pipeline</button>
+        <button class="btn btn-outline btn-sm" id="cancelNewLead">Cancel</button>
+      </div>
+    </div>
+
+    <div class="kanban-board" id="kanbanBoard"></div>
+  </div>
+
+  <!-- TEAM DASHBOARD VIEW -->
+  <div class="view" id="view-dashboard">
+    <div class="dash-controls">
+      <div class="dash-range-btns">
+        <button class="btn btn-ghost btn-sm dash-range active" data-range="today">Today</button>
+        <button class="btn btn-ghost btn-sm dash-range" data-range="week">This week</button>
+        <button class="btn btn-ghost btn-sm dash-range" data-range="custom">Custom</button>
+      </div>
+      <div class="dash-custom" id="dashCustom" style="display:none;">
+        <input type="date" id="dashFrom">
+        <span style="color:var(--muted);font-size:12px;">to</span>
+        <input type="date" id="dashTo">
+      </div>
+      <div class="dash-quota">
+        <label style="font-size:12px;font-weight:700;color:var(--navy);">Daily call quota</label>
+        <input type="number" id="dashQuota" min="0" value="40" style="width:70px;">
+      </div>
+      <button class="btn btn-ghost btn-sm" id="refreshDash">Refresh</button>
+    </div>
+
+    <div class="stats" id="dashTotals"></div>
+
+    <div class="card" style="padding:0;overflow:hidden;">
+      <div class="dash-table-wrap">
+        <table class="dash-table" id="dashTable">
+          <thead>
+            <tr>
+              <th>Rep</th>
+              <th>Calls</th>
+              <th>Quota</th>
+              <th>Meetings booked</th>
+              <th>Booking rate</th>
+              <th>Emails sent</th>
+              <th>Contracts</th>
+            </tr>
+          </thead>
+          <tbody id="dashTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <p class="footnote" id="dashNote"></p>
+  </div>
+
+</div>
+
+<script>
+// Browser-persistent adapter used by the hosted assistant. It mirrors the
+// window.storage interface expected by the original prototype.
+if (!window.storage) {
+  window.storage = {
+    async set(key, value) {
+      localStorage.setItem('guide:' + key, value);
+      return { key, value };
+    },
+    async get(key) {
+      const value = localStorage.getItem('guide:' + key);
+      return value === null ? null : { key, value };
+    },
+    async list(prefix) {
+      const keys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const storedKey = localStorage.key(i) || '';
+        if (storedKey.startsWith('guide:' + prefix)) keys.push(storedKey.slice(6));
+      }
+      return { keys };
+    },
+    async delete(key) {
+      localStorage.removeItem('guide:' + key);
+      return { key };
+    }
+  };
+}
+// ---------- Resilient storage ----------
+// Uses window.storage when it exists (persists across sessions / shared with team).
+// When it is unavailable, falls back to an in-memory store so the tool still
+// works fully for the current session.
+const memStore = {};
+const hasShared = (typeof window !== 'undefined' && window.storage && typeof window.storage.set === 'function');
+let SHARED_OK = hasShared;
+
+const store = {
+  async set(key, value){
+    if(SHARED_OK){
+      try{ return await window.storage.set(key, value, true); }
+      catch(e){ SHARED_OK = false; }
+    }
+    if(hasShared){
+      try{ return await window.storage.set(key, value, false); }
+      catch(e){ /* fall through to memory */ }
+    }
+    memStore[key] = value;
+    return { key, value };
+  },
+  async get(key){
+    if(SHARED_OK){
+      try{ const r = await window.storage.get(key, true); if(r) return r; }
+      catch(e){ /* fall through */ }
+    }
+    if(hasShared){
+      try{ const r = await window.storage.get(key, false); if(r) return r; }
+      catch(e){ /* fall through */ }
+    }
+    return (key in memStore) ? { key, value: memStore[key] } : null;
+  },
+  async list(prefix){
+    const keys = new Set();
+    if(SHARED_OK){
+      try{
+        const r = await window.storage.list(prefix, true);
+        if(r && r.keys) r.keys.forEach(k=>keys.add(k));
+      }catch(e){ SHARED_OK = false; }
+    }
+    if(hasShared){
+      try{
+        const r = await window.storage.list(prefix, false);
+        if(r && r.keys) r.keys.forEach(k=>keys.add(k));
+      }catch(e){ /* fall through */ }
+    }
+    Object.keys(memStore).forEach(k=>{ if(k.indexOf(prefix) === 0) keys.add(k); });
+    return { keys: Array.from(keys) };
+  },
+  async delete(key){
+    if(hasShared){
+      try{ await window.storage.delete(key, true); }catch(e){}
+      try{ await window.storage.delete(key, false); }catch(e){}
+    }
+    delete memStore[key];
+    return true;
+  }
+};
+
+// ---------- Script content ----------
+const STEPS = [
+  {
+    title: "Confirm they provide private duty",
+    lines: [
+      {t:'say', v:"Hi, my name is [Name]. Quick question, do you provide private duty home care?"},
+      {t:'input-privateduty'},
+      {t:'note', v:"If they say no, thank them and end the call."},
+      {t:'say', v:"Wonderful. We are actually looking for private duty home care agencies because we have clients who need services."}
+    ]
+  },
+  {
+    title: "Confirm their service area",
+    lines: [
+      {t:'say', v:"Which counties do you currently serve?"},
+      {t:'input'},
+      {t:'say', v:"Perfect. That is exactly the area we need."}
+    ]
+  },
+  {
+    title: "Explain why you are calling them specifically",
+    lines: [
+      {t:'say', v:"I'm calling because we recently had a client who had previously used your agency. When we checked our directory, we weren't sure if you are participating in the GUIDE Model."}
+    ]
+  },
+  {
+    title: "Introduce the GUIDE Model",
+    lines: [
+      {t:'say', v:"Have you ever heard about the GUIDE Model?"},
+      {t:'note', v:"If they say no:"},
+      {t:'say', v:"It is a new Medicare program for people living with dementia and their family caregivers."},
+      {t:'say', v:"Many of these individuals have a husband, wife, son, daughter, or another caregiver who becomes overwhelmed and needs respite support."}
+    ]
+  },
+  {
+    title: "Explain how the partnership works",
+    lines: [
+      {t:'say', v:"Now, I know that private duty home care agencies normally do not accept or bill Medicare."},
+      {t:'say', v:"However, Medicare saw a major gap, a real void, because so many caregivers, including husbands, wives, sons, and daughters, are overwhelmed and need respite."},
+      {t:'say', v:"The best way Medicare found to fill that void was to pay a third party organization, which is our company, MedBetterHealth."},
+      {t:'say', v:"Medicare pays MedBetterHealth, and then MedBetterHealth contracts directly with your organization and pays your agency $34.50 per hour privately for the approved respite services."},
+      {t:'say', v:"This way, your organization does not bill Medicare. Instead, your agency bills MedBetterHealth directly on the private side."}
+    ]
+  },
+  {
+    title: "Explain the benefit to the agency",
+    lines: [
+      {t:'say', v:"We have participants who need private duty home care, so we are looking for reliable agencies that we can partner with and refer clients to."},
+      {t:'say', v:"This can bring your agency additional paid referrals and additional home care hours."},
+      {t:'say', v:"We already work with many private duty home care agencies like Senior Helpers, ComForCare, Wisdom Senior Care, Catholic Health, Trilogy, TheKey, and over 70 other partner organizations, and we are continuing to expand our partner network."}
+    ]
+  },
+  {
+    title: "Reach the decision maker",
+    lines: [
+      {t:'note', v:"If you're speaking with a receptionist or scheduler:"},
+      {t:'say', v:"Who would be the best person to speak with about a partnership like this?"},
+      {t:'note', v:"Before being transferred, ask:"},
+      {t:'say', v:"What is the person's name, email address, and phone number in case the call gets disconnected?"},
+      {t:'input-contact'},
+      {t:'note', v:"Once transferred, briefly repeat the key points above and move to scheduling."}
+    ]
+  },
+  {
+    title: "Schedule the meeting during the call",
+    lines: [
+      {t:'say', v:"That sounds great. I have access to Dr. Erik's calendar. Let me pull it up now so we can schedule a brief conversation."},
+      {t:'say', v:"I see Dr. Erik is available on [date] at [time]. Would that work for you?"},
+      {t:'note', v:"If not, offer another time. Once they agree, collect full name, direct phone number, and best email for the invite."},
+      {t:'say', v:"Great, you are scheduled with Dr. Erik for [date] at [time]. You'll get a calendar invite and an email with information on MedBetterHealth and the GUIDE Model."}
+    ]
+  }
+];
+
+// ---------- Pipeline stages ----------
+const STAGES = [
+  {key:'email_sent', label:'Email Sent'},
+  {key:'meeting_scheduled', label:'Meeting Booked'},
+  {key:'meeting_held', label:'Meeting Held'},
+  {key:'pathway_emailed', label:'Partnership Pathway Emailed'},
+  {key:'contract_signed', label:'Contract Signed'},
+  {key:'submitted_medicare', label:'Submitted to Medicare'},
+  {key:'medicare_approved', label:'Medicare Approved', terminal:'win'},
+  {key:'unable_to_reach', label:'Unable to Reach', side:true},
+  {key:'closed_lost', label:'Closed, Not Interested', side:true, terminal:'loss'}
+];
+const STAGE_RANK = {};
+STAGES.forEach((s,i)=>{ STAGE_RANK[s.key] = i; });
+
+function mapOutcomeToStage(outcome){
+  switch(outcome){
+    case 'Meeting Scheduled': return 'meeting_scheduled';
+    case 'Interested, follow up needed': return 'email_sent';
+    case 'Not interested': return 'closed_lost';
+    case 'No answer / Voicemail': return 'unable_to_reach';
+    case 'Not private duty': return 'closed_lost';
+    default: return 'email_sent';
+  }
+}
+
+async function upsertDealFromCall(callRecord){
+  try{
+    let keys = [];
+    try{
+      const keysRes = await store.list('deals:');
+      keys = (keysRes && keysRes.keys) ? keysRes.keys : [];
+    }catch(e){ keys = []; }
+    let existingKey = null;
+    let existingDeal = null;
+    for(const k of keys){
+      try{
+        const r = await store.get(k);
+        if(r && r.value){
+          const parsed = JSON.parse(r.value);
+          if((parsed.agency || '').trim().toLowerCase() === (callRecord.agency || '').trim().toLowerCase()){
+            existingKey = k;
+            existingDeal = parsed;
+            break;
+          }
+        }
+      }catch(e){ /* skip unreadable entry */ }
+    }
+
+    const suggestedStage = mapOutcomeToStage(callRecord.outcome);
+    const now = new Date().toISOString();
+    const historyNote = 'Call logged' + (callRecord.outcome ? ', outcome ' + callRecord.outcome : '') + (callRecord.loggedBy ? ', by ' + callRecord.loggedBy : '') + '.';
+
+    if(existingDeal){
+      const stageInfo = STAGES.find(s=>s.key===existingDeal.stage);
+      const isTerminal = stageInfo && stageInfo.terminal;
+      const suggestedInfo = STAGES.find(s=>s.key===suggestedStage) || {};
+      const currentIsSide = stageInfo && stageInfo.side;
+      let newStage = existingDeal.stage;
+      if(!isTerminal){
+        if(suggestedStage === 'closed_lost'){
+          newStage = 'closed_lost';
+        } else if(suggestedInfo.side){
+          if(currentIsSide){ newStage = suggestedStage; }
+        } else if(currentIsSide){
+          newStage = suggestedStage;
+        } else if(STAGE_RANK[suggestedStage] > STAGE_RANK[existingDeal.stage]){
+          newStage = suggestedStage;
+        }
+      }
+      existingDeal.contact = callRecord.contact || existingDeal.contact;
+      existingDeal.phone = callRecord.phone || existingDeal.phone;
+      existingDeal.email = callRecord.email || existingDeal.email;
+      existingDeal.counties = callRecord.counties || existingDeal.counties;
+      existingDeal.stage = newStage;
+      existingDeal.updatedAt = now;
+      existingDeal.history = existingDeal.history || [];
+      existingDeal.history.push({ts: now, stage:newStage, note: historyNote});
+      await store.set(existingKey, JSON.stringify(existingDeal));
+      return { agency: existingDeal.agency, stageLabel: (STAGES.find(s=>s.key===newStage)||{}).label || newStage, key: existingKey, stage: newStage };
+    } else {
+      const id = Date.now() + '-' + Math.random().toString(36).slice(2,8);
+      const dealKey = 'deals:' + id;
+      const deal = {
+        agency: callRecord.agency,
+        contact: callRecord.contact,
+        phone: callRecord.phone,
+        email: callRecord.email,
+        counties: callRecord.counties,
+        stage: suggestedStage,
+        createdAt: now,
+        updatedAt: now,
+        history: [{ts: now, stage: suggestedStage, note: 'Deal created. ' + historyNote}]
+      };
+      await store.set(dealKey, JSON.stringify(deal));
+      return { agency: deal.agency, stageLabel: (STAGES.find(s=>s.key===suggestedStage)||{}).label || suggestedStage, key: dealKey, stage: suggestedStage };
+    }
+  }catch(e){
+    return null;
+  }
+}
+
+let allDeals = [];
+let highlightDealKey = null;
+
+async function loadDeals(){
+  const board = document.getElementById('kanbanBoard');
+  board.innerHTML = '<div class="kanban-empty">Loading pipeline...</div>';
+  try{
+    const keysRes = await store.list('deals:');
+    const keys = (keysRes && keysRes.keys) ? keysRes.keys : [];
+    const deals = [];
+    for(const k of keys){
+      try{
+        const r = await store.get(k);
+        if(r && r.value){
+          const parsed = JSON.parse(r.value);
+          parsed._key = k;
+          deals.push(parsed);
+        }
+      }catch(e){ /* skip unreadable entry */ }
+    }
+    deals.sort((a,b)=> new Date(b.updatedAt) - new Date(a.updatedAt));
+    allDeals = deals;
+    renderPipelineStats();
+    renderPipeline();
+  }catch(e){
+    board.innerHTML = '<div class="kanban-empty">Could not load the pipeline. Try refreshing.</div>';
+  }
+}
+
+function renderPipelineStats(){
+  const passedOrAt = (keys)=> allDeals.filter(d=> keys.includes(d.stage)).length;
+  const emails = passedOrAt(['email_sent','meeting_scheduled','meeting_held','pathway_emailed','contract_signed','submitted_medicare','medicare_approved']);
+  const meetings = passedOrAt(['meeting_scheduled','meeting_held','pathway_emailed','contract_signed','submitted_medicare','medicare_approved']);
+  const contracts = passedOrAt(['contract_signed','submitted_medicare','medicare_approved']);
+  const signed = passedOrAt(['medicare_approved']);
+  document.getElementById('statEmails').textContent = emails;
+  document.getElementById('statMeetings').textContent = meetings;
+  document.getElementById('statContracts').textContent = contracts;
+  document.getElementById('statSigned').textContent = signed;
+}
+
+function renderPipeline(){
+  const board = document.getElementById('kanbanBoard');
+  const search = document.getElementById('pipelineSearch').value.toLowerCase();
+  const filtered = allDeals.filter(d=> !search || ((d.agency || '') + ' ' + (d.contact || '')).toLowerCase().includes(search));
+
+  const cardHtml = (d)=>{
+    const updated = d.updatedAt ? new Date(d.updatedAt).toLocaleDateString() : '';
+    const historyHtml = (d.history || []).slice().reverse().map(h=>{
+      const when = h.ts ? new Date(h.ts).toLocaleString() : '';
+      return `<div class="history-line">${escapeHtml(when)}: ${escapeHtml(h.note || '')}</div>`;
+    }).join('');
+    const moveOptions = STAGES.map(s=>`<option value="${s.key}" ${s.key===d.stage?'selected':''}>${escapeHtml(s.label)}</option>`).join('');
+    return `
+      <div class="deal-card" data-key="${d._key}" draggable="true">
+        <div class="agency"><span class="drag-grip" aria-hidden="true">⠿</span> ${escapeHtml(d.agency || 'Unnamed agency')}</div>
+        <div class="meta">${escapeHtml(d.contact || 'No contact yet')} &middot; Updated ${escapeHtml(updated)}</div>
+        <div class="card-move">
+          <label class="card-move-label">Move to</label>
+          <select class="card-move-select" data-key="${d._key}">${moveOptions}</select>
+        </div>
+        <div class="expand">
+          <div class="detail-row"><span class="k">Phone</span><span class="v mono">${escapeHtml(d.phone || 'Not yet provided')}</span></div>
+          <div class="detail-row"><span class="k">Email</span><span class="v">${escapeHtml(d.email || 'Not yet provided')}</span></div>
+          <div class="detail-row"><span class="k">Counties</span><span class="v">${escapeHtml(d.counties || 'Not yet provided')}</span></div>
+          <div style="margin-top:8px;margin-bottom:4px;font-weight:700;font-size:11.5px;color:var(--navy);">History</div>
+          ${historyHtml || '<div class="history-line">No history yet.</div>'}
+        </div>
+      </div>
+    `;
+  };
+
+  const colHtml = (stage, label)=>{
+    const dealsInStage = filtered.filter(d=>d.stage === stage.key);
+    const colClass = stage.terminal === 'win' ? 'win' : (stage.side ? 'side' : '');
+    const cards = dealsInStage.map(cardHtml).join('');
+    return `
+      <div class="kanban-col ${colClass}" data-stage="${stage.key}">
+        <div class="kanban-col-header"><span>${label}</span><span class="count">${dealsInStage.length}</span></div>
+        <div class="kanban-cards" data-stage="${stage.key}">${cards || '<div class="kanban-empty">No leads yet</div>'}</div>
+      </div>
+    `;
+  };
+
+  const mainStages = STAGES.filter(s=>!s.side);
+  const sideStages = STAGES.filter(s=>s.side);
+
+  const mainHtml = mainStages.map((stage, idx)=>{
+    return colHtml(stage, (idx+1) + '. ' + stage.label);
+  }).join('');
+
+  const sideHtml = sideStages.map(stage=>{
+    return colHtml(stage, stage.label);
+  }).join('');
+
+  board.innerHTML = mainHtml + sideHtml;
+
+  let draggedKey = null;
+
+  board.querySelectorAll('.card-move-select').forEach(sel=>{
+    sel.addEventListener('click', (e)=> e.stopPropagation());
+    sel.addEventListener('pointerdown', (e)=> e.stopPropagation());
+    sel.addEventListener('change', async (e)=>{
+      e.stopPropagation();
+      await moveDeal(sel.dataset.key, sel.value);
+    });
+  });
+
+  board.querySelectorAll('.deal-card').forEach(card=>{
+    let dragStarted = false;
+
+    card.addEventListener('click', (e)=>{
+      if(e.target.closest('.card-move')) return;
+      if(dragStarted){ dragStarted = false; return; }
+      card.classList.toggle('open');
+    });
+    card.addEventListener('dragstart', (e)=>{
+      dragStarted = true;
+      draggedKey = card.dataset.key;
+      card.classList.add('dragging');
+      if(e.dataTransfer){
+        e.dataTransfer.effectAllowed = 'move';
+        try{ e.dataTransfer.setData('text/plain', card.dataset.key); }catch(err){}
+      }
+    });
+    card.addEventListener('dragend', ()=>{
+      card.classList.remove('dragging');
+      board.querySelectorAll('.kanban-col').forEach(c=>c.classList.remove('drop-active'));
+    });
+  });
+
+  const handleDrop = async (colEl)=>{
+    const key = draggedKey;
+    const targetStage = colEl.dataset.stage;
+    draggedKey = null;
+    colEl.classList.remove('drop-active');
+    if(!key || !targetStage) return;
+    const deal = allDeals.find(d=>d._key === key);
+    if(deal && deal.stage === targetStage) return;
+    await moveDeal(key, targetStage);
+  };
+
+  board.querySelectorAll('.kanban-col').forEach(colEl=>{
+    colEl.addEventListener('dragover', (e)=>{
+      e.preventDefault();
+      if(e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+      colEl.classList.add('drop-active');
+    });
+    colEl.addEventListener('dragleave', (e)=>{
+      if(!colEl.contains(e.relatedTarget)) colEl.classList.remove('drop-active');
+    });
+    colEl.addEventListener('drop', async (e)=>{
+      e.preventDefault();
+      await handleDrop(colEl);
+    });
+  });
+
+  if(highlightDealKey){
+    const card = board.querySelector('.deal-card[data-key="' + highlightDealKey + '"]');
+    if(card){
+      const col = card.closest('.kanban-col');
+      if(col && col.scrollIntoView){
+        col.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+      }
+      card.classList.add('just-added');
+      setTimeout(()=>card.classList.remove('just-added'), 2600);
+    }
+    highlightDealKey = null;
+  }
+}
+
+async function moveDeal(key, newStageKey){
+  const deal = allDeals.find(d=>d._key === key);
+  if(!deal) return;
+  const stageLabel = (STAGES.find(s=>s.key===newStageKey) || {}).label || newStageKey;
+  const callerName = (document.getElementById('callerName').value || '').trim();
+  const now = new Date().toISOString();
+  deal.stage = newStageKey;
+  deal.updatedAt = now;
+  deal.history = deal.history || [];
+  deal.history.push({ts: now, stage:newStageKey, by: callerName, note: 'Moved to ' + stageLabel + (callerName ? ', by ' + callerName : '') + '.'});
+  try{
+    await store.set(deal._key, JSON.stringify(deal));
+    showToast('Moved to ' + stageLabel + '.');
+    await loadDeals();
+  }catch(e){
+    showToast('Could not update the pipeline. Try again.');
+  }
+}
+
+let currentStep = 0;
+
+function formatPhoneNumber(value){
+  const digits = value.replace(/\D/g, '').slice(0, 10);
+  const len = digits.length;
+  if(len === 0) return '';
+  if(len < 4) return '(' + digits;
+  if(len < 7) return '(' + digits.slice(0,3) + ') ' + digits.slice(3);
+  return '(' + digits.slice(0,3) + ') ' + digits.slice(3,6) + '-' + digits.slice(6);
+}
+
+function renderStep(){
+  document.getElementById('stepNum').textContent = currentStep + 1;
+  const dotsEl = document.getElementById('stepDots');
+  dotsEl.innerHTML = STEPS.map((s,i)=>{
+    let cls = 'dot';
+    if(i === currentStep) cls += ' current';
+    else if(i < currentStep) cls += ' done';
+    return `<div class="${cls}" data-idx="${i}">${i+1}</div>`;
+  }).join('');
+  dotsEl.querySelectorAll('.dot').forEach(d=>{
+    d.addEventListener('click', ()=>{ currentStep = parseInt(d.dataset.idx); renderStep(); });
+  });
+
+  const step = STEPS[currentStep];
+  const contentEl = document.getElementById('stepContent');
+  contentEl.innerHTML = `<div class="step-title">${step.title}</div>` +
+    step.lines.map(l=>{
+      if(l.t === 'say') return `<div class="say-line">"${l.v}"</div>`;
+      if(l.t === 'input') return `<div class="field" style="margin:-2px 0 12px;"><label>Counties served</label><input type="text" id="stepCountiesInput" placeholder="e.g. Broward, Palm Beach"></div>`;
+      if(l.t === 'input-privateduty') return `
+        <div class="field" style="margin:-2px 0 12px;">
+          <label>Provides private duty</label>
+          <select id="stepPrivateDutyInput">
+            <option value="">Select one</option>
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+            <option value="Unsure">Unsure</option>
+          </select>
+        </div>
+      `;
+      if(l.t === 'input-contact') return `
+        <div class="row2" style="margin:-2px 0 12px;">
+          <div class="field"><label>Contact full name</label><input type="text" id="stepContactInput" placeholder="First and last name"></div>
+          <div class="field"><label>Phone number</label><input type="tel" id="stepPhoneInput" placeholder="(954) 000 0000"></div>
+        </div>
+        <div class="field" style="margin:-2px 0 12px;"><label>Email address</label><input type="email" id="stepEmailInput" placeholder="name@agency.com"></div>
+      `;
+      return `<div class="note-line">${l.v}</div>`;
+    }).join('') +
+    (currentStep === STEPS.length - 1 ? `
+      <button class="btn btn-red" style="margin-top:6px;" onclick="openScheduler()" type="button">Schedule with Dr. Erik</button>
+      <div class="note-line" style="margin-top:8px;">Opens in a small window over this page. If an email is entered in Call Details, it's copied to your clipboard first, just paste it into the calendar page.</div>
+    ` : '');
+
+  const inlineCounties = document.getElementById('stepCountiesInput');
+  if(inlineCounties){
+    inlineCounties.value = document.getElementById('f_counties').value;
+    inlineCounties.addEventListener('input', (e)=>{
+      document.getElementById('f_counties').value = e.target.value;
+    });
+  }
+
+  const inlinePrivateDuty = document.getElementById('stepPrivateDutyInput');
+  if(inlinePrivateDuty){
+    inlinePrivateDuty.value = document.getElementById('f_privateduty').value;
+    inlinePrivateDuty.addEventListener('change', (e)=>{
+      document.getElementById('f_privateduty').value = e.target.value;
+    });
+  }
+
+  const inlineContact = document.getElementById('stepContactInput');
+  if(inlineContact){
+    inlineContact.value = document.getElementById('f_contact').value;
+    inlineContact.addEventListener('input', (e)=>{
+      document.getElementById('f_contact').value = e.target.value;
+    });
+  }
+  const inlinePhone = document.getElementById('stepPhoneInput');
+  if(inlinePhone){
+    inlinePhone.value = document.getElementById('f_phone').value;
+    inlinePhone.addEventListener('input', (e)=>{
+      const formatted = formatPhoneNumber(e.target.value);
+      e.target.value = formatted;
+      document.getElementById('f_phone').value = formatted;
+    });
+  }
+  const inlineEmail = document.getElementById('stepEmailInput');
+  if(inlineEmail){
+    inlineEmail.value = document.getElementById('f_email').value;
+    inlineEmail.addEventListener('input', (e)=>{
+      document.getElementById('f_email').value = e.target.value;
+    });
+  }
+
+  document.getElementById('prevStep').disabled = currentStep === 0;
+  const nextBtn = document.getElementById('nextStep');
+  if(currentStep === STEPS.length - 1){
+    nextBtn.textContent = 'Last step';
+    nextBtn.disabled = true;
+  } else {
+    nextBtn.textContent = 'Next step';
+    nextBtn.disabled = false;
+  }
+}
+
+document.getElementById('prevStep').addEventListener('click', ()=>{
+  if(currentStep > 0){ currentStep--; renderStep(); }
+});
+document.getElementById('nextStep').addEventListener('click', ()=>{
+  if(currentStep < STEPS.length - 1){ currentStep++; renderStep(); }
+});
+renderStep();
+
+document.getElementById('f_contact').addEventListener('input', (e)=>{
+  const inlineContact = document.getElementById('stepContactInput');
+  if(inlineContact && inlineContact.value !== e.target.value){
+    inlineContact.value = e.target.value;
+  }
+});
+document.getElementById('f_phone').addEventListener('input', (e)=>{
+  const formatted = formatPhoneNumber(e.target.value);
+  e.target.value = formatted;
+  const inlinePhone = document.getElementById('stepPhoneInput');
+  if(inlinePhone && inlinePhone.value !== formatted){
+    inlinePhone.value = formatted;
+  }
+});
+document.getElementById('f_email').addEventListener('input', (e)=>{
+  const inlineEmail = document.getElementById('stepEmailInput');
+  if(inlineEmail && inlineEmail.value !== e.target.value){
+    inlineEmail.value = e.target.value;
+  }
+});
+
+// ---------- Tabs ----------
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.getElementById('view-' + btn.dataset.view).classList.add('active');
+    if(btn.dataset.view === 'log') loadLog();
+    if(btn.dataset.view === 'pipeline') loadDeals();
+    if(btn.dataset.view === 'dashboard') loadDashboard();
+  });
+});
+
+// ---------- Scheduling ----------
+const SCHEDULE_URL = "https://bookings.cloud.microsoft/book/VirtualMeetingWithDrErik15Mins@MedBetterHealthorg.onmicrosoft.com/s/u7xNOVg5z0GPG1odRVrt9w2?ismsaljsauthenabled=true";
+
+let toastTimer;
+function showToast(msg, duration = 3600){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> t.classList.remove('show'), duration);
+}
+
+async function openScheduler(){
+  const emailField = document.getElementById('f_email');
+  const email = emailField ? emailField.value.trim() : '';
+
+  if(email){
+    try{
+      await navigator.clipboard.writeText(email);
+      showToast('Copied ' + email + '. Paste it into the email field on the calendar page.');
+    }catch(e){
+      // Clipboard blocked by the browser, still open the scheduler
+    }
+  }
+
+  const w = 480, h = 760;
+  const left = Math.max(0, (window.screen.width - w) / 2);
+  const top = Math.max(0, (window.screen.height - h) / 2);
+  const popup = window.open(
+    SCHEDULE_URL,
+    'scheduleDrErik',
+    `width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=yes`
+  );
+  if(!popup){
+    // Popup blocked by the browser, fall back to a new tab
+    window.open(SCHEDULE_URL, '_blank');
+  } else {
+    popup.focus();
+  }
+}
+
+document.getElementById('scheduleTopBtn').addEventListener('click', openScheduler);
+
+// ---------- Caller name (personal setting) ----------
+const callerInput = document.getElementById('callerName');
+(async function loadCallerName(){
+  try{
+    const res = await store.get('caller_name');
+    if(res && res.value) callerInput.value = res.value;
+  }catch(e){ /* no saved name yet */ }
+})();
+let callerSaveTimer;
+callerInput.addEventListener('input', ()=>{
+  clearTimeout(callerSaveTimer);
+  callerSaveTimer = setTimeout(async ()=>{
+    try{
+      await store.set('caller_name', callerInput.value);
+      const tick = document.getElementById('callerSavedTick');
+      tick.classList.add('show');
+      setTimeout(()=>tick.classList.remove('show'), 1500);
+    }catch(e){}
+  }, 600);
+});
+
+// ---------- Speech recognition ----------
+let recognition = null;
+let listening = false;
+let finalTranscript = '';
+const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+if(!SpeechRecognitionClass){
+  document.getElementById('supportNote').classList.add('show');
+  document.getElementById('recToggle').disabled = true;
+} else {
+  recognition = new SpeechRecognitionClass();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = 'en-US';
+
+  recognition.onresult = (event)=>{
+    let interim = '';
+    for(let i = event.resultIndex; i < event.results.length; i++){
+      const text = event.results[i][0].transcript;
+      if(event.results[i].isFinal){
+        finalTranscript += text + ' ';
+      } else {
+        interim += text;
+      }
+    }
+    renderTranscript(interim);
+  };
+  recognition.onerror = (e)=>{
+    document.getElementById('recStatus').textContent = 'Mic error: ' + e.error;
+  };
+  recognition.onend = ()=>{
+    if(listening){
+      // restart automatically to keep listening through natural pauses
+      try{ recognition.start(); }catch(e){}
+    }
+  };
+}
+
+function renderTranscript(interim){
+  const box = document.getElementById('transcriptBox');
+  const shown = finalTranscript.trim();
+  if(!shown && !interim){
+    box.innerHTML = '<span class="placeholder">Transcript will appear here once you start listening.</span>';
+    return;
+  }
+  box.innerHTML = escapeHtml(shown) + (interim ? ' <span class="interim">' + escapeHtml(interim) + '</span>' : '');
+  box.scrollTop = box.scrollHeight;
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+document.getElementById('recToggle').addEventListener('click', ()=>{
+  if(!recognition) return;
+  if(!listening){
+    listening = true;
+    try{ recognition.start(); }catch(e){}
+    document.getElementById('recToggle').textContent = 'Stop listening';
+    document.getElementById('recDot').classList.add('live');
+    document.getElementById('recStatus').textContent = 'Listening';
+  } else {
+    listening = false;
+    try{ recognition.stop(); }catch(e){}
+    document.getElementById('recToggle').textContent = 'Start listening';
+    document.getElementById('recDot').classList.remove('live');
+    document.getElementById('recStatus').textContent = 'Not listening';
+  }
+});
+
+document.getElementById('clearTranscript').addEventListener('click', ()=>{
+  finalTranscript = '';
+  renderTranscript('');
+});
+
+// ---------- AI summary ----------
+document.getElementById('genSummary').addEventListener('click', async ()=>{
+  const statusEl = document.getElementById('aiStatus');
+  const transcript = finalTranscript.trim();
+  if(!transcript){
+    statusEl.className = 'ai-status show error';
+    statusEl.textContent = 'There is no transcript yet. Start listening during the call, or type notes directly.';
+    return;
+  }
+  statusEl.className = 'ai-status show loading';
+  statusEl.textContent = 'Summarizing the conversation...';
+
+  const prompt = `You are helping a home care partnership team summarize a business development phone call to a home care agency about the CMS GUIDE Model. Read the raw transcript below and return ONLY a JSON object, no markdown fences, no preamble, with these exact keys:
+"notes": a concise 3 to 5 sentence summary of what was discussed and any concerns the agency raised,
+"interest_level": one of "Hot", "Warm", "Cold", "N/A" based on tone and content,
+"outcome": one of "Meeting Scheduled", "Interested, follow up needed", "Not interested", "No answer / Voicemail", "Not private duty",
+"next_action": a short, specific next step.
+
+Transcript:
+"""${transcript}"""`;
+
+  try{
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        messages: [{role:"user", content: prompt}]
+      })
+    });
+    const data = await response.json();
+    const textBlock = (data.content || []).find(b => b.type === 'text');
+    if(!textBlock){ throw new Error('No response text'); }
+    let clean = textBlock.text.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+
+    document.getElementById('f_notes').value = parsed.notes || '';
+    if(parsed.interest_level) document.getElementById('f_interest').value = parsed.interest_level;
+    if(parsed.outcome) document.getElementById('f_outcome').value = parsed.outcome;
+    if(parsed.next_action) document.getElementById('f_nextaction').value = parsed.next_action;
+
+    statusEl.className = 'ai-status show ok';
+    statusEl.textContent = 'Summary added below. Review and edit before saving.';
+  }catch(e){
+    statusEl.className = 'ai-status show error';
+    statusEl.textContent = 'Could not generate a summary. You can still write notes manually.';
+  }
+});
+
+// ---------- Save / validate ----------
+function collectForm(){
+  return {
+    agency: document.getElementById('f_agency').value.trim(),
+    contact: document.getElementById('f_contact').value.trim(),
+    phone: document.getElementById('f_phone').value.trim(),
+    email: document.getElementById('f_email').value.trim(),
+    counties: document.getElementById('f_counties').value.trim(),
+    privateDuty: document.getElementById('f_privateduty').value,
+    interest: document.getElementById('f_interest').value,
+    outcome: document.getElementById('f_outcome').value,
+    meeting: document.getElementById('f_meeting').value,
+    nextAction: document.getElementById('f_nextaction').value.trim(),
+    notes: document.getElementById('f_notes').value.trim(),
+    transcript: finalTranscript.trim(),
+    loggedBy: callerInput.value.trim(),
+    loggedAt: new Date().toISOString()
+  };
+}
+
+function clearForm(){
+  ['f_agency','f_contact','f_phone','f_email','f_counties','f_nextaction','f_notes'].forEach(id=>{
+    document.getElementById(id).value = '';
+  });
+  ['f_privateduty','f_interest','f_outcome'].forEach(id=>{
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('f_meeting').value = '';
+  finalTranscript = '';
+  renderTranscript('');
+  document.getElementById('aiStatus').className = 'ai-status';
+  document.getElementById('validationMsg').classList.remove('show');
+  currentStep = 0;
+  renderStep();
+}
+
+document.getElementById('clearForm').addEventListener('click', clearForm);
+
+document.getElementById('saveCall').addEventListener('click', async ()=>{
+  const record = collectForm();
+  const valMsg = document.getElementById('validationMsg');
+  if(!record.agency || (!record.phone && !record.email)){
+    valMsg.classList.add('show');
+    return;
+  }
+  valMsg.classList.remove('show');
+
+  const id = Date.now() + '-' + Math.random().toString(36).slice(2,8);
+  const saveBtn = document.getElementById('saveCall');
+  const originalText = saveBtn.textContent;
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Submitting...';
+
+  let saved = false;
+  let failReason = '';
+  try{
+    await store.set('calls:' + id, JSON.stringify(record));
+    saved = true;
+  }catch(e){
+    saved = false;
+    failReason = (e && e.message) ? e.message : String(e);
+  }
+
+  if(!saved){
+    saveBtn.disabled = false;
+    saveBtn.textContent = originalText;
+    valMsg.textContent = 'Could not submit. ' + (failReason ? '(' + failReason + ') ' : '') + 'Please try again.';
+    valMsg.classList.add('show');
+    return;
+  }
+
+  let dealUpdate = null;
+  try{
+    dealUpdate = await upsertDealFromCall(record);
+  }catch(e){
+    dealUpdate = null;
+  }
+
+  saveBtn.textContent = 'Submitted';
+  if(dealUpdate){
+    showToast(dealUpdate.agency + ' is now in "' + dealUpdate.stageLabel + '" on the Pipeline tab.');
+    highlightDealKey = dealUpdate.key || null;
+  } else {
+    showToast(record.agency + ' submitted to the pipeline.');
+    highlightDealKey = null;
+  }
+  setTimeout(()=>{
+    saveBtn.textContent = originalText;
+    saveBtn.disabled = false;
+    clearForm();
+    document.querySelector('.tab-btn[data-view="pipeline"]').click();
+  }, 600);
+});
+
+// ---------- Call log ----------
+let allCalls = [];
+
+async function loadLog(){
+  const listEl = document.getElementById('logList');
+  listEl.innerHTML = '<div class="log-empty">Loading call log...</div>';
+  try{
+    const keysRes = await store.list('calls:');
+    const keys = (keysRes && keysRes.keys) ? keysRes.keys : [];
+    const records = [];
+    for(const k of keys){
+      try{
+        const r = await store.get(k);
+        if(r && r.value){
+          const parsed = JSON.parse(r.value);
+          parsed._key = k;
+          records.push(parsed);
+        }
+      }catch(e){ /* skip unreadable entry */ }
+    }
+    records.sort((a,b)=> new Date(b.loggedAt) - new Date(a.loggedAt));
+    allCalls = records;
+    renderStats();
+    renderLog();
+  }catch(e){
+    listEl.innerHTML = '<div class="log-empty">Could not load the call log. Try refreshing.</div>';
+  }
+}
+
+function renderStats(){
+  document.getElementById('statTotal').textContent = allCalls.length;
+  document.getElementById('logStatMeetings').textContent = allCalls.filter(c=>c.outcome === 'Meeting Scheduled').length;
+  document.getElementById('statHot').textContent = allCalls.filter(c=>c.interest === 'Hot').length;
+  document.getElementById('statFollow').textContent = allCalls.filter(c=>c.outcome === 'Interested, follow up needed').length;
+}
+
+function badgeClass(level){
+  if(level === 'Hot') return 'hot';
+  if(level === 'Warm') return 'warm';
+  if(level === 'Cold') return 'cold';
+  return 'na';
+}
+
+function renderLog(){
+  const search = document.getElementById('logSearch').value.toLowerCase();
+  const filter = document.getElementById('logFilter').value;
+  const listEl = document.getElementById('logList');
+
+  let filtered = allCalls.filter(c=>{
+    const matchesSearch = !search || (c.agency + ' ' + c.contact + ' ' + c.counties).toLowerCase().includes(search);
+    const matchesFilter = !filter || c.outcome === filter;
+    return matchesSearch && matchesFilter;
+  });
+
+  if(filtered.length === 0){
+    listEl.innerHTML = '<div class="log-empty">No calls logged yet. Entries you save on the New Call tab will show up here for the whole team.</div>';
+    return;
+  }
+
+  listEl.innerHTML = filtered.map(c=>{
+    const when = c.loggedAt ? new Date(c.loggedAt).toLocaleString() : '';
+    const meeting = c.meeting ? new Date(c.meeting).toLocaleString() : 'Not scheduled';
+    return `
+    <div class="log-item" data-key="${c._key}">
+      <div class="top">
+        <div>
+          <div class="agency">${escapeHtml(c.agency || 'Unnamed agency')}</div>
+          <div class="meta">${escapeHtml(c.contact || 'No contact name')} &middot; ${escapeHtml(c.counties || 'No counties listed')}</div>
+        </div>
+        <span class="badge ${badgeClass(c.interest)}">${c.interest || 'N/A'}</span>
+      </div>
+      <div class="details">
+        <div class="detail-row"><span class="k">Phone</span><span class="v mono">${escapeHtml(c.phone || '—')}</span></div>
+        <div class="detail-row"><span class="k">Email</span><span class="v">${escapeHtml(c.email || '—')}</span></div>
+        <div class="detail-row"><span class="k">Private duty</span><span class="v">${escapeHtml(c.privateDuty || '—')}</span></div>
+        <div class="detail-row"><span class="k">Outcome</span><span class="v">${escapeHtml(c.outcome || '—')}</span></div>
+        <div class="detail-row"><span class="k">Meeting</span><span class="v">${escapeHtml(meeting)}</span></div>
+        <div class="detail-row"><span class="k">Next action</span><span class="v">${escapeHtml(c.nextAction || '—')}</span></div>
+        <div class="detail-row"><span class="k">Notes</span><span class="v">${escapeHtml(c.notes || '—')}</span></div>
+        <div class="detail-row"><span class="k">Logged by</span><span class="v">${escapeHtml(c.loggedBy || '—')} on ${escapeHtml(when)}</span></div>
+        <div class="footer-row">
+          <button class="btn btn-outline btn-sm delete-btn" data-key="${c._key}">Delete entry</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  listEl.querySelectorAll('.log-item').forEach(item=>{
+    item.addEventListener('click', (e)=>{
+      if(e.target.classList.contains('delete-btn')) return;
+      item.classList.toggle('open');
+    });
+  });
+  listEl.querySelectorAll('.delete-btn').forEach(btn=>{
+    btn.addEventListener('click', async (e)=>{
+      e.stopPropagation();
+      const key = btn.dataset.key;
+      btn.textContent = 'Deleting...';
+      try{
+        await store.delete(key);
+        await loadLog();
+      }catch(err){
+        btn.textContent = 'Could not delete';
+      }
+    });
+  });
+}
+
+document.getElementById('logSearch').addEventListener('input', renderLog);
+document.getElementById('pipelineSearch').addEventListener('input', renderPipeline);
+document.getElementById('refreshPipeline').addEventListener('click', loadDeals);
+
+document.getElementById('toggleAddLead').addEventListener('click', ()=>{
+  const form = document.getElementById('addLeadForm');
+  form.style.display = form.style.display === 'none' ? 'block' : 'none';
+});
+document.getElementById('cancelNewLead').addEventListener('click', ()=>{
+  document.getElementById('newLeadAgency').value = '';
+  document.getElementById('newLeadCounties').value = '';
+  document.getElementById('addLeadForm').style.display = 'none';
+});
+document.getElementById('saveNewLead').addEventListener('click', async ()=>{
+  const agency = document.getElementById('newLeadAgency').value.trim();
+  const counties = document.getElementById('newLeadCounties').value.trim();
+  if(!agency){
+    showToast('Enter an agency name first.');
+    return;
+  }
+  const now = new Date().toISOString();
+  const id = Date.now() + '-' + Math.random().toString(36).slice(2,8);
+  const deal = {
+    agency: agency,
+    contact: '',
+    phone: '',
+    email: '',
+    counties: counties,
+    stage: 'unable_to_reach',
+    createdAt: now,
+    updatedAt: now,
+    history: [{ts: now, stage:'unable_to_reach', note:'Added directly to the pipeline, not yet reached.'}]
+  };
+  try{
+    await store.set('deals:' + id, JSON.stringify(deal));
+    document.getElementById('newLeadAgency').value = '';
+    document.getElementById('newLeadCounties').value = '';
+    document.getElementById('addLeadForm').style.display = 'none';
+    showToast(agency + ' added to Unable to Reach.');
+    await loadDeals();
+  }catch(e){
+    showToast('Could not add the lead. Try again.');
+  }
+});
+
+document.getElementById('logFilter').addEventListener('change', renderLog);
+document.getElementById('refreshLog').addEventListener('click', loadLog);
+
+// ---------- CSV export for GoHighLevel ----------
+function toCsvValue(val){
+  const str = (val === undefined || val === null) ? '' : String(val);
+  if(/[",\n]/.test(str)){
+    return '"' + str.replace(/"/g, '""') + '"';
+  }
+  return str;
+}
+
+function exportCsvForGoHighLevel(){
+  const headers = ['Business Name','First Name','Last Name','Phone','Email','Tags','Notes'];
+  const rows = allCalls.map(c=>{
+    const nameParts = (c.contact || '').trim().split(/\s+/).filter(Boolean);
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ');
+    const tags = ['GUIDE Model Outreach', c.interest ? c.interest + ' Lead' : '', c.outcome || ''].filter(Boolean).join(', ');
+    const meeting = c.meeting ? new Date(c.meeting).toLocaleString() : '';
+    const notesParts = [
+      c.counties ? 'Counties: ' + c.counties : '',
+      c.privateDuty ? 'Private duty: ' + c.privateDuty : '',
+      meeting ? 'Meeting: ' + meeting : '',
+      c.nextAction ? 'Next action: ' + c.nextAction : '',
+      c.notes ? 'Notes: ' + c.notes : '',
+      c.loggedBy ? 'Logged by: ' + c.loggedBy : ''
+    ].filter(Boolean).join(' | ');
+    return [c.agency || '', firstName, lastName, c.phone || '', c.email || '', tags, notesParts];
+  });
+  const csvLines = [headers, ...rows].map(row => row.map(toCsvValue).join(',')).join('\r\n');
+  const blob = new Blob([csvLines], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'guide-model-calls-' + new Date().toISOString().slice(0,10) + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById('exportCsvBtn').addEventListener('click', exportCsvForGoHighLevel);
+
+// ---------- Team Dashboard ----------
+let dashRange = 'today';
+
+function dashDateBounds(){
+  const now = new Date();
+  if(dashRange === 'today'){
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const end = new Date(start); end.setDate(end.getDate() + 1);
+    return { start, end };
+  }
+  if(dashRange === 'week'){
+    const day = now.getDay();
+    const diff = (day === 0 ? 6 : day - 1); // Monday as start of week
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diff);
+    const end = new Date(start); end.setDate(end.getDate() + 7);
+    return { start, end };
+  }
+  // custom
+  const fromVal = document.getElementById('dashFrom').value;
+  const toVal = document.getElementById('dashTo').value;
+  const start = fromVal ? new Date(fromVal + 'T00:00:00') : new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const end = toVal ? new Date(toVal + 'T00:00:00') : new Date(start);
+  end.setDate(end.getDate() + 1); // inclusive of the "to" day
+  return { start, end };
+}
+
+function inRange(ts, bounds){
+  if(!ts) return false;
+  const t = new Date(ts);
+  return t >= bounds.start && t < bounds.end;
+}
+
+async function loadDashboard(){
+  const body = document.getElementById('dashTableBody');
+  body.innerHTML = '<tr><td colspan="7" class="dash-empty">Loading...</td></tr>';
+
+  // Gather all calls
+  let callKeys = [];
+  try{ const r = await store.list('calls:'); callKeys = (r && r.keys) ? r.keys : []; }catch(e){ callKeys = []; }
+  const calls = [];
+  for(const k of callKeys){
+    try{ const r = await store.get(k); if(r && r.value) calls.push(JSON.parse(r.value)); }catch(e){}
+  }
+  // Gather all deals (for email/contract stage moves from history)
+  let dealKeys = [];
+  try{ const r = await store.list('deals:'); dealKeys = (r && r.keys) ? r.keys : []; }catch(e){ dealKeys = []; }
+  const deals = [];
+  for(const k of dealKeys){
+    try{ const r = await store.get(k); if(r && r.value) deals.push(JSON.parse(r.value)); }catch(e){}
+  }
+
+  const bounds = dashDateBounds();
+  const quota = parseInt(document.getElementById('dashQuota').value) || 0;
+
+  // Build per-rep stats
+  const reps = {};
+  const rep = (name)=>{
+    const key = name || 'Unattributed';
+    if(!reps[key]) reps[key] = { name: key, calls:0, meetings:0, emails:0, contracts:0 };
+    return reps[key];
+  };
+
+  // Calls and meetings, from call outcome that day
+  calls.forEach(c=>{
+    if(!inRange(c.loggedAt, bounds)) return;
+    const r = rep(c.loggedBy);
+    r.calls++;
+    if(c.outcome === 'Meeting Scheduled') r.meetings++;
+  });
+
+  // Emails sent and contracts, from deal history stage moves in range
+  deals.forEach(d=>{
+    (d.history || []).forEach(h=>{
+      if(!inRange(h.ts, bounds)) return;
+      const who = h.by || '';
+      if(h.stage === 'email_sent'){ rep(who).emails++; }
+      if(h.stage === 'contract_signed'){ rep(who).contracts++; }
+    });
+  });
+
+  const rows = Object.values(reps).sort((a,b)=> b.calls - a.calls);
+
+  // Totals
+  const totals = rows.reduce((acc,r)=>{
+    acc.calls += r.calls; acc.meetings += r.meetings; acc.emails += r.emails; acc.contracts += r.contracts;
+    return acc;
+  }, {calls:0, meetings:0, emails:0, contracts:0});
+  const teamRate = totals.calls ? Math.round((totals.meetings / totals.calls) * 100) : 0;
+
+  // Top summary cards
+  document.getElementById('dashTotals').innerHTML = `
+    <div class="stat"><div class="num">${totals.calls}</div><div class="lbl">Calls made</div></div>
+    <div class="stat"><div class="num">${totals.meetings}</div><div class="lbl">Meetings booked</div></div>
+    <div class="stat"><div class="num">${teamRate}%</div><div class="lbl">Team booking rate</div></div>
+    <div class="stat"><div class="num">${rows.length}</div><div class="lbl">Reps active</div></div>
+  `;
+
+  if(rows.length === 0){
+    body.innerHTML = '<tr><td colspan="7" class="dash-empty">No activity in this date range yet. Submitted calls will show up here.</td></tr>';
+    updateDashNote(bounds);
+    return;
+  }
+
+  const rateColor = (rate)=>{
+    if(rate >= 25) return 'background:var(--success-bg);color:var(--success);';
+    if(rate >= 10) return 'background:#FBF0DD;color:#8A5A00;';
+    return 'background:#FCEAEA;color:var(--red-dark);';
+  };
+
+  const rowHtml = (r)=>{
+    const rate = r.calls ? Math.round((r.meetings / r.calls) * 100) : 0;
+    const pct = quota ? Math.min(100, Math.round((r.calls / quota) * 100)) : 0;
+    const met = quota && r.calls >= quota;
+    const quotaCell = quota ? `
+      <div class="quota-cell">
+        <span>${r.calls} / ${quota}</span>
+        <div class="quota-bar"><div class="quota-fill ${met?'met':''}" style="width:${pct}%;"></div></div>
+      </div>` : '<span style="color:var(--muted);">—</span>';
+    return `
+      <tr>
+        <td class="rep-name">${escapeHtml(r.name)}</td>
+        <td class="big">${r.calls}</td>
+        <td>${quotaCell}</td>
+        <td class="big">${r.meetings}</td>
+        <td><span class="rate-pill" style="${rateColor(rate)}">${rate}%</span></td>
+        <td>${r.emails}</td>
+        <td>${r.contracts}</td>
+      </tr>
+    `;
+  };
+
+  const teamRow = `
+    <tr class="team-total">
+      <td class="rep-name">Team total</td>
+      <td class="big">${totals.calls}</td>
+      <td>${quota ? (rows.length * quota) + ' target' : '—'}</td>
+      <td class="big">${totals.meetings}</td>
+      <td><span class="rate-pill" style="${rateColor(teamRate)}">${teamRate}%</span></td>
+      <td>${totals.emails}</td>
+      <td>${totals.contracts}</td>
+    </tr>
+  `;
+
+  body.innerHTML = rows.map(rowHtml).join('') + teamRow;
+  updateDashNote(bounds);
+}
+
+function updateDashNote(bounds){
+  const endDisplay = new Date(bounds.end); endDisplay.setDate(endDisplay.getDate() - 1);
+  const fmt = (d)=> d.toLocaleDateString();
+  const label = (fmt(bounds.start) === fmt(endDisplay)) ? fmt(bounds.start) : (fmt(bounds.start) + ' to ' + fmt(endDisplay));
+  document.getElementById('dashNote').textContent = 'Showing ' + label + '. Calls and meetings are counted from the call outcome logged that day, by the rep named in "Logged by." Emails and contracts are counted when a rep moves a lead into that stage.';
+}
+
+document.querySelectorAll('.dash-range').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.dash-range').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    dashRange = btn.dataset.range;
+    document.getElementById('dashCustom').style.display = (dashRange === 'custom') ? 'flex' : 'none';
+    loadDashboard();
+  });
+});
+document.getElementById('dashFrom').addEventListener('change', loadDashboard);
+document.getElementById('dashTo').addEventListener('change', loadDashboard);
+document.getElementById('dashQuota').addEventListener('input', loadDashboard);
+document.getElementById('refreshDash').addEventListener('click', loadDashboard);
+
+
+</script>
+<div class="toast" id="toast"></div>
+
+</body>
+</html>
