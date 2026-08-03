@@ -34,6 +34,21 @@ export async function POST(request:Request) {
   try {
     const call = await request.json() as Record<string,string>;
     if (!call.agency || (!call.phone && !call.email)) return Response.json({error:"Agency and phone or email are required"},{status:400});
+    const usersResult=await ghl(`/users/?locationId=${encodeURIComponent(env.GHL_LOCATION_ID)}`).catch(()=>({users:[]}));
+    const users=(usersResult.users || []) as Array<{id:string;name?:string;email?:string}>;
+    const loggedBy=(call.loggedBy || "").trim().toLowerCase();
+    const assignedUser=users.find(user=>
+      loggedBy && ((user.name || "").toLowerCase().includes(loggedBy) || (user.email || "").toLowerCase()===loggedBy)
+    );
+    const fieldsResult=await ghl(`/locations/${encodeURIComponent(env.GHL_LOCATION_ID)}/customFields`).catch(()=>({customFields:[]}));
+    const fields=(fieldsResult.customFields || []) as Array<{id:string;name:string}>;
+    const fieldId=(name:string)=>fields.find(field=>field.name===name)?.id;
+    const customFields=[
+      {id:fieldId("Partner - Lead Source"),field_value:"GUIDE Model Outreach"},
+      {id:fieldId("Partner - Last Contact Date"),field_value:new Date().toISOString().slice(0,10)},
+      {id:fieldId("Partner - Next Follow-Up Date"),field_value:call.nextFollowUpDate?.slice(0,10)},
+      {id:fieldId("Partner - Meeting Date"),field_value:call.meeting?.slice(0,10)},
+    ].filter(field=>field.id && field.field_value);
     const names=(call.contact || "").trim().split(/\s+/).filter(Boolean);
     const contactResult=await ghl("/contacts/upsert",{method:"POST",body:JSON.stringify({
       locationId:env.GHL_LOCATION_ID,
@@ -44,7 +59,9 @@ export async function POST(request:Request) {
       website:call.website || undefined,
       phone:call.phone || undefined,
       email:call.email || undefined,
+      assignedTo:assignedUser?.id || undefined,
       source:"GUIDE Partner Call Assistant",
+      customFields,
       tags:["GUIDE Model Outreach", call.interest ? `${call.interest} Lead` : "", call.outcome || ""].filter(Boolean)
     })});
     const contact=(contactResult.contact || contactResult) as {id?:string};
@@ -62,6 +79,7 @@ export async function POST(request:Request) {
       pipelineId:pipeline.id,
       pipelineStageId:stage.id,
       name:`${call.agency} — GUIDE Partnership`,
+      assignedTo:assignedUser?.id || undefined,
       status:["Not Interested","Disqualified"].includes(stageName) ? "lost" : "open"
     })});
 
