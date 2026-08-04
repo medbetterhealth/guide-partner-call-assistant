@@ -1057,11 +1057,18 @@ async function moveDeal(key, newStageKey){
   deal.history = deal.history || [];
   deal.history.push({ts: now, stage:newStageKey, by: callerName, note: 'Moved to ' + stageLabel + (callerName ? ', by ' + callerName : '') + '.'});
   try{
+    const response = await fetch('/api/move-stage', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({...deal, stageName:stageLabel})
+    });
+    const result = await response.json().catch(()=>({}));
+    if(!response.ok) throw new Error(result.error || 'GoHighLevel stage update failed');
     await store.set(deal._key, JSON.stringify(deal));
-    showToast('Moved to ' + stageLabel + '.');
+    showToast('Moved to ' + stageLabel + ' in the dashboard and GoHighLevel.');
     await loadDeals();
   }catch(e){
-    showToast('Could not update the pipeline. Try again.');
+    showToast((e && e.message) ? e.message : 'Could not update the pipeline. Try again.');
   }
 }
 
