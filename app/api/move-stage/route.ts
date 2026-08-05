@@ -15,28 +15,45 @@ async function ghl(path: string, init: RequestInit = {}) {
     },
   });
   const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error((data as { message?: string }).message || `HighLevel request failed (${response.status})`);
+  if (!response.ok) {
+    throw new Error((data as { message?: string }).message || `HighLevel request failed (${response.status})`);
+  }
   return data as Record<string, unknown>;
 }
 
 export async function POST(request: Request) {
   try {
     const deal = await request.json() as Record<string, string>;
-    if (!deal.agency || (!deal.phone && !deal.email) || !deal.stageName) {
-      return Response.json({ error: "Agency, phone or email, and stage are required" }, { status: 400 });
+    if (!deal.agencyName || !deal.stageName) {
+      return Response.json({ error: "Agency Name and stage are required" }, { status: 400 });
     }
 
-    const names = (deal.contact || "").trim().split(/\s+/).filter(Boolean);
+    const fieldsResult = await ghl(`/locations/${encodeURIComponent(env.GHL_LOCATION_ID)}/customFields`).catch(() => ({ customFields: [] }));
+    const fields = (fieldsResult.customFields || []) as Array<{ id: string; name: string }>;
+    const fieldId = (...names: string[]) => fields.find((field) =>
+      names.some((name) => field.name.trim().toLowerCase() === name.toLowerCase())
+    )?.id;
+    const customFields = [
+      { id: fieldId("Answered By", "Partner - Answered By"), field_value: deal.answeredBy },
+      { id: fieldId("Agency Phone Number", "Partner - Agency Phone Number"), field_value: deal.agencyPhoneNumber },
+      { id: fieldId("Decision Maker Name", "Partner - Decision Maker Name"), field_value: deal.decisionMakerName },
+      { id: fieldId("Decision Maker Phone", "Partner - Decision Maker Phone"), field_value: deal.decisionMakerPhone },
+      { id: fieldId("Decision Maker Email", "Partner - Decision Maker Email"), field_value: deal.decisionMakerEmail },
+    ].filter((field) => field.id && field.field_value);
+
+    const primaryName = (deal.decisionMakerName || deal.answeredBy || deal.agencyName).trim();
+    const names = primaryName.split(/\s+/).filter(Boolean);
     const contactResult = await ghl("/contacts/upsert", {
       method: "POST",
       body: JSON.stringify({
         locationId: env.GHL_LOCATION_ID,
-        firstName: names[0] || deal.agency,
+        firstName: names[0] || deal.agencyName,
         lastName: names.slice(1).join(" "),
-        companyName: deal.agency,
-        phone: deal.phone || undefined,
-        email: deal.email || undefined,
+        companyName: deal.agencyName,
+        phone: deal.decisionMakerPhone || deal.agencyPhoneNumber || undefined,
+        email: deal.decisionMakerEmail || undefined,
         source: "GUIDE Partner Call Assistant",
+        customFields,
       }),
     });
     const contact = (contactResult.contact || contactResult) as { id?: string };
@@ -56,7 +73,7 @@ export async function POST(request: Request) {
         contactId: contact.id,
         pipelineId: pipeline.id,
         pipelineStageId: stage.id,
-        name: `${deal.agency} — GUIDE Partnership`,
+        name: `${deal.agencyName} — GUIDE Partnership`,
         status: ["Not Interested", "Disqualified"].includes(deal.stageName) ? "lost" : "open",
       }),
     });

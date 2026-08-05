@@ -356,62 +356,37 @@
         <p class="sub">Captured as you go. Nothing is saved until you tap Submit call to pipeline.</p>
 
         <div class="field">
-          <label>Agency name</label>
-          <input type="text" id="f_agency" placeholder="e.g. Comfort Keepers of Broward">
+          <label>Agency Name (Required)</label>
+          <input type="text" id="f_agency_name" placeholder="e.g. Comfort Keepers of Broward" required>
         </div>
         <div class="row2">
           <div class="field">
-            <label>Contact full name</label>
-            <input type="text" id="f_contact" placeholder="First and last name">
+            <label>Agency Phone Number (Required)</label>
+            <input type="tel" id="f_agency_phone_number" placeholder="(954) 000-0000" required>
           </div>
           <div class="field">
-            <label>Phone number</label>
-            <input type="tel" id="f_phone" placeholder="(954) 000 0000">
+            <label>Answered By (Required)</label>
+            <input type="text" id="f_answered_by" placeholder="First and last name" required>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>Decision Maker Name</label>
+            <input type="text" id="f_decision_maker_name" placeholder="First and last name">
+          </div>
+          <div class="field">
+            <label>Decision Maker Phone</label>
+            <input type="tel" id="f_decision_maker_phone" placeholder="(954) 000-0000">
           </div>
         </div>
         <div class="field">
-          <label>Email address</label>
-          <input type="email" id="f_email" placeholder="name@agency.com">
-        </div>
-        <div class="row2">
-          <div class="field"><label>Agency address</label><input type="text" id="f_address" placeholder="Street, city, state"></div>
-          <div class="field"><label>Website</label><input type="url" id="f_website" placeholder="https://agency.com"></div>
+          <label>Decision Maker Email</label>
+          <input type="email" id="f_decision_maker_email" placeholder="name@agency.com">
         </div>
         <input type="hidden" id="f_counties">
         <input type="hidden" id="f_privateduty">
-        <div class="row2">
-          <div class="field">
-            <label>Interest level</label>
-            <select id="f_interest">
-              <option value="">Select one</option>
-              <option value="Hot">Hot</option>
-              <option value="Warm">Warm</option>
-              <option value="Cold">Cold</option>
-              <option value="N/A">N/A</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Call outcome</label>
-            <select id="f_outcome">
-              <option value="">Select one</option>
-              <option value="Meeting Scheduled">Meeting scheduled</option>
-              <option value="Interested, follow up needed">Interested, follow up needed</option>
-              <option value="Not interested">Not interested</option>
-              <option value="No answer / Voicemail">No answer / Voicemail</option>
-              <option value="Not private duty">Not private duty</option>
-            </select>
-          </div>
-        </div>
-        <div class="field">
-          <label>Meeting date and time</label>
-          <input type="datetime-local" id="f_meeting">
-        </div>
-        <div class="field">
-          <label>Next follow up action</label>
-          <input type="text" id="f_nextaction" placeholder="e.g. Second email in one week">
-        </div>
 
-        <div class="validation" id="validationMsg">Add at least an agency name and a phone number or email before submitting.</div>
+        <div class="validation" id="validationMsg">Agency Name, Agency Phone Number, and Answered By are required.</div>
         <div class="form-actions">
           <button class="btn btn-red" id="saveCall" style="flex:1;">Submit call to pipeline</button>
           <button class="btn btn-outline" id="clearForm">Clear</button>
@@ -457,20 +432,18 @@
   <div class="view" id="view-log">
     <div class="stats">
       <div class="stat"><div class="num" id="statTotal">0</div><div class="lbl">Calls logged</div></div>
-      <div class="stat"><div class="num" id="logStatMeetings">0</div><div class="lbl">Meetings scheduled</div></div>
-      <div class="stat"><div class="num" id="statHot">0</div><div class="lbl">Hot leads</div></div>
-      <div class="stat"><div class="num" id="statFollow">0</div><div class="lbl">Need follow up</div></div>
+      <div class="stat"><div class="num" id="logStatAgencies">0</div><div class="lbl">Agencies</div></div>
+      <div class="stat"><div class="num" id="statDecisionMakers">0</div><div class="lbl">Decision makers</div></div>
+      <div class="stat"><div class="num" id="statDecisionMakerEmails">0</div><div class="lbl">Decision maker emails</div></div>
     </div>
 
     <div class="log-controls">
-      <input type="text" id="logSearch" placeholder="Search agency, contact, or county">
+      <input type="text" id="logSearch" placeholder="Search agency, answered by, decision maker, or county">
       <select id="logFilter">
-        <option value="">All outcomes</option>
-        <option value="Meeting Scheduled">Meeting scheduled</option>
-        <option value="Interested, follow up needed">Interested, follow up needed</option>
-        <option value="Not interested">Not interested</option>
-        <option value="No answer / Voicemail">No answer / Voicemail</option>
-        <option value="Not private duty">Not private duty</option>
+        <option value="">All calls</option>
+        <option value="decision-maker">Decision maker identified</option>
+        <option value="decision-maker-email">Decision maker email provided</option>
+        <option value="no-decision-maker">Decision maker not identified</option>
       </select>
       <button class="btn btn-ghost btn-sm" id="refreshLog">Refresh</button>
       <button class="btn btn-ghost btn-sm" id="exportCsvBtn">Export CSV for GoHighLevel</button>
@@ -489,7 +462,7 @@
     </div>
 
     <div class="log-controls">
-      <input type="text" id="pipelineSearch" placeholder="Search agency or contact">
+      <input type="text" id="pipelineSearch" placeholder="Search agency, answered by, or decision maker">
       <button class="btn btn-ghost btn-sm" id="refreshPipeline">Refresh</button>
       <button class="btn btn-red btn-sm" id="toggleAddLead">Add lead</button>
     </div>
@@ -518,7 +491,7 @@
   <div class="view" id="view-partners">
     <div class="stats" id="partnerStats"></div>
     <div class="log-controls">
-      <input type="text" id="partnerSearch" placeholder="Search agency, contact, phone, or email">
+      <input type="text" id="partnerSearch" placeholder="Search agency, answered by, decision maker, phone, or email">
       <select id="partnerStage"><option value="">All pipeline stages</option></select>
       <select id="partnerStatus">
         <option value="">All partner statuses</option>
@@ -532,7 +505,7 @@
     <div class="card" style="padding:0;overflow:hidden;">
       <div class="dash-table-wrap">
         <table class="dash-table">
-          <thead><tr><th>Agency</th><th>Contact</th><th>Salesperson</th><th>Stage</th><th>Partner status</th><th>Referrals</th><th>Approval rate</th><th>Last contact</th><th>Next follow-up</th></tr></thead>
+          <thead><tr><th>Agency</th><th>Decision Maker</th><th>Salesperson</th><th>Stage</th><th>Partner status</th><th>Referrals</th><th>Approval rate</th><th>Last contact</th><th>Next follow-up</th></tr></thead>
           <tbody id="partnersTableBody"></tbody>
         </table>
       </div>
@@ -739,7 +712,7 @@ const STEPS = [
       {t:'note', v:"If you're speaking with a receptionist or scheduler:"},
       {t:'say', v:"Who would be the best person to speak with about a partnership like this?"},
       {t:'note', v:"Before being transferred, ask:"},
-      {t:'say', v:"What is the person's name, email address, and phone number in case the call gets disconnected?"},
+      {t:'say', v:"What is the decision maker's name, phone number, and best email in case the call gets disconnected?"},
       {t:'input-contact'},
       {t:'note', v:"Once transferred, briefly repeat the key points above and move to scheduling."}
     ]
@@ -774,18 +747,44 @@ const STAGES = [
   {key:'no_response', label:'No Response', side:true},
   {key:'disqualified', label:'Disqualified', side:true, terminal:'loss'}
 ];
-const STAGE_RANK = {};
-STAGES.forEach((s,i)=>{ STAGE_RANK[s.key] = i; });
+function upgradeCallRecord(record){
+  return {
+    agencyName: record.agencyName || record.agency || '',
+    agencyPhoneNumber: record.agencyPhoneNumber || record.phone || '',
+    answeredBy: record.answeredBy || record.contact || '',
+    decisionMakerName: record.decisionMakerName || '',
+    decisionMakerPhone: record.decisionMakerPhone || '',
+    decisionMakerEmail: record.decisionMakerEmail || record.email || '',
+    counties: record.counties || '',
+    privateDuty: record.privateDuty || '',
+    notes: record.notes || '',
+    transcript: record.transcript || '',
+    loggedBy: record.loggedBy || '',
+    loggedAt: record.loggedAt || ''
+  };
+}
 
-function mapOutcomeToStage(outcome){
-  switch(outcome){
-    case 'Meeting Scheduled': return 'meeting_scheduled';
-    case 'Interested, follow up needed': return 'contacted';
-    case 'Not interested': return 'not_interested';
-    case 'No answer / Voicemail': return 'outreach_attempted';
-    case 'Not private duty': return 'disqualified';
-    default: return 'new_lead';
-  }
+function upgradeDealRecord(record){
+  return {
+    agencyName: record.agencyName || record.agency || '',
+    agencyPhoneNumber: record.agencyPhoneNumber || record.phone || '',
+    answeredBy: record.answeredBy || record.contact || '',
+    decisionMakerName: record.decisionMakerName || '',
+    decisionMakerPhone: record.decisionMakerPhone || '',
+    decisionMakerEmail: record.decisionMakerEmail || record.email || '',
+    counties: record.counties || '',
+    stage: record.stage || 'new_lead',
+    createdAt: record.createdAt || '',
+    updatedAt: record.updatedAt || '',
+    assignedSalesperson: record.assignedSalesperson || '',
+    leadSource: record.leadSource || '',
+    lastContactDate: record.lastContactDate || '',
+    nextFollowUpDate: record.nextFollowUpDate || '',
+    totalReferrals: record.totalReferrals || 0,
+    submittedReferrals: record.submittedReferrals || 0,
+    approvedReferrals: record.approvedReferrals || 0,
+    history: Array.isArray(record.history) ? record.history : []
+  };
 }
 
 async function upsertDealFromCall(callRecord){
@@ -801,8 +800,8 @@ async function upsertDealFromCall(callRecord){
       try{
         const r = await store.get(k);
         if(r && r.value){
-          const parsed = JSON.parse(r.value);
-          if((parsed.agency || '').trim().toLowerCase() === (callRecord.agency || '').trim().toLowerCase()){
+          const parsed = upgradeDealRecord(JSON.parse(r.value));
+          if((parsed.agencyName || '').trim().toLowerCase() === (callRecord.agencyName || '').trim().toLowerCase()){
             existingKey = k;
             existingDeal = parsed;
             break;
@@ -811,64 +810,48 @@ async function upsertDealFromCall(callRecord){
       }catch(e){ /* skip unreadable entry */ }
     }
 
-    const suggestedStage = mapOutcomeToStage(callRecord.outcome);
     const now = new Date().toISOString();
-    const historyNote = 'Call logged' + (callRecord.outcome ? ', outcome ' + callRecord.outcome : '') + (callRecord.loggedBy ? ', by ' + callRecord.loggedBy : '') + '.';
+    const historyNote = 'Call logged' + (callRecord.loggedBy ? ', by ' + callRecord.loggedBy : '') + '.';
 
     if(existingDeal){
-      const stageInfo = STAGES.find(s=>s.key===existingDeal.stage);
-      const isTerminal = stageInfo && stageInfo.terminal;
-      const suggestedInfo = STAGES.find(s=>s.key===suggestedStage) || {};
-      const currentIsSide = stageInfo && stageInfo.side;
-      let newStage = existingDeal.stage;
-      if(!isTerminal){
-        if(suggestedStage === 'not_interested' || suggestedStage === 'disqualified'){
-          newStage = suggestedStage;
-        } else if(suggestedInfo.side){
-          if(currentIsSide){ newStage = suggestedStage; }
-        } else if(currentIsSide){
-          newStage = suggestedStage;
-        } else if(STAGE_RANK[suggestedStage] > STAGE_RANK[existingDeal.stage]){
-          newStage = suggestedStage;
-        }
-      }
-      existingDeal.contact = callRecord.contact || existingDeal.contact;
-      existingDeal.phone = callRecord.phone || existingDeal.phone;
-      existingDeal.email = callRecord.email || existingDeal.email;
-      existingDeal.address = callRecord.address || existingDeal.address;
-      existingDeal.website = callRecord.website || existingDeal.website;
+      const newStage = existingDeal.stage || 'new_lead';
+      existingDeal.agencyName = callRecord.agencyName || existingDeal.agencyName;
+      existingDeal.agencyPhoneNumber = callRecord.agencyPhoneNumber || existingDeal.agencyPhoneNumber;
+      existingDeal.answeredBy = callRecord.answeredBy || existingDeal.answeredBy;
+      existingDeal.decisionMakerName = callRecord.decisionMakerName || existingDeal.decisionMakerName;
+      existingDeal.decisionMakerPhone = callRecord.decisionMakerPhone || existingDeal.decisionMakerPhone;
+      existingDeal.decisionMakerEmail = callRecord.decisionMakerEmail || existingDeal.decisionMakerEmail;
       existingDeal.assignedSalesperson = callRecord.loggedBy || existingDeal.assignedSalesperson;
       existingDeal.lastContactDate = now;
-      existingDeal.nextFollowUpDate = callRecord.nextFollowUpDate || existingDeal.nextFollowUpDate;
       existingDeal.counties = callRecord.counties || existingDeal.counties;
       existingDeal.stage = newStage;
       existingDeal.updatedAt = now;
       existingDeal.history = existingDeal.history || [];
       existingDeal.history.push({ts: now, stage:newStage, note: historyNote});
       await store.set(existingKey, JSON.stringify(existingDeal));
-      return { agency: existingDeal.agency, stageLabel: (STAGES.find(s=>s.key===newStage)||{}).label || newStage, key: existingKey, stage: newStage };
+      return { agencyName: existingDeal.agencyName, stageLabel: (STAGES.find(s=>s.key===newStage)||{}).label || newStage, key: existingKey, stage: newStage };
     } else {
       const id = Date.now() + '-' + Math.random().toString(36).slice(2,8);
       const dealKey = 'deals:' + id;
       const deal = {
-        agency: callRecord.agency,
-        contact: callRecord.contact,
-        phone: callRecord.phone,
-        email: callRecord.email,
-        address: callRecord.address,
-        website: callRecord.website,
+        agencyName: callRecord.agencyName,
+        agencyPhoneNumber: callRecord.agencyPhoneNumber,
+        answeredBy: callRecord.answeredBy,
+        decisionMakerName: callRecord.decisionMakerName,
+        decisionMakerPhone: callRecord.decisionMakerPhone,
+        decisionMakerEmail: callRecord.decisionMakerEmail,
         assignedSalesperson: callRecord.loggedBy,
         leadSource: 'GUIDE Model Outreach',
         lastContactDate: now,
-        nextFollowUpDate: callRecord.nextFollowUpDate || '',
+        nextFollowUpDate: '',
         counties: callRecord.counties,
-        stage: suggestedStage,
+        stage: 'new_lead',
         createdAt: now,
         updatedAt: now,
-        history: [{ts: now, stage: suggestedStage, note: 'Deal created. ' + historyNote}]
+        history: [{ts: now, stage: 'new_lead', note: 'Deal created. ' + historyNote}]
       };
       await store.set(dealKey, JSON.stringify(deal));
-      return { agency: deal.agency, stageLabel: (STAGES.find(s=>s.key===suggestedStage)||{}).label || suggestedStage, key: dealKey, stage: suggestedStage };
+      return { agencyName: deal.agencyName, stageLabel: 'New Lead', key: dealKey, stage: 'new_lead' };
     }
   }catch(e){
     return null;
@@ -889,7 +872,9 @@ async function loadDeals(){
       try{
         const r = await store.get(k);
         if(r && r.value){
-          const parsed = JSON.parse(r.value);
+          const raw = JSON.parse(r.value);
+          const parsed = upgradeDealRecord(raw);
+          if(!raw.agencyName) await store.set(k, JSON.stringify(parsed));
           parsed._key = k;
           deals.push(parsed);
         }
@@ -919,7 +904,7 @@ function renderPipelineStats(){
 function renderPipeline(){
   const board = document.getElementById('kanbanBoard');
   const search = document.getElementById('pipelineSearch').value.toLowerCase();
-  const filtered = allDeals.filter(d=> !search || ((d.agency || '') + ' ' + (d.contact || '')).toLowerCase().includes(search));
+  const filtered = allDeals.filter(d=> !search || [d.agencyName,d.answeredBy,d.decisionMakerName,d.decisionMakerPhone,d.decisionMakerEmail].join(' ').toLowerCase().includes(search));
 
   const cardHtml = (d)=>{
     const updated = d.updatedAt ? new Date(d.updatedAt).toLocaleDateString() : '';
@@ -930,15 +915,17 @@ function renderPipeline(){
     const moveOptions = STAGES.map(s=>`<option value="${s.key}" ${s.key===d.stage?'selected':''}>${escapeHtml(s.label)}</option>`).join('');
     return `
       <div class="deal-card" data-key="${d._key}" draggable="true">
-        <div class="agency"><span class="drag-grip" aria-hidden="true">⠿</span> ${escapeHtml(d.agency || 'Unnamed agency')}</div>
-        <div class="meta">${escapeHtml(d.contact || 'No contact yet')} &middot; Updated ${escapeHtml(updated)}</div>
+        <div class="agency"><span class="drag-grip" aria-hidden="true">⠿</span> ${escapeHtml(d.agencyName || 'Unnamed agency')}</div>
+        <div class="meta">Answered by ${escapeHtml(d.answeredBy || 'Not yet provided')} &middot; Updated ${escapeHtml(updated)}</div>
         <div class="card-move">
           <label class="card-move-label">Move to</label>
           <select class="card-move-select" data-key="${d._key}">${moveOptions}</select>
         </div>
         <div class="expand">
-          <div class="detail-row"><span class="k">Phone</span><span class="v mono">${escapeHtml(d.phone || 'Not yet provided')}</span></div>
-          <div class="detail-row"><span class="k">Email</span><span class="v">${escapeHtml(d.email || 'Not yet provided')}</span></div>
+          <div class="detail-row"><span class="k">Agency Phone</span><span class="v mono">${escapeHtml(d.agencyPhoneNumber || 'Not yet provided')}</span></div>
+          <div class="detail-row"><span class="k">Decision Maker</span><span class="v">${escapeHtml(d.decisionMakerName || 'Not yet provided')}</span></div>
+          <div class="detail-row"><span class="k">Decision Maker Phone</span><span class="v mono">${escapeHtml(d.decisionMakerPhone || 'Not yet provided')}</span></div>
+          <div class="detail-row"><span class="k">Decision Maker Email</span><span class="v">${escapeHtml(d.decisionMakerEmail || 'Not yet provided')}</span></div>
           <div class="detail-row"><span class="k">Counties</span><span class="v">${escapeHtml(d.counties || 'Not yet provided')}</span></div>
           <div style="margin-top:8px;margin-bottom:4px;font-weight:700;font-size:11.5px;color:var(--navy);">History</div>
           ${historyHtml || '<div class="history-line">No history yet.</div>'}
@@ -1115,16 +1102,16 @@ function renderStep(){
       `;
       if(l.t === 'input-contact') return `
         <div class="row2" style="margin:-2px 0 12px;">
-          <div class="field"><label>Contact full name</label><input type="text" id="stepContactInput" placeholder="First and last name"></div>
-          <div class="field"><label>Phone number</label><input type="tel" id="stepPhoneInput" placeholder="(954) 000 0000"></div>
+          <div class="field"><label>Decision Maker Name</label><input type="text" id="stepDecisionMakerNameInput" placeholder="First and last name"></div>
+          <div class="field"><label>Decision Maker Phone</label><input type="tel" id="stepDecisionMakerPhoneInput" placeholder="(954) 000-0000"></div>
         </div>
-        <div class="field" style="margin:-2px 0 12px;"><label>Email address</label><input type="email" id="stepEmailInput" placeholder="name@agency.com"></div>
+        <div class="field" style="margin:-2px 0 12px;"><label>Decision Maker Email</label><input type="email" id="stepDecisionMakerEmailInput" placeholder="name@agency.com"></div>
       `;
       return `<div class="note-line">${l.v}</div>`;
     }).join('') +
     (currentStep === STEPS.length - 1 ? `
       <button class="btn btn-red" style="margin-top:6px;" onclick="openScheduler()" type="button">Schedule with Dr. Erik</button>
-      <div class="note-line" style="margin-top:8px;">Opens in a small window over this page. If an email is entered in Call Details, it's copied to your clipboard first, just paste it into the calendar page.</div>
+      <div class="note-line" style="margin-top:8px;">Opens in a small window over this page. If a Decision Maker Email is entered in Call Details, it is copied to your clipboard first.</div>
     ` : '');
 
   const inlineCounties = document.getElementById('stepCountiesInput');
@@ -1143,27 +1130,27 @@ function renderStep(){
     });
   }
 
-  const inlineContact = document.getElementById('stepContactInput');
-  if(inlineContact){
-    inlineContact.value = document.getElementById('f_contact').value;
-    inlineContact.addEventListener('input', (e)=>{
-      document.getElementById('f_contact').value = e.target.value;
+  const inlineDecisionMakerName = document.getElementById('stepDecisionMakerNameInput');
+  if(inlineDecisionMakerName){
+    inlineDecisionMakerName.value = document.getElementById('f_decision_maker_name').value;
+    inlineDecisionMakerName.addEventListener('input', (e)=>{
+      document.getElementById('f_decision_maker_name').value = e.target.value;
     });
   }
-  const inlinePhone = document.getElementById('stepPhoneInput');
-  if(inlinePhone){
-    inlinePhone.value = document.getElementById('f_phone').value;
-    inlinePhone.addEventListener('input', (e)=>{
+  const inlineDecisionMakerPhone = document.getElementById('stepDecisionMakerPhoneInput');
+  if(inlineDecisionMakerPhone){
+    inlineDecisionMakerPhone.value = document.getElementById('f_decision_maker_phone').value;
+    inlineDecisionMakerPhone.addEventListener('input', (e)=>{
       const formatted = formatPhoneNumber(e.target.value);
       e.target.value = formatted;
-      document.getElementById('f_phone').value = formatted;
+      document.getElementById('f_decision_maker_phone').value = formatted;
     });
   }
-  const inlineEmail = document.getElementById('stepEmailInput');
-  if(inlineEmail){
-    inlineEmail.value = document.getElementById('f_email').value;
-    inlineEmail.addEventListener('input', (e)=>{
-      document.getElementById('f_email').value = e.target.value;
+  const inlineDecisionMakerEmail = document.getElementById('stepDecisionMakerEmailInput');
+  if(inlineDecisionMakerEmail){
+    inlineDecisionMakerEmail.value = document.getElementById('f_decision_maker_email').value;
+    inlineDecisionMakerEmail.addEventListener('input', (e)=>{
+      document.getElementById('f_decision_maker_email').value = e.target.value;
     });
   }
 
@@ -1186,24 +1173,28 @@ document.getElementById('nextStep').addEventListener('click', ()=>{
 });
 renderStep();
 
-document.getElementById('f_contact').addEventListener('input', (e)=>{
-  const inlineContact = document.getElementById('stepContactInput');
-  if(inlineContact && inlineContact.value !== e.target.value){
-    inlineContact.value = e.target.value;
+document.getElementById('f_decision_maker_name').addEventListener('input', (e)=>{
+  const inlineDecisionMakerName = document.getElementById('stepDecisionMakerNameInput');
+  if(inlineDecisionMakerName && inlineDecisionMakerName.value !== e.target.value){
+    inlineDecisionMakerName.value = e.target.value;
   }
 });
-document.getElementById('f_phone').addEventListener('input', (e)=>{
+document.getElementById('f_agency_phone_number').addEventListener('input', (e)=>{
   const formatted = formatPhoneNumber(e.target.value);
   e.target.value = formatted;
-  const inlinePhone = document.getElementById('stepPhoneInput');
-  if(inlinePhone && inlinePhone.value !== formatted){
-    inlinePhone.value = formatted;
+});
+document.getElementById('f_decision_maker_phone').addEventListener('input', (e)=>{
+  const formatted = formatPhoneNumber(e.target.value);
+  e.target.value = formatted;
+  const inlineDecisionMakerPhone = document.getElementById('stepDecisionMakerPhoneInput');
+  if(inlineDecisionMakerPhone && inlineDecisionMakerPhone.value !== formatted){
+    inlineDecisionMakerPhone.value = formatted;
   }
 });
-document.getElementById('f_email').addEventListener('input', (e)=>{
-  const inlineEmail = document.getElementById('stepEmailInput');
-  if(inlineEmail && inlineEmail.value !== e.target.value){
-    inlineEmail.value = e.target.value;
+document.getElementById('f_decision_maker_email').addEventListener('input', (e)=>{
+  const inlineDecisionMakerEmail = document.getElementById('stepDecisionMakerEmailInput');
+  if(inlineDecisionMakerEmail && inlineDecisionMakerEmail.value !== e.target.value){
+    inlineDecisionMakerEmail.value = e.target.value;
   }
 });
 
@@ -1239,7 +1230,7 @@ async function openScheduler(){
     showToast('The GoHighLevel sales calendar is not configured yet. Ask a manager to finish the Outlook calendar sync.');
     return;
   }
-  const emailField = document.getElementById('f_email');
+  const emailField = document.getElementById('f_decision_maker_email');
   const email = emailField ? emailField.value.trim() : '';
 
   if(email){
@@ -1379,11 +1370,8 @@ document.getElementById('genSummary').addEventListener('click', async ()=>{
   statusEl.className = 'ai-status show loading';
   statusEl.textContent = 'Summarizing the conversation...';
 
-  const prompt = `You are helping a home care partnership team summarize a business development phone call to a home care agency about the CMS GUIDE Model. Read the raw transcript below and return ONLY a JSON object, no markdown fences, no preamble, with these exact keys:
-"notes": a concise 3 to 5 sentence summary of what was discussed and any concerns the agency raised,
-"interest_level": one of "Hot", "Warm", "Cold", "N/A" based on tone and content,
-"outcome": one of "Meeting Scheduled", "Interested, follow up needed", "Not interested", "No answer / Voicemail", "Not private duty",
-"next_action": a short, specific next step.
+  const prompt = `You are helping a home care partnership team summarize a business development phone call to a home care agency about the CMS GUIDE Model. Read the raw transcript below and return ONLY a JSON object, no markdown fences, no preamble, with this exact key:
+  "notes": a concise 3 to 5 sentence summary of what was discussed and any concerns the agency raised.
 
 Transcript:
 """${transcript}"""`;
@@ -1405,29 +1393,11 @@ Transcript:
     const parsed = JSON.parse(clean);
 
     document.getElementById('f_notes').value = parsed.notes || '';
-    if(parsed.interest_level) document.getElementById('f_interest').value = parsed.interest_level;
-    if(parsed.outcome) document.getElementById('f_outcome').value = parsed.outcome;
-    if(parsed.next_action) document.getElementById('f_nextaction').value = parsed.next_action;
-
     statusEl.className = 'ai-status show ok';
     statusEl.textContent = 'Summary added below. Review and edit before saving.';
   }catch(e){
     const compact = transcript.replace(/\s+/g, ' ').trim();
-    const lower = compact.toLowerCase();
-    const interest = /very interested|schedule|book|meeting|send.*contract/.test(lower) ? 'Hot' :
-      /interested|follow up|send.*information|learn more/.test(lower) ? 'Warm' :
-      /not interested|do not call|no thanks/.test(lower) ? 'Cold' : 'N/A';
-    const outcome = /meeting|scheduled|booked/.test(lower) ? 'Meeting Scheduled' :
-      /not private duty/.test(lower) ? 'Not private duty' :
-      /not interested|do not call|no thanks/.test(lower) ? 'Not interested' :
-      /voicemail|no answer/.test(lower) ? 'No answer / Voicemail' : 'Interested, follow up needed';
-    const nextAction = outcome === 'Meeting Scheduled' ? 'Confirm the meeting and send preparation details.' :
-      outcome === 'Interested, follow up needed' ? 'Send the GUIDE partnership information and follow up within one week.' :
-      outcome === 'No answer / Voicemail' ? 'Attempt a second call and send an introductory email.' : 'No follow-up required unless requested.';
     document.getElementById('f_notes').value = compact.length > 700 ? compact.slice(0,697) + '...' : compact;
-    document.getElementById('f_interest').value = interest;
-    document.getElementById('f_outcome').value = outcome;
-    document.getElementById('f_nextaction').value = nextAction;
     statusEl.className = 'ai-status show ok';
     statusEl.textContent = 'Summary added below. Review and edit before saving.';
   }
@@ -1436,19 +1406,14 @@ Transcript:
 // ---------- Save / validate ----------
 function collectForm(){
   return {
-    agency: document.getElementById('f_agency').value.trim(),
-    contact: document.getElementById('f_contact').value.trim(),
-    phone: document.getElementById('f_phone').value.trim(),
-    email: document.getElementById('f_email').value.trim(),
-    address: document.getElementById('f_address').value.trim(),
-    website: document.getElementById('f_website').value.trim(),
+    agencyName: document.getElementById('f_agency_name').value.trim(),
+    agencyPhoneNumber: document.getElementById('f_agency_phone_number').value.trim(),
+    answeredBy: document.getElementById('f_answered_by').value.trim(),
+    decisionMakerName: document.getElementById('f_decision_maker_name').value.trim(),
+    decisionMakerPhone: document.getElementById('f_decision_maker_phone').value.trim(),
+    decisionMakerEmail: document.getElementById('f_decision_maker_email').value.trim(),
     counties: document.getElementById('f_counties').value.trim(),
     privateDuty: document.getElementById('f_privateduty').value,
-    interest: document.getElementById('f_interest').value,
-    outcome: document.getElementById('f_outcome').value,
-    meeting: document.getElementById('f_meeting').value,
-    nextAction: document.getElementById('f_nextaction').value.trim(),
-    nextFollowUpDate: document.getElementById('f_meeting').value || '',
     notes: document.getElementById('f_notes').value.trim(),
     transcript: finalTranscript.trim(),
     loggedBy: callerInput.value.trim(),
@@ -1457,13 +1422,10 @@ function collectForm(){
 }
 
 function clearForm(){
-  ['f_agency','f_contact','f_phone','f_email','f_address','f_website','f_counties','f_nextaction','f_notes'].forEach(id=>{
+  ['f_agency_name','f_agency_phone_number','f_answered_by','f_decision_maker_name','f_decision_maker_phone','f_decision_maker_email','f_counties','f_notes'].forEach(id=>{
     document.getElementById(id).value = '';
   });
-  ['f_privateduty','f_interest','f_outcome'].forEach(id=>{
-    document.getElementById(id).value = '';
-  });
-  document.getElementById('f_meeting').value = '';
+  document.getElementById('f_privateduty').value = '';
   finalTranscript = '';
   renderTranscript('');
   document.getElementById('aiStatus').className = 'ai-status';
@@ -1477,7 +1439,14 @@ document.getElementById('clearForm').addEventListener('click', clearForm);
 document.getElementById('saveCall').addEventListener('click', async ()=>{
   const record = collectForm();
   const valMsg = document.getElementById('validationMsg');
-  if(!record.agency || (!record.phone && !record.email)){
+  if(!record.agencyName || !record.agencyPhoneNumber || !record.answeredBy){
+    valMsg.textContent = 'Agency Name, Agency Phone Number, and Answered By are required.';
+    valMsg.classList.add('show');
+    return;
+  }
+  const decisionMakerEmailField = document.getElementById('f_decision_maker_email');
+  if(record.decisionMakerEmail && !decisionMakerEmailField.checkValidity()){
+    valMsg.textContent = 'Enter a valid Decision Maker Email.';
     valMsg.classList.add('show');
     return;
   }
@@ -1532,10 +1501,10 @@ document.getElementById('saveCall').addEventListener('click', async ()=>{
 
   saveBtn.textContent = 'Submitted';
   if(dealUpdate){
-    showToast(dealUpdate.agency + ' is now in "' + dealUpdate.stageLabel + '" on the Pipeline tab.');
+    showToast(dealUpdate.agencyName + ' is now in "' + dealUpdate.stageLabel + '" on the Pipeline tab.');
     highlightDealKey = dealUpdate.key || null;
   } else {
-    showToast(record.agency + ' submitted to the pipeline.');
+    showToast(record.agencyName + ' submitted to the pipeline.');
     highlightDealKey = null;
   }
   setTimeout(()=>{
@@ -1560,7 +1529,9 @@ async function loadLog(){
       try{
         const r = await store.get(k);
         if(r && r.value){
-          const parsed = JSON.parse(r.value);
+          const raw = JSON.parse(r.value);
+          const parsed = upgradeCallRecord(raw);
+          if(!raw.agencyName) await store.set(k, JSON.stringify(parsed));
           parsed._key = k;
           records.push(parsed);
         }
@@ -1577,16 +1548,9 @@ async function loadLog(){
 
 function renderStats(){
   document.getElementById('statTotal').textContent = allCalls.length;
-  document.getElementById('logStatMeetings').textContent = allCalls.filter(c=>c.outcome === 'Meeting Scheduled').length;
-  document.getElementById('statHot').textContent = allCalls.filter(c=>c.interest === 'Hot').length;
-  document.getElementById('statFollow').textContent = allCalls.filter(c=>c.outcome === 'Interested, follow up needed').length;
-}
-
-function badgeClass(level){
-  if(level === 'Hot') return 'hot';
-  if(level === 'Warm') return 'warm';
-  if(level === 'Cold') return 'cold';
-  return 'na';
+  document.getElementById('logStatAgencies').textContent = new Set(allCalls.map(c=>c.agencyName.toLowerCase()).filter(Boolean)).size;
+  document.getElementById('statDecisionMakers').textContent = allCalls.filter(c=>c.decisionMakerName).length;
+  document.getElementById('statDecisionMakerEmails').textContent = allCalls.filter(c=>c.decisionMakerEmail).length;
 }
 
 function renderLog(){
@@ -1595,8 +1559,11 @@ function renderLog(){
   const listEl = document.getElementById('logList');
 
   let filtered = allCalls.filter(c=>{
-    const matchesSearch = !search || (c.agency + ' ' + c.contact + ' ' + c.counties).toLowerCase().includes(search);
-    const matchesFilter = !filter || c.outcome === filter;
+    const matchesSearch = !search || [c.agencyName,c.answeredBy,c.decisionMakerName,c.decisionMakerPhone,c.decisionMakerEmail,c.counties].join(' ').toLowerCase().includes(search);
+    const matchesFilter = !filter ||
+      (filter === 'decision-maker' && !!c.decisionMakerName) ||
+      (filter === 'decision-maker-email' && !!c.decisionMakerEmail) ||
+      (filter === 'no-decision-maker' && !c.decisionMakerName);
     return matchesSearch && matchesFilter;
   });
 
@@ -1607,23 +1574,21 @@ function renderLog(){
 
   listEl.innerHTML = filtered.map(c=>{
     const when = c.loggedAt ? new Date(c.loggedAt).toLocaleString() : '';
-    const meeting = c.meeting ? new Date(c.meeting).toLocaleString() : 'Not scheduled';
     return `
     <div class="log-item" data-key="${c._key}">
       <div class="top">
         <div>
-          <div class="agency">${escapeHtml(c.agency || 'Unnamed agency')}</div>
-          <div class="meta">${escapeHtml(c.contact || 'No contact name')} &middot; ${escapeHtml(c.counties || 'No counties listed')}</div>
+          <div class="agency">${escapeHtml(c.agencyName || 'Unnamed agency')}</div>
+          <div class="meta">Answered by ${escapeHtml(c.answeredBy || 'Not provided')} &middot; ${escapeHtml(c.counties || 'No counties listed')}</div>
         </div>
-        <span class="badge ${badgeClass(c.interest)}">${c.interest || 'N/A'}</span>
       </div>
       <div class="details">
-        <div class="detail-row"><span class="k">Phone</span><span class="v mono">${escapeHtml(c.phone || '—')}</span></div>
-        <div class="detail-row"><span class="k">Email</span><span class="v">${escapeHtml(c.email || '—')}</span></div>
+        <div class="detail-row"><span class="k">Agency Phone</span><span class="v mono">${escapeHtml(c.agencyPhoneNumber || '—')}</span></div>
+        <div class="detail-row"><span class="k">Answered By</span><span class="v">${escapeHtml(c.answeredBy || '—')}</span></div>
+        <div class="detail-row"><span class="k">Decision Maker</span><span class="v">${escapeHtml(c.decisionMakerName || '—')}</span></div>
+        <div class="detail-row"><span class="k">Decision Maker Phone</span><span class="v mono">${escapeHtml(c.decisionMakerPhone || '—')}</span></div>
+        <div class="detail-row"><span class="k">Decision Maker Email</span><span class="v">${escapeHtml(c.decisionMakerEmail || '—')}</span></div>
         <div class="detail-row"><span class="k">Private duty</span><span class="v">${escapeHtml(c.privateDuty || '—')}</span></div>
-        <div class="detail-row"><span class="k">Outcome</span><span class="v">${escapeHtml(c.outcome || '—')}</span></div>
-        <div class="detail-row"><span class="k">Meeting</span><span class="v">${escapeHtml(meeting)}</span></div>
-        <div class="detail-row"><span class="k">Next action</span><span class="v">${escapeHtml(c.nextAction || '—')}</span></div>
         <div class="detail-row"><span class="k">Notes</span><span class="v">${escapeHtml(c.notes || '—')}</span></div>
         <div class="detail-row"><span class="k">Logged by</span><span class="v">${escapeHtml(c.loggedBy || '—')} on ${escapeHtml(when)}</span></div>
         <div class="footer-row">
@@ -1668,19 +1633,21 @@ document.getElementById('cancelNewLead').addEventListener('click', ()=>{
   document.getElementById('addLeadForm').style.display = 'none';
 });
 document.getElementById('saveNewLead').addEventListener('click', async ()=>{
-  const agency = document.getElementById('newLeadAgency').value.trim();
+  const agencyName = document.getElementById('newLeadAgency').value.trim();
   const counties = document.getElementById('newLeadCounties').value.trim();
-  if(!agency){
+  if(!agencyName){
     showToast('Enter an agency name first.');
     return;
   }
   const now = new Date().toISOString();
   const id = Date.now() + '-' + Math.random().toString(36).slice(2,8);
   const deal = {
-    agency: agency,
-    contact: '',
-    phone: '',
-    email: '',
+    agencyName,
+    agencyPhoneNumber: '',
+    answeredBy: '',
+    decisionMakerName: '',
+    decisionMakerPhone: '',
+    decisionMakerEmail: '',
     counties: counties,
     stage: 'new_lead',
     createdAt: now,
@@ -1696,7 +1663,7 @@ document.getElementById('saveNewLead').addEventListener('click', async ()=>{
     document.getElementById('newLeadAgency').value = '';
     document.getElementById('newLeadCounties').value = '';
     document.getElementById('addLeadForm').style.display = 'none';
-    showToast(agency + ' added as a New Lead.');
+    showToast(agencyName + ' added as a New Lead.');
     await loadDeals();
   }catch(e){
     showToast('Could not add the lead. Try again.');
@@ -1716,22 +1683,32 @@ function toCsvValue(val){
 }
 
 function exportCsvForGoHighLevel(){
-  const headers = ['Business Name','First Name','Last Name','Phone','Email','Tags','Notes'];
+  const headers = ['Business Name','First Name','Last Name','Phone','Email','Answered By','Agency Phone Number','Decision Maker Name','Decision Maker Phone','Decision Maker Email','Tags','Notes'];
   const rows = allCalls.map(c=>{
-    const nameParts = (c.contact || '').trim().split(/\s+/).filter(Boolean);
+    const nameParts = (c.decisionMakerName || c.answeredBy || '').trim().split(/\s+/).filter(Boolean);
     const firstName = nameParts[0] || '';
     const lastName = nameParts.slice(1).join(' ');
-    const tags = ['GUIDE Model Outreach', c.interest ? c.interest + ' Lead' : '', c.outcome || ''].filter(Boolean).join(', ');
-    const meeting = c.meeting ? new Date(c.meeting).toLocaleString() : '';
+    const tags = 'GUIDE Model Outreach';
     const notesParts = [
       c.counties ? 'Counties: ' + c.counties : '',
       c.privateDuty ? 'Private duty: ' + c.privateDuty : '',
-      meeting ? 'Meeting: ' + meeting : '',
-      c.nextAction ? 'Next action: ' + c.nextAction : '',
       c.notes ? 'Notes: ' + c.notes : '',
       c.loggedBy ? 'Logged by: ' + c.loggedBy : ''
     ].filter(Boolean).join(' | ');
-    return [c.agency || '', firstName, lastName, c.phone || '', c.email || '', tags, notesParts];
+    return [
+      c.agencyName || '',
+      firstName,
+      lastName,
+      c.decisionMakerPhone || c.agencyPhoneNumber || '',
+      c.decisionMakerEmail || '',
+      c.answeredBy || '',
+      c.agencyPhoneNumber || '',
+      c.decisionMakerName || '',
+      c.decisionMakerPhone || '',
+      c.decisionMakerEmail || '',
+      tags,
+      notesParts
+    ];
   });
   const csvLines = [headers, ...rows].map(row => row.map(toCsvValue).join(',')).join('\r\n');
   const blob = new Blob([csvLines], {type:'text/csv;charset=utf-8;'});
@@ -1772,7 +1749,7 @@ function renderPartners(){
   const statusFilter = document.getElementById('partnerStatus').value;
   const filtered = allDeals.filter(d=>{
     const status = partnerStatusFor(d);
-    const haystack = [d.agency,d.contact,d.phone,d.email].join(' ').toLowerCase();
+    const haystack = [d.agencyName,d.answeredBy,d.decisionMakerName,d.agencyPhoneNumber,d.decisionMakerPhone,d.decisionMakerEmail].join(' ').toLowerCase();
     return (!search || haystack.includes(search)) && (!stageFilter || d.stage === stageFilter) && (!statusFilter || status.key === statusFilter);
   });
   const active = allDeals.filter(d=>partnerStatusFor(d).key === 'active').length;
@@ -1792,8 +1769,8 @@ function renderPartners(){
     const stage = (STAGES.find(s=>s.key === d.stage) || {}).label || d.stage || 'New Lead';
     const date = value=> value ? new Date(value).toLocaleDateString() : '—';
     return '<tr>' +
-      '<td><strong>' + escapeHtml(d.agency || 'Unnamed agency') + '</strong><br><span class="muted">' + escapeHtml(d.phone || d.email || '') + '</span></td>' +
-      '<td>' + escapeHtml(d.contact || '—') + '</td>' +
+      '<td><strong>' + escapeHtml(d.agencyName || 'Unnamed agency') + '</strong><br><span class="muted">' + escapeHtml(d.agencyPhoneNumber || '') + '</span></td>' +
+      '<td>' + escapeHtml(d.decisionMakerName || '—') + '</td>' +
       '<td>' + escapeHtml(d.assignedSalesperson || 'Unassigned') + '</td>' +
       '<td>' + escapeHtml(stage) + '</td>' +
       '<td><span class="rate-pill">' + escapeHtml(status.label) + '</span></td>' +
@@ -1871,19 +1848,19 @@ async function loadDashboard(){
     return reps[key];
   };
 
-  // Calls and meetings, from call outcome that day
+  // Calls logged that day
   calls.forEach(c=>{
     if(!inRange(c.loggedAt, bounds)) return;
     const r = rep(c.loggedBy);
     r.calls++;
-    if(c.outcome === 'Meeting Scheduled') r.meetings++;
   });
 
-  // Emails sent and contracts, from deal history stage moves in range
+  // Meetings, emails, and contracts from pipeline stage moves in range
   deals.forEach(d=>{
     (d.history || []).forEach(h=>{
       if(!inRange(h.ts, bounds)) return;
-      const who = h.by || '';
+      const who = h.by || d.assignedSalesperson || '';
+      if(h.stage === 'meeting_scheduled'){ rep(who).meetings++; }
       if(h.stage === 'contacted'){ rep(who).emails++; }
       if(h.stage === 'contract_signed'){ rep(who).contracts++; }
     });
@@ -1960,7 +1937,7 @@ function updateDashNote(bounds){
   const endDisplay = new Date(bounds.end); endDisplay.setDate(endDisplay.getDate() - 1);
   const fmt = (d)=> d.toLocaleDateString();
   const label = (fmt(bounds.start) === fmt(endDisplay)) ? fmt(bounds.start) : (fmt(bounds.start) + ' to ' + fmt(endDisplay));
-  document.getElementById('dashNote').textContent = 'Showing ' + label + '. Calls and meetings are counted from the call outcome logged that day, by the rep named in "Logged by." Emails and contracts are counted when a rep moves a lead into that stage.';
+  document.getElementById('dashNote').textContent = 'Showing ' + label + '. Calls are counted when submitted. Meetings, emails, and contracts are counted when a rep moves a lead into the corresponding pipeline stage.';
 }
 
 document.querySelectorAll('.dash-range').forEach(btn=>{

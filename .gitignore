@@ -2,6 +2,8 @@
 
 # dependencies
 /node_modules
+/node_modules.incomplete/
+/.pnpm-store/
 /.pnp
 .pnp.*
 .yarn/*
@@ -27,6 +29,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+/dev.log
+/dev.err.log
+/site-package-*.tar.gz
 
 # env files (can opt-in for committing if needed)
 .env*
