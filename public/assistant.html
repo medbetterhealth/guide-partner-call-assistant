@@ -323,7 +323,6 @@
     <button class="tab-btn" data-view="partners">Partners</button>
     <button class="tab-btn" data-view="dashboard">Team Dashboard</button>
   </div>
-  <button class="btn btn-red" id="scheduleTopBtn" type="button" style="white-space:nowrap;" title="Copies the contact's email to your clipboard, then opens the calendar in a small window">Schedule with Dr. Erik</button>
 </div>
 
 <div class="wrap">
@@ -1257,8 +1256,6 @@ async function openScheduler(){
     popup.focus();
   }
 }
-
-document.getElementById('scheduleTopBtn').addEventListener('click', openScheduler);
 
 // ---------- Caller name (personal setting) ----------
 const callerInput = document.getElementById('callerName');

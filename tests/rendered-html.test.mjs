@@ -91,3 +91,13 @@ test("Schedule with Dr. Erik discovers the active HighLevel calendar securely", 
   assert.match(configRoute, /calendarUrl: calendar\?\.url \|\| ""/);
   assert.doesNotMatch(configRoute, /GHL_PRIVATE_TOKEN[^\n]*calendarUrl/);
 });
+
+test("Schedule with Dr. Erik appears only in Step 8", async () => {
+  const html = await readFile(new URL("public/assistant.html", root), "utf8");
+  const scheduleButtons = html.match(/>Schedule with Dr\. Erik<\/button>/g) || [];
+
+  assert.equal(scheduleButtons.length, 1);
+  assert.doesNotMatch(html, /scheduleTopBtn/);
+  assert.match(html, /currentStep === STEPS\.length - 1/);
+  assert.match(html, /onclick="openScheduler\(\)"/);
+});
