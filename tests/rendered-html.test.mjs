@@ -74,3 +74,20 @@ test("dependent views, CSV, and HighLevel routes use the new field model", async
   assert.match(submitRoute, /Decision Maker Email is invalid/);
   assert.match(submitRoute, /item\.name === "New Lead"/);
 });
+
+test("Schedule with Dr. Erik discovers the active HighLevel calendar securely", async () => {
+  const [html, configRoute] = await Promise.all([
+    readFile(new URL("public/assistant.html", root), "utf8"),
+    readFile(new URL("app/api/config/route.ts", root), "utf8"),
+  ]);
+
+  assert.match(html, /Schedule with Dr\. Erik/);
+  assert.match(html, /fetch\('\/api\/config'\)/);
+  assert.match(configRoute, /services\.leadconnectorhq\.com/);
+  assert.match(configRoute, /\/calendars\/\?locationId=/);
+  assert.match(configRoute, /Authorization: `Bearer \$\{token\}`/);
+  assert.match(configRoute, /Version: "v3"/);
+  assert.match(configRoute, /api\.leadconnectorhq\.com\/widget\/booking/);
+  assert.match(configRoute, /calendarUrl: calendar\?\.url \|\| ""/);
+  assert.doesNotMatch(configRoute, /GHL_PRIVATE_TOKEN[^\n]*calendarUrl/);
+});

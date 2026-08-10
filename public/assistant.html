@@ -1227,7 +1227,7 @@ function showToast(msg, duration = 3600){
 
 async function openScheduler(){
   if(!SCHEDULE_URL){
-    showToast('The GoHighLevel sales calendar is not configured yet. Ask a manager to finish the Outlook calendar sync.');
+    showToast('The active Dr. Erik calendar could not be found in GoHighLevel. Ask a manager to confirm the calendar name and status.');
     return;
   }
   const emailField = document.getElementById('f_decision_maker_email');
