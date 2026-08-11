@@ -729,33 +729,43 @@ const STEPS = [
 
 // ---------- Pipeline stages ----------
 const STAGES = [
-  {key:'outreach_attempted', label:'Outreach Attempted'},
   {key:'new_lead', label:'New Lead'},
+  {key:'outreach_made', label:'Outreach Made'},
   {key:'email_sent', label:'Email Sent'},
   {key:'meeting_scheduled', label:'Meeting Scheduled'},
-  {key:'partner_onboarding', label:'Partner Onboarding'},
+  {key:'meeting_held', label:'Meeting Held'},
+  {key:'onboarding_documents_signed', label:'Onboarding Documents Signed'},
+  {key:'submitted_to_medicare', label:'Submitted to Medicare'},
+  {key:'partner_training', label:'Partner Training'},
+  {key:'medicare_approved', label:'Medicare Approved'},
+  {key:'partner_onboarding_call', label:'Partner Onboarding Call'},
   {key:'active_partner', label:'Active Partner', terminal:'win'}
 ];
 
 const STAGE_ALIASES = {
-  outreach_attempted:'outreach_attempted',
   new_lead:'new_lead',
+  outreach_attempted:'outreach_made',
+  outreach_made:'outreach_made',
   contacted:'email_sent',
   qualified:'email_sent',
   email_sent:'email_sent',
   meeting_scheduled:'meeting_scheduled',
-  meeting_held:'meeting_scheduled',
-  pathway_pending:'partner_onboarding',
-  pathway_completed:'partner_onboarding',
-  contract_pending:'partner_onboarding',
-  contract_signed:'partner_onboarding',
-  submitted_medicare:'partner_onboarding',
-  medicare_approved:'partner_onboarding',
-  partner_onboarding:'partner_onboarding',
+  meeting_held:'meeting_held',
+  pathway_pending:'onboarding_documents_signed',
+  pathway_completed:'onboarding_documents_signed',
+  contract_pending:'onboarding_documents_signed',
+  contract_signed:'onboarding_documents_signed',
+  partner_onboarding:'onboarding_documents_signed',
+  onboarding_documents_signed:'onboarding_documents_signed',
+  submitted_medicare:'submitted_to_medicare',
+  submitted_to_medicare:'submitted_to_medicare',
+  partner_training:'partner_training',
+  medicare_approved:'medicare_approved',
+  partner_onboarding_call:'partner_onboarding_call',
   active_partner:'active_partner',
-  not_interested:'outreach_attempted',
-  no_response:'outreach_attempted',
-  disqualified:'outreach_attempted'
+  not_interested:'outreach_made',
+  no_response:'outreach_made',
+  disqualified:'outreach_made'
 };
 
 function normalizeStageKey(value){
@@ -905,7 +915,7 @@ async function loadDeals(){
 
 function renderPipelineStats(){
   const inStage = (key)=> allDeals.filter(d=>d.stage === key).length;
-  document.getElementById('statOutreach').textContent = inStage('outreach_attempted');
+  document.getElementById('statOutreach').textContent = inStage('outreach_made');
   document.getElementById('statEmails').textContent = inStage('email_sent');
   document.getElementById('statMeetings').textContent = inStage('meeting_scheduled');
   document.getElementById('statActive').textContent = inStage('active_partner');

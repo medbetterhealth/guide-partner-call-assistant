@@ -102,7 +102,7 @@ test("Schedule with Dr. Erik appears only in Step 8", async () => {
   assert.match(html, /onclick="openScheduler\(\)"/);
 });
 
-test("the assistant pipeline shows exactly the six requested stages in order", async () => {
+test("the assistant pipeline shows exactly the eleven requested stages in order", async () => {
   const html = await readFile(new URL("public/assistant.html", root), "utf8");
   const start = html.indexOf("const STAGES = [");
   const end = html.indexOf("];", start);
@@ -110,11 +110,42 @@ test("the assistant pipeline shows exactly the six requested stages in order", a
   const labels = [...stagesBlock.matchAll(/label:'([^']+)'/g)].map((match) => match[1]);
 
   assert.deepEqual(labels, [
-    "Outreach Attempted",
     "New Lead",
+    "Outreach Made",
     "Email Sent",
     "Meeting Scheduled",
-    "Partner Onboarding",
+    "Meeting Held",
+    "Onboarding Documents Signed",
+    "Submitted to Medicare",
+    "Partner Training",
+    "Medicare Approved",
+    "Partner Onboarding Call",
     "Active Partner",
   ]);
+});
+
+test("the secured HighLevel migration targets only the GUIDE pipeline and preserves records", async () => {
+  const route = await readFile(new URL("app/api/admin-pipeline/route.ts", root), "utf8");
+  const start = route.indexOf("const DESIRED_STAGES = [");
+  const end = route.indexOf("] as const;", start);
+  const stageBlock = route.slice(start, end);
+  const names = [...stageBlock.matchAll(/name: "([^"]+)"/g)].map((match) => match[1]);
+
+  assert.deepEqual(names, [
+    "New Lead",
+    "Outreach Made",
+    "Email Sent",
+    "Meeting Scheduled",
+    "Meeting Held",
+    "Onboarding Documents Signed",
+    "Submitted to Medicare",
+    "Partner Training",
+    "Medicare Approved",
+    "Partner Onboarding Call",
+    "Active Partner",
+  ]);
+  assert.match(route, /const PIPELINE_NAME = "GUIDE Partner Call Assistant"/);
+  assert.match(route, /Opportunity preservation verification failed/);
+  assert.match(route, /Another HighLevel pipeline changed unexpectedly/);
+  assert.doesNotMatch(route, /method: "DELETE"/);
 });
