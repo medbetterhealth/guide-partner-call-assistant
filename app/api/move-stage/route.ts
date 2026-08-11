@@ -74,7 +74,7 @@ export async function POST(request: Request) {
         pipelineId: pipeline.id,
         pipelineStageId: stage.id,
         name: `${deal.agencyName} — GUIDE Partnership`,
-        status: ["Not Interested", "Disqualified"].includes(deal.stageName) ? "lost" : "open",
+        status: deal.stageName === "Active Partner" ? "won" : "open",
       }),
     });
 

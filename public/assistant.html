@@ -454,10 +454,10 @@
   <!-- PIPELINE VIEW -->
   <div class="view" id="view-pipeline">
     <div class="stats" id="pipelineStats">
+      <div class="stat"><div class="num" id="statOutreach">0</div><div class="lbl">Outreach attempted</div></div>
       <div class="stat"><div class="num" id="statEmails">0</div><div class="lbl">Emails sent</div></div>
-      <div class="stat"><div class="num" id="statMeetings">0</div><div class="lbl">Meetings booked or held</div></div>
-      <div class="stat"><div class="num" id="statContracts">0</div><div class="lbl">Contracts signed</div></div>
-      <div class="stat"><div class="num" id="statSigned">0</div><div class="lbl">Medicare approved</div></div>
+      <div class="stat"><div class="num" id="statMeetings">0</div><div class="lbl">Meetings scheduled</div></div>
+      <div class="stat"><div class="num" id="statActive">0</div><div class="lbl">Active partners</div></div>
     </div>
 
     <div class="log-controls">
@@ -542,10 +542,10 @@
               <th>Rep</th>
               <th>Calls</th>
               <th>Quota</th>
-              <th>Meetings booked</th>
+              <th>Meetings scheduled</th>
               <th>Booking rate</th>
               <th>Emails sent</th>
-              <th>Contracts</th>
+              <th>Partners activated</th>
             </tr>
           </thead>
           <tbody id="dashTableBody"></tbody>
@@ -729,23 +729,38 @@ const STEPS = [
 
 // ---------- Pipeline stages ----------
 const STAGES = [
-  {key:'new_lead', label:'New Lead'},
   {key:'outreach_attempted', label:'Outreach Attempted'},
-  {key:'contacted', label:'Contacted'},
-  {key:'qualified', label:'Qualified'},
-  {key:'meeting_scheduled', label:'Meeting Booked'},
-  {key:'meeting_held', label:'Meeting Held'},
-  {key:'pathway_pending', label:'Partnership Pathway Pending'},
-  {key:'pathway_completed', label:'Partnership Pathway Completed'},
-  {key:'contract_pending', label:'Contract Pending'},
-  {key:'contract_signed', label:'Contract Signed'},
-  {key:'submitted_medicare', label:'Submitted to Medicare'},
-  {key:'medicare_approved', label:'Medicare Approved'},
-  {key:'active_partner', label:'Active Referral Partner', terminal:'win'},
-  {key:'not_interested', label:'Not Interested', side:true, terminal:'loss'},
-  {key:'no_response', label:'No Response', side:true},
-  {key:'disqualified', label:'Disqualified', side:true, terminal:'loss'}
+  {key:'new_lead', label:'New Lead'},
+  {key:'email_sent', label:'Email Sent'},
+  {key:'meeting_scheduled', label:'Meeting Scheduled'},
+  {key:'partner_onboarding', label:'Partner Onboarding'},
+  {key:'active_partner', label:'Active Partner', terminal:'win'}
 ];
+
+const STAGE_ALIASES = {
+  outreach_attempted:'outreach_attempted',
+  new_lead:'new_lead',
+  contacted:'email_sent',
+  qualified:'email_sent',
+  email_sent:'email_sent',
+  meeting_scheduled:'meeting_scheduled',
+  meeting_held:'meeting_scheduled',
+  pathway_pending:'partner_onboarding',
+  pathway_completed:'partner_onboarding',
+  contract_pending:'partner_onboarding',
+  contract_signed:'partner_onboarding',
+  submitted_medicare:'partner_onboarding',
+  medicare_approved:'partner_onboarding',
+  partner_onboarding:'partner_onboarding',
+  active_partner:'active_partner',
+  not_interested:'outreach_attempted',
+  no_response:'outreach_attempted',
+  disqualified:'outreach_attempted'
+};
+
+function normalizeStageKey(value){
+  return STAGE_ALIASES[value] || 'new_lead';
+}
 function upgradeCallRecord(record){
   return {
     agencyName: record.agencyName || record.agency || '',
@@ -772,7 +787,7 @@ function upgradeDealRecord(record){
     decisionMakerPhone: record.decisionMakerPhone || '',
     decisionMakerEmail: record.decisionMakerEmail || record.email || '',
     counties: record.counties || '',
-    stage: record.stage || 'new_lead',
+    stage: normalizeStageKey(record.stage),
     createdAt: record.createdAt || '',
     updatedAt: record.updatedAt || '',
     assignedSalesperson: record.assignedSalesperson || '',
@@ -782,7 +797,7 @@ function upgradeDealRecord(record){
     totalReferrals: record.totalReferrals || 0,
     submittedReferrals: record.submittedReferrals || 0,
     approvedReferrals: record.approvedReferrals || 0,
-    history: Array.isArray(record.history) ? record.history : []
+    history: Array.isArray(record.history) ? record.history.map(item=>({...item, stage:normalizeStageKey(item.stage)})) : []
   };
 }
 
@@ -873,7 +888,7 @@ async function loadDeals(){
         if(r && r.value){
           const raw = JSON.parse(r.value);
           const parsed = upgradeDealRecord(raw);
-          if(!raw.agencyName) await store.set(k, JSON.stringify(parsed));
+          if(!raw.agencyName || raw.stage !== parsed.stage) await store.set(k, JSON.stringify(parsed));
           parsed._key = k;
           deals.push(parsed);
         }
@@ -889,15 +904,11 @@ async function loadDeals(){
 }
 
 function renderPipelineStats(){
-  const passedOrAt = (keys)=> allDeals.filter(d=> keys.includes(d.stage)).length;
-  const emails = passedOrAt(['contacted','qualified','meeting_scheduled','meeting_held','pathway_pending','pathway_completed','contract_pending','contract_signed','submitted_medicare','medicare_approved','active_partner']);
-  const meetings = passedOrAt(['meeting_scheduled','meeting_held','pathway_pending','pathway_completed','contract_pending','contract_signed','submitted_medicare','medicare_approved','active_partner']);
-  const contracts = passedOrAt(['contract_signed','submitted_medicare','medicare_approved','active_partner']);
-  const signed = passedOrAt(['medicare_approved','active_partner']);
-  document.getElementById('statEmails').textContent = emails;
-  document.getElementById('statMeetings').textContent = meetings;
-  document.getElementById('statContracts').textContent = contracts;
-  document.getElementById('statSigned').textContent = signed;
+  const inStage = (key)=> allDeals.filter(d=>d.stage === key).length;
+  document.getElementById('statOutreach').textContent = inStage('outreach_attempted');
+  document.getElementById('statEmails').textContent = inStage('email_sent');
+  document.getElementById('statMeetings').textContent = inStage('meeting_scheduled');
+  document.getElementById('statActive').textContent = inStage('active_partner');
 }
 
 function renderPipeline(){
@@ -945,18 +956,11 @@ function renderPipeline(){
     `;
   };
 
-  const mainStages = STAGES.filter(s=>!s.side);
-  const sideStages = STAGES.filter(s=>s.side);
-
-  const mainHtml = mainStages.map((stage, idx)=>{
+  const mainHtml = STAGES.map((stage, idx)=>{
     return colHtml(stage, (idx+1) + '. ' + stage.label);
   }).join('');
 
-  const sideHtml = sideStages.map(stage=>{
-    return colHtml(stage, stage.label);
-  }).join('');
-
-  board.innerHTML = mainHtml + sideHtml;
+  board.innerHTML = mainHtml;
 
   let draggedKey = null;
 
@@ -1727,7 +1731,7 @@ function partnerStatusFor(deal){
   const followUp = deal.nextFollowUpDate ? new Date(deal.nextFollowUpDate).getTime() : 0;
   const last = deal.lastContactDate || deal.updatedAt;
   const inactive = last && (now - new Date(last).getTime()) > 30 * 86400000;
-  if(deal.stage === 'active_partner' || deal.stage === 'medicare_approved') return {key:'active', label:'Active', cls:'ok'};
+  if(deal.stage === 'active_partner') return {key:'active', label:'Active', cls:'ok'};
   if(followUp && followUp < now) return {key:'followup', label:'Follow-up overdue', cls:'warn'};
   if(inactive) return {key:'inactive', label:'No recent activity', cls:'warn'};
   return {key:'pending', label:'In progress', cls:''};
@@ -1826,12 +1830,12 @@ async function loadDashboard(){
   for(const k of callKeys){
     try{ const r = await store.get(k); if(r && r.value) calls.push(JSON.parse(r.value)); }catch(e){}
   }
-  // Gather all deals (for email/contract stage moves from history)
+  // Gather all deals (for pipeline-stage activity from history)
   let dealKeys = [];
   try{ const r = await store.list('deals:'); dealKeys = (r && r.keys) ? r.keys : []; }catch(e){ dealKeys = []; }
   const deals = [];
   for(const k of dealKeys){
-    try{ const r = await store.get(k); if(r && r.value) deals.push(JSON.parse(r.value)); }catch(e){}
+    try{ const r = await store.get(k); if(r && r.value) deals.push(upgradeDealRecord(JSON.parse(r.value))); }catch(e){}
   }
 
   const bounds = dashDateBounds();
@@ -1841,7 +1845,7 @@ async function loadDashboard(){
   const reps = {};
   const rep = (name)=>{
     const key = name || 'Unattributed';
-    if(!reps[key]) reps[key] = { name: key, calls:0, meetings:0, emails:0, contracts:0 };
+    if(!reps[key]) reps[key] = { name: key, calls:0, meetings:0, emails:0, partners:0 };
     return reps[key];
   };
 
@@ -1852,14 +1856,14 @@ async function loadDashboard(){
     r.calls++;
   });
 
-  // Meetings, emails, and contracts from pipeline stage moves in range
+  // Meetings, emails, and partner activations from pipeline stage moves in range
   deals.forEach(d=>{
     (d.history || []).forEach(h=>{
       if(!inRange(h.ts, bounds)) return;
       const who = h.by || d.assignedSalesperson || '';
       if(h.stage === 'meeting_scheduled'){ rep(who).meetings++; }
-      if(h.stage === 'contacted'){ rep(who).emails++; }
-      if(h.stage === 'contract_signed'){ rep(who).contracts++; }
+      if(h.stage === 'email_sent'){ rep(who).emails++; }
+      if(h.stage === 'active_partner'){ rep(who).partners++; }
     });
   });
 
@@ -1867,9 +1871,9 @@ async function loadDashboard(){
 
   // Totals
   const totals = rows.reduce((acc,r)=>{
-    acc.calls += r.calls; acc.meetings += r.meetings; acc.emails += r.emails; acc.contracts += r.contracts;
+    acc.calls += r.calls; acc.meetings += r.meetings; acc.emails += r.emails; acc.partners += r.partners;
     return acc;
-  }, {calls:0, meetings:0, emails:0, contracts:0});
+  }, {calls:0, meetings:0, emails:0, partners:0});
   const teamRate = totals.calls ? Math.round((totals.meetings / totals.calls) * 100) : 0;
 
   // Top summary cards
@@ -1909,7 +1913,7 @@ async function loadDashboard(){
         <td class="big">${r.meetings}</td>
         <td><span class="rate-pill" style="${rateColor(rate)}">${rate}%</span></td>
         <td>${r.emails}</td>
-        <td>${r.contracts}</td>
+        <td>${r.partners}</td>
       </tr>
     `;
   };
@@ -1922,7 +1926,7 @@ async function loadDashboard(){
       <td class="big">${totals.meetings}</td>
       <td><span class="rate-pill" style="${rateColor(teamRate)}">${teamRate}%</span></td>
       <td>${totals.emails}</td>
-      <td>${totals.contracts}</td>
+      <td>${totals.partners}</td>
     </tr>
   `;
 
@@ -1934,7 +1938,7 @@ function updateDashNote(bounds){
   const endDisplay = new Date(bounds.end); endDisplay.setDate(endDisplay.getDate() - 1);
   const fmt = (d)=> d.toLocaleDateString();
   const label = (fmt(bounds.start) === fmt(endDisplay)) ? fmt(bounds.start) : (fmt(bounds.start) + ' to ' + fmt(endDisplay));
-  document.getElementById('dashNote').textContent = 'Showing ' + label + '. Calls are counted when submitted. Meetings, emails, and contracts are counted when a rep moves a lead into the corresponding pipeline stage.';
+  document.getElementById('dashNote').textContent = 'Showing ' + label + '. Calls are counted when submitted. Meetings, emails, and active partners are counted when a rep moves a lead into the corresponding pipeline stage.';
 }
 
 document.querySelectorAll('.dash-range').forEach(btn=>{

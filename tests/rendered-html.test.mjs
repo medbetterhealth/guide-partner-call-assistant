@@ -101,3 +101,20 @@ test("Schedule with Dr. Erik appears only in Step 8", async () => {
   assert.match(html, /currentStep === STEPS\.length - 1/);
   assert.match(html, /onclick="openScheduler\(\)"/);
 });
+
+test("the assistant pipeline shows exactly the six requested stages in order", async () => {
+  const html = await readFile(new URL("public/assistant.html", root), "utf8");
+  const start = html.indexOf("const STAGES = [");
+  const end = html.indexOf("];", start);
+  const stagesBlock = html.slice(start, end);
+  const labels = [...stagesBlock.matchAll(/label:'([^']+)'/g)].map((match) => match[1]);
+
+  assert.deepEqual(labels, [
+    "Outreach Attempted",
+    "New Lead",
+    "Email Sent",
+    "Meeting Scheduled",
+    "Partner Onboarding",
+    "Active Partner",
+  ]);
+});
