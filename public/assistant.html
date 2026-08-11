@@ -245,7 +245,7 @@
   }
   .kanban-col-header .stage-name{position:relative;flex:1;line-height:1.35;}
   .kanban-col-header .stage-name.has-description{
-    cursor:help;text-decoration:underline dotted;text-underline-offset:3px;
+    cursor:help;
   }
   .kanban-col-header .stage-name.has-description::after{
     content:attr(data-tooltip);position:absolute;left:0;top:calc(100% + 8px);z-index:20;
@@ -265,8 +265,16 @@
   .kanban-col.win .kanban-col-header{color:var(--success);}
   .kanban-col.side .kanban-col-header{color:var(--red-dark);}
   .kanban-cards{min-height:56px;max-height:420px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-right:2px;border-radius:8px;}
-  .kanban-col{transition:background .12s, box-shadow .12s;}
-  .kanban-col.drop-active{box-shadow:0 0 0 2px var(--navy) inset;background:#DCE6F5;}
+  .kanban-stage-target{transition:background .12s,box-shadow .12s;}
+  .kanban-stage-target.drop-active{box-shadow:0 0 0 2px var(--navy) inset;background:#DCE6F5;}
+  .kanban-group-col{background:#F3F1F8;border:1.5px solid #9D8CC2;}
+  .kanban-substages{display:flex;flex-direction:column;gap:10px;}
+  .kanban-substage{
+    background:rgba(255,255,255,.48);border:1px solid rgba(157,140,194,.22);
+    border-radius:9px;padding:10px;
+  }
+  .kanban-substage-header{margin-bottom:8px;padding:0;font-size:11.5px;}
+  .kanban-substage .kanban-cards{max-height:300px;}
   .card-move{margin-top:8px;}
   .card-move-label{display:block;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.3px;margin-bottom:3px;}
   .card-move-select{width:100%;padding:5px 7px;font-size:12px;border:1.5px solid var(--border);border-radius:6px;font-family:'Inter';background:#fff;color:var(--ink);cursor:pointer;}
@@ -973,24 +981,53 @@ function renderPipeline(){
     `;
   };
 
+  const stageNameHtml = (stage, label)=>{
+    const description = stage.description || '';
+    const helpClass = description ? ' has-description' : '';
+    const helpAttrs = description ? ` tabindex="0" aria-label="${escapeAttr(stage.step + ' ' + stage.label + '. ' + description)}" data-tooltip="${escapeAttr(description)}"` : '';
+    return `<span class="stage-name${helpClass}"${helpAttrs}>${escapeHtml(label)}</span>`;
+  };
+
   const colHtml = (stage, label)=>{
     const dealsInStage = filtered.filter(d=>d.stage === stage.key);
     const colClass = stage.terminal === 'win' ? 'win' : (stage.side ? 'side' : '');
     const cards = dealsInStage.map(cardHtml).join('');
-    const description = stage.description || '';
-    const helpClass = description ? ' has-description' : '';
-    const helpAttrs = description ? ` tabindex="0" title="${escapeAttr(description)}" data-tooltip="${escapeAttr(description)}"` : '';
     return `
-      <div class="kanban-col ${colClass}" data-stage="${stage.key}">
-        <div class="kanban-col-header"><span class="stage-name${helpClass}"${helpAttrs}>${escapeHtml(label)}</span><span class="count">${dealsInStage.length}</span></div>
+      <div class="kanban-col kanban-stage-target ${colClass}" data-stage="${stage.key}">
+        <div class="kanban-col-header">${stageNameHtml(stage, label)}<span class="count">${dealsInStage.length}</span></div>
         <div class="kanban-cards" data-stage="${stage.key}">${cards || '<div class="kanban-empty">No leads yet</div>'}</div>
       </div>
     `;
   };
 
-  const mainHtml = STAGES.map((stage)=>{
-    return colHtml(stage, stage.step + ' ' + stage.label);
-  }).join('');
+  const groupedStages = STAGES.filter((stage)=> ['3.a','3.b','3.c'].includes(stage.step));
+  const groupedStageKeys = new Set(groupedStages.map((stage)=>stage.key));
+  const groupedColHtml = ()=>{
+    const totalDeals = groupedStages.reduce((total, stage)=> total + filtered.filter((deal)=>deal.stage === stage.key).length, 0);
+    const substages = groupedStages.map((stage)=>{
+      const dealsInStage = filtered.filter((deal)=>deal.stage === stage.key);
+      const cards = dealsInStage.map(cardHtml).join('');
+      return `
+        <div class="kanban-substage kanban-stage-target" data-stage="${stage.key}">
+          <div class="kanban-col-header kanban-substage-header">${stageNameHtml(stage, stage.step + ' ' + stage.label)}</div>
+          <div class="kanban-cards" data-stage="${stage.key}">${cards || '<div class="kanban-empty">No leads yet</div>'}</div>
+        </div>
+      `;
+    }).join('');
+    return `
+      <div class="kanban-col kanban-group-col">
+        <div class="kanban-col-header"><span class="stage-name">3. Next Contact / Email Sent</span><span class="count">${totalDeals}</span></div>
+        <div class="kanban-substages">${substages}</div>
+      </div>
+    `;
+  };
+
+  const mainHtml = STAGES.reduce((html, stage)=>{
+    if(groupedStageKeys.has(stage.key)){
+      return stage.key === groupedStages[0].key ? html + groupedColHtml() : html;
+    }
+    return html + colHtml(stage, stage.step + ' ' + stage.label);
+  }, '');
 
   board.innerHTML = mainHtml;
 
@@ -1024,7 +1061,7 @@ function renderPipeline(){
     });
     card.addEventListener('dragend', ()=>{
       card.classList.remove('dragging');
-      board.querySelectorAll('.kanban-col').forEach(c=>c.classList.remove('drop-active'));
+      board.querySelectorAll('.kanban-stage-target').forEach(c=>c.classList.remove('drop-active'));
     });
   });
 
@@ -1039,7 +1076,7 @@ function renderPipeline(){
     await moveDeal(key, targetStage);
   };
 
-  board.querySelectorAll('.kanban-col').forEach(colEl=>{
+  board.querySelectorAll('.kanban-stage-target').forEach(colEl=>{
     colEl.addEventListener('dragover', (e)=>{
       e.preventDefault();
       if(e.dataTransfer) e.dataTransfer.dropEffect = 'move';

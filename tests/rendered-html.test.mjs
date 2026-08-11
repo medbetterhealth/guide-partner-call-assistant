@@ -136,6 +136,11 @@ test("the assistant pipeline shows the requested numbered stages and hover guida
   assert.match(stagesBlock, /You spoke with the gatekeeper or decision maker and they clearly declined\./);
   assert.match(html, /data-tooltip="\$\{escapeAttr\(description\)\}"/);
   assert.match(html, /stage-name\.has-description:hover::after/);
+  assert.match(html, /3\. Next Contact \/ Email Sent/);
+  assert.match(html, /class="kanban-col kanban-group-col"/);
+  assert.match(html, /class="kanban-substage kanban-stage-target"/);
+  assert.doesNotMatch(html, /text-decoration:underline/);
+  assert.doesNotMatch(html, /title="\$\{escapeAttr\(description\)\}"/);
 });
 
 test("the secured HighLevel migration targets only the GUIDE pipeline and preserves records", async () => {
