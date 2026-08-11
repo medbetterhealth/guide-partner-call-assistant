@@ -184,3 +184,20 @@ test("the secured HighLevel migration targets only the GUIDE pipeline and preser
   assert.match(route, /\["Onboarding Documents Signed", "Partner Onboarding"\]/);
   assert.doesNotMatch(route, /method: "DELETE"/);
 });
+
+test("clear and delete controls safely cover unsaved and saved assistant details", async () => {
+  const html = await readFile(new URL("public/assistant.html", root), "utf8");
+
+  assert.match(html, /id="clearForm">Clear all fields<\/button>/);
+  assert.match(html, /window\.confirm\('Clear all unsaved call details\?'\)/);
+  assert.match(html, /class="btn btn-danger-outline btn-sm delete-btn"/);
+  assert.match(html, /class="btn btn-danger-outline btn-sm deal-delete-btn"/);
+  assert.match(html, /class="btn btn-danger-outline btn-sm partner-delete-btn"/);
+  assert.match(html, /async function deleteDealFromAssistant\(key, button\)/);
+  assert.match(html, /await store\.list\('calls:'\)/);
+  assert.match(html, /if\(sameRecord\) await store\.delete\(callKey\)/);
+  assert.match(html, /GoHighLevel contact and opportunity will not be deleted/);
+  assert.match(html, /GoHighLevel was not changed/);
+  assert.match(html, /<th>Actions<\/th>/);
+  assert.match(html, /colspan="10"/);
+});

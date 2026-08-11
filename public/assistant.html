@@ -122,6 +122,7 @@
   .btn-red{background:var(--red);color:#fff;}
   .btn-ghost{background:#EDF1F5;color:var(--navy);}
   .btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--muted);}
+  .btn-danger-outline{background:#fff;border:1.5px solid #D8A4A8;color:var(--red-dark);}
   .btn-sm{padding:7px 12px;font-size:12.5px;}
 
   /* Form */
@@ -297,6 +298,7 @@
     margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:12px;display:none;
   }
   .deal-card.open .expand{display:block;}
+  .record-actions{display:flex;justify-content:flex-end;margin-top:10px;padding-top:9px;border-top:1px solid var(--border);}
   .history-line{color:var(--muted);margin-bottom:4px;line-height:1.5;}
   .kanban-empty{font-size:12px;color:var(--muted);text-align:center;padding:16px 4px;border:1px dashed var(--border);border-radius:8px;}
 
@@ -411,7 +413,7 @@
         <div class="validation" id="validationMsg">Agency Name and Agency Phone Number are required.</div>
         <div class="form-actions">
           <button class="btn btn-red" id="saveCall" style="flex:1;">Submit call to pipeline</button>
-          <button class="btn btn-outline" id="clearForm">Clear</button>
+          <button class="btn btn-outline" id="clearForm">Clear all fields</button>
         </div>
       </div>
     </div>
@@ -507,6 +509,7 @@
     </div>
 
     <div class="kanban-board" id="kanbanBoard"></div>
+    <p class="footnote">Delete saved details removes the agency and its saved call entries from this assistant only. It does not delete the GoHighLevel contact or opportunity.</p>
   </div>
 
   <!-- PARTNERS VIEW -->
@@ -527,12 +530,12 @@
     <div class="card" style="padding:0;overflow:hidden;">
       <div class="dash-table-wrap">
         <table class="dash-table">
-          <thead><tr><th>Agency</th><th>Decision Maker</th><th>Salesperson</th><th>Stage</th><th>Partner status</th><th>Referrals</th><th>Approval rate</th><th>Last contact</th><th>Next follow-up</th></tr></thead>
+          <thead><tr><th>Agency</th><th>Decision Maker</th><th>Salesperson</th><th>Stage</th><th>Partner status</th><th>Referrals</th><th>Approval rate</th><th>Last contact</th><th>Next follow-up</th><th>Actions</th></tr></thead>
           <tbody id="partnersTableBody"></tbody>
         </table>
       </div>
     </div>
-    <p class="footnote">Approval rate = approved referrals ÷ valid submitted referrals. Incomplete or invalid records are excluded.</p>
+    <p class="footnote">Approval rate = approved referrals ÷ valid submitted referrals. Incomplete or invalid records are excluded. Delete saved details affects this assistant only and leaves GoHighLevel unchanged.</p>
   </div>
 
   <!-- TEAM DASHBOARD VIEW -->
@@ -974,6 +977,9 @@ function renderPipeline(){
           <div class="detail-row"><span class="k">Counties</span><span class="v">${escapeHtml(d.counties || 'Not yet provided')}</span></div>
           <div style="margin-top:8px;margin-bottom:4px;font-weight:700;font-size:11.5px;color:var(--navy);">History</div>
           ${historyHtml || '<div class="history-line">No history yet.</div>'}
+          <div class="record-actions">
+            <button class="btn btn-danger-outline btn-sm deal-delete-btn" data-key="${escapeAttr(d._key)}">Delete saved details</button>
+          </div>
         </div>
       </div>
     `;
@@ -1040,11 +1046,18 @@ function renderPipeline(){
     });
   });
 
+  board.querySelectorAll('.deal-delete-btn').forEach(btn=>{
+    btn.addEventListener('click', async (e)=>{
+      e.stopPropagation();
+      await deleteDealFromAssistant(btn.dataset.key, btn);
+    });
+  });
+
   board.querySelectorAll('.deal-card').forEach(card=>{
     let dragStarted = false;
 
     card.addEventListener('click', (e)=>{
-      if(e.target.closest('.card-move')) return;
+      if(e.target.closest('.card-move, .record-actions')) return;
       if(dragStarted){ dragStarted = false; return; }
       card.classList.toggle('open');
     });
@@ -1126,6 +1139,59 @@ async function moveDeal(key, newStageKey){
     await loadDeals();
   }catch(e){
     showToast((e && e.message) ? e.message : 'Could not update the pipeline. Try again.');
+  }
+}
+
+function normalizeRecordName(value){
+  return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+function normalizeRecordPhone(value){
+  return String(value || '').replace(/\D/g, '');
+}
+
+async function deleteDealFromAssistant(key, button){
+  const deal = allDeals.find(d=>d._key === key);
+  if(!deal) return;
+  const agencyName = deal.agencyName || 'this agency';
+  const confirmed = window.confirm(
+    'Delete ' + agencyName + ' and its saved call entries from this assistant?\n\n' +
+    'The GoHighLevel contact and opportunity will not be deleted.'
+  );
+  if(!confirmed) return;
+
+  if(button){
+    button.disabled = true;
+    button.textContent = 'Deleting...';
+  }
+
+  try{
+    await store.delete(key);
+    const targetName = normalizeRecordName(deal.agencyName);
+    const targetPhone = normalizeRecordPhone(deal.agencyPhoneNumber);
+    const keysRes = await store.list('calls:');
+    const callKeys = (keysRes && keysRes.keys) ? keysRes.keys : [];
+    for(const callKey of callKeys){
+      try{
+        const response = await store.get(callKey);
+        if(!response || !response.value) continue;
+        const call = upgradeCallRecord(JSON.parse(response.value));
+        const sameName = targetName && normalizeRecordName(call.agencyName) === targetName;
+        const callPhone = normalizeRecordPhone(call.agencyPhoneNumber);
+        const sameRecord = sameName && (!targetPhone || !callPhone || callPhone === targetPhone);
+        if(sameRecord) await store.delete(callKey);
+      }catch(e){ /* leave unreadable or unrelated call entries untouched */ }
+    }
+    await loadDeals();
+    await loadLog();
+    renderPartners();
+    showToast('Saved details removed from the assistant. GoHighLevel was not changed.', 5200);
+  }catch(e){
+    if(button){
+      button.disabled = false;
+      button.textContent = 'Delete saved details';
+    }
+    showToast('Could not delete the saved details. Try again.');
   }
 }
 
@@ -1505,7 +1571,16 @@ function clearForm(){
   renderStep();
 }
 
-document.getElementById('clearForm').addEventListener('click', clearForm);
+function hasUnsavedCallDetails(){
+  const ids = ['f_agency_name','f_agency_phone_number','f_answered_by','f_decision_maker_name','f_decision_maker_phone','f_decision_maker_email','f_counties','f_notes'];
+  return ids.some(id=>document.getElementById(id).value.trim()) ||
+    !!document.getElementById('f_privateduty').value ||
+    !!finalTranscript.trim();
+}
+
+document.getElementById('clearForm').addEventListener('click', ()=>{
+  if(!hasUnsavedCallDetails() || window.confirm('Clear all unsaved call details?')) clearForm();
+});
 
 document.getElementById('saveCall').addEventListener('click', async ()=>{
   const record = collectForm();
@@ -1663,7 +1738,7 @@ function renderLog(){
         <div class="detail-row"><span class="k">Notes</span><span class="v">${escapeHtml(c.notes || '—')}</span></div>
         <div class="detail-row"><span class="k">Logged by</span><span class="v">${escapeHtml(c.loggedBy || '—')} on ${escapeHtml(when)}</span></div>
         <div class="footer-row">
-          <button class="btn btn-outline btn-sm delete-btn" data-key="${c._key}">Delete entry</button>
+          <button class="btn btn-danger-outline btn-sm delete-btn" data-key="${escapeAttr(c._key)}">Delete entry</button>
         </div>
       </div>
     </div>`;
@@ -1679,10 +1754,12 @@ function renderLog(){
     btn.addEventListener('click', async (e)=>{
       e.stopPropagation();
       const key = btn.dataset.key;
+      if(!window.confirm('Delete this call log entry from the assistant?\n\nThe GoHighLevel contact and opportunity will not be deleted.')) return;
       btn.textContent = 'Deleting...';
       try{
         await store.delete(key);
         await loadLog();
+        showToast('Call log entry removed from the assistant. GoHighLevel was not changed.', 5200);
       }catch(err){
         btn.textContent = 'Could not delete';
       }
@@ -1809,7 +1886,7 @@ function partnerStatusFor(deal){
 
 async function loadPartners(){
   const body = document.getElementById('partnersTableBody');
-  body.innerHTML = '<tr><td colspan="9" class="dash-empty">Loading partners...</td></tr>';
+  body.innerHTML = '<tr><td colspan="10" class="dash-empty">Loading partners...</td></tr>';
   await loadDeals();
   renderPartners();
 }
@@ -1830,7 +1907,7 @@ function renderPartners(){
     '<div class="stat"><div class="num">' + active + '</div><div class="lbl">Active partners</div></div>' +
     '<div class="stat"><div class="num">' + overdue + '</div><div class="lbl">Follow-ups overdue</div></div>';
   const body = document.getElementById('partnersTableBody');
-  if(!filtered.length){ body.innerHTML = '<tr><td colspan="9" class="dash-empty">No partners match these filters.</td></tr>'; return; }
+  if(!filtered.length){ body.innerHTML = '<tr><td colspan="10" class="dash-empty">No partners match these filters.</td></tr>'; return; }
   body.innerHTML = filtered.map(d=>{
     const status = partnerStatusFor(d);
     const total = Number(d.totalReferrals || 0);
@@ -1846,8 +1923,14 @@ function renderPartners(){
       '<td>' + escapeHtml(stage) + '</td>' +
       '<td><span class="rate-pill">' + escapeHtml(status.label) + '</span></td>' +
       '<td>' + total + '</td><td>' + rate + '</td>' +
-      '<td>' + date(d.lastContactDate || d.updatedAt) + '</td><td>' + date(d.nextFollowUpDate) + '</td></tr>';
+      '<td>' + date(d.lastContactDate || d.updatedAt) + '</td><td>' + date(d.nextFollowUpDate) + '</td>' +
+      '<td><button class="btn btn-danger-outline btn-sm partner-delete-btn" data-key="' + escapeAttr(d._key) + '">Delete</button></td></tr>';
   }).join('');
+  body.querySelectorAll('.partner-delete-btn').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      await deleteDealFromAssistant(btn.dataset.key, btn);
+    });
+  });
 }
 
 const partnerStage = document.getElementById('partnerStage');
