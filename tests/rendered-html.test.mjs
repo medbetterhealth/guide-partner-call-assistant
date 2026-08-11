@@ -107,17 +107,20 @@ test("Schedule with Dr. Erik appears only in Step 8", async () => {
   assert.match(html, /onclick="openScheduler\(\)"/);
 });
 
-test("the assistant pipeline shows exactly the eleven requested stages in order", async () => {
+test("the assistant pipeline shows the requested numbered stages and hover guidance", async () => {
   const html = await readFile(new URL("public/assistant.html", root), "utf8");
   const start = html.indexOf("const STAGES = [");
   const end = html.indexOf("];", start);
   const stagesBlock = html.slice(start, end);
   const labels = [...stagesBlock.matchAll(/label:'([^']+)'/g)].map((match) => match[1]);
+  const steps = [...stagesBlock.matchAll(/step:'([^']+)'/g)].map((match) => match[1]);
 
   assert.deepEqual(labels, [
     "New Lead",
     "Outreach Made",
-    "Email Sent",
+    "Decision Maker Identified – Email Sent",
+    "Decision Maker Contacted – Email Sent",
+    "Not Interested",
     "Meeting Scheduled",
     "Meeting Held",
     "Onboarding Documents Signed",
@@ -127,6 +130,12 @@ test("the assistant pipeline shows exactly the eleven requested stages in order"
     "Partner Onboarding Call",
     "Active Partner",
   ]);
+  assert.deepEqual(steps, ["1.", "2.", "3.a", "3.b", "3.c", "4.", "5.", "6.", "7.", "8.", "9.", "10.", "11."]);
+  assert.match(stagesBlock, /Gatekeeper provided the decision maker’s name\/contact information\. Email was sent, but no conversation with the decision maker yet\./);
+  assert.match(stagesBlock, /Gatekeeper connected you to the decision maker\. You spoke with them, then sent the follow-up email\./);
+  assert.match(stagesBlock, /You spoke with the gatekeeper or decision maker and they clearly declined\./);
+  assert.match(html, /data-tooltip="\$\{escapeAttr\(description\)\}"/);
+  assert.match(html, /stage-name\.has-description:hover::after/);
 });
 
 test("the secured HighLevel migration targets only the GUIDE pipeline and preserves records", async () => {
@@ -139,7 +148,9 @@ test("the secured HighLevel migration targets only the GUIDE pipeline and preser
   assert.deepEqual(names, [
     "New Lead",
     "Outreach Made",
-    "Email Sent",
+    "Decision Maker Identified – Email Sent",
+    "Decision Maker Contacted – Email Sent",
+    "Not Interested",
     "Meeting Scheduled",
     "Meeting Held",
     "Onboarding Documents Signed",

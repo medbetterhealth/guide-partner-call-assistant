@@ -5,7 +5,15 @@ const PIPELINE_NAME = "GUIDE Partner Call Assistant";
 const DESIRED_STAGES = [
   { name: "New Lead", sources: ["New Lead"] },
   { name: "Outreach Made", sources: ["Outreach Made", "Outreach Attempted"] },
-  { name: "Email Sent", sources: ["Email Sent"] },
+  {
+    name: "Decision Maker Identified – Email Sent",
+    sources: ["Decision Maker Identified – Email Sent", "Email Sent"],
+  },
+  {
+    name: "Decision Maker Contacted – Email Sent",
+    sources: ["Decision Maker Contacted – Email Sent"],
+  },
+  { name: "Not Interested", sources: ["Not Interested"] },
   { name: "Meeting Scheduled", sources: ["Meeting Scheduled"] },
   { name: "Meeting Held", sources: ["Meeting Held"] },
   {

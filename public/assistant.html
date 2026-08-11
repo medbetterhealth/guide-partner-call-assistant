@@ -243,6 +243,21 @@
     font-family:'Manrope';font-weight:800;font-size:12px;color:var(--navy);
     margin-bottom:10px;padding:0 2px;
   }
+  .kanban-col-header .stage-name{position:relative;flex:1;line-height:1.35;}
+  .kanban-col-header .stage-name.has-description{
+    cursor:help;text-decoration:underline dotted;text-underline-offset:3px;
+  }
+  .kanban-col-header .stage-name.has-description::after{
+    content:attr(data-tooltip);position:absolute;left:0;top:calc(100% + 8px);z-index:20;
+    width:min(300px,75vw);padding:10px 12px;border-radius:8px;background:var(--navy);
+    color:#fff;font-family:'Inter';font-size:11.5px;font-weight:500;line-height:1.45;
+    box-shadow:0 8px 22px rgba(0,0,0,.22);opacity:0;visibility:hidden;pointer-events:none;
+    transform:translateY(-3px);transition:opacity .15s ease,transform .15s ease,visibility .15s ease;
+  }
+  .kanban-col-header .stage-name.has-description:hover::after,
+  .kanban-col-header .stage-name.has-description:focus-visible::after{
+    opacity:1;visibility:visible;transform:translateY(0);
+  }
   .kanban-col-header .count{
     background:#fff;border-radius:20px;padding:2px 9px;font-size:11px;color:var(--muted);
   }
@@ -729,26 +744,30 @@ const STEPS = [
 
 // ---------- Pipeline stages ----------
 const STAGES = [
-  {key:'new_lead', label:'New Lead'},
-  {key:'outreach_made', label:'Outreach Made'},
-  {key:'email_sent', label:'Email Sent'},
-  {key:'meeting_scheduled', label:'Meeting Scheduled'},
-  {key:'meeting_held', label:'Meeting Held'},
-  {key:'onboarding_documents_signed', label:'Onboarding Documents Signed'},
-  {key:'submitted_to_medicare', label:'Submitted to Medicare'},
-  {key:'partner_training', label:'Partner Training'},
-  {key:'medicare_approved', label:'Medicare Approved'},
-  {key:'partner_onboarding_call', label:'Partner Onboarding Call'},
-  {key:'active_partner', label:'Active Partner', terminal:'win'}
+  {key:'new_lead', step:'1.', label:'New Lead'},
+  {key:'outreach_made', step:'2.', label:'Outreach Made'},
+  {key:'decision_maker_identified_email_sent', step:'3.a', label:'Decision Maker Identified – Email Sent', description:'Gatekeeper provided the decision maker’s name/contact information. Email was sent, but no conversation with the decision maker yet.'},
+  {key:'decision_maker_contacted_email_sent', step:'3.b', label:'Decision Maker Contacted – Email Sent', description:'Gatekeeper connected you to the decision maker. You spoke with them, then sent the follow-up email.'},
+  {key:'not_interested', step:'3.c', label:'Not Interested', description:'You spoke with the gatekeeper or decision maker and they clearly declined.'},
+  {key:'meeting_scheduled', step:'4.', label:'Meeting Scheduled'},
+  {key:'meeting_held', step:'5.', label:'Meeting Held'},
+  {key:'onboarding_documents_signed', step:'6.', label:'Onboarding Documents Signed'},
+  {key:'submitted_to_medicare', step:'7.', label:'Submitted to Medicare'},
+  {key:'partner_training', step:'8.', label:'Partner Training'},
+  {key:'medicare_approved', step:'9.', label:'Medicare Approved'},
+  {key:'partner_onboarding_call', step:'10.', label:'Partner Onboarding Call'},
+  {key:'active_partner', step:'11.', label:'Active Partner', terminal:'win'}
 ];
 
 const STAGE_ALIASES = {
   new_lead:'new_lead',
   outreach_attempted:'outreach_made',
   outreach_made:'outreach_made',
-  contacted:'email_sent',
-  qualified:'email_sent',
-  email_sent:'email_sent',
+  contacted:'decision_maker_identified_email_sent',
+  qualified:'decision_maker_identified_email_sent',
+  email_sent:'decision_maker_identified_email_sent',
+  decision_maker_identified_email_sent:'decision_maker_identified_email_sent',
+  decision_maker_contacted_email_sent:'decision_maker_contacted_email_sent',
   meeting_scheduled:'meeting_scheduled',
   meeting_held:'meeting_held',
   pathway_pending:'onboarding_documents_signed',
@@ -763,7 +782,7 @@ const STAGE_ALIASES = {
   medicare_approved:'medicare_approved',
   partner_onboarding_call:'partner_onboarding_call',
   active_partner:'active_partner',
-  not_interested:'outreach_made',
+  not_interested:'not_interested',
   no_response:'outreach_made',
   disqualified:'outreach_made'
 };
@@ -916,7 +935,7 @@ async function loadDeals(){
 function renderPipelineStats(){
   const inStage = (key)=> allDeals.filter(d=>d.stage === key).length;
   document.getElementById('statOutreach').textContent = inStage('outreach_made');
-  document.getElementById('statEmails').textContent = inStage('email_sent');
+  document.getElementById('statEmails').textContent = inStage('decision_maker_identified_email_sent') + inStage('decision_maker_contacted_email_sent');
   document.getElementById('statMeetings').textContent = inStage('meeting_scheduled');
   document.getElementById('statActive').textContent = inStage('active_partner');
 }
@@ -958,16 +977,19 @@ function renderPipeline(){
     const dealsInStage = filtered.filter(d=>d.stage === stage.key);
     const colClass = stage.terminal === 'win' ? 'win' : (stage.side ? 'side' : '');
     const cards = dealsInStage.map(cardHtml).join('');
+    const description = stage.description || '';
+    const helpClass = description ? ' has-description' : '';
+    const helpAttrs = description ? ` tabindex="0" title="${escapeAttr(description)}" data-tooltip="${escapeAttr(description)}"` : '';
     return `
       <div class="kanban-col ${colClass}" data-stage="${stage.key}">
-        <div class="kanban-col-header"><span>${label}</span><span class="count">${dealsInStage.length}</span></div>
+        <div class="kanban-col-header"><span class="stage-name${helpClass}"${helpAttrs}>${escapeHtml(label)}</span><span class="count">${dealsInStage.length}</span></div>
         <div class="kanban-cards" data-stage="${stage.key}">${cards || '<div class="kanban-empty">No leads yet</div>'}</div>
       </div>
     `;
   };
 
-  const mainHtml = STAGES.map((stage, idx)=>{
-    return colHtml(stage, (idx+1) + '. ' + stage.label);
+  const mainHtml = STAGES.map((stage)=>{
+    return colHtml(stage, stage.step + ' ' + stage.label);
   }).join('');
 
   board.innerHTML = mainHtml;
@@ -1345,6 +1367,9 @@ function escapeHtml(str){
   const d = document.createElement('div');
   d.textContent = str;
   return d.innerHTML;
+}
+function escapeAttr(str){
+  return escapeHtml(str).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 document.getElementById('recToggle').addEventListener('click', ()=>{
@@ -1872,7 +1897,7 @@ async function loadDashboard(){
       if(!inRange(h.ts, bounds)) return;
       const who = h.by || d.assignedSalesperson || '';
       if(h.stage === 'meeting_scheduled'){ rep(who).meetings++; }
-      if(h.stage === 'email_sent'){ rep(who).emails++; }
+      if(h.stage === 'decision_maker_identified_email_sent' || h.stage === 'decision_maker_contacted_email_sent'){ rep(who).emails++; }
       if(h.stage === 'active_partner'){ rep(who).partners++; }
     });
   });
