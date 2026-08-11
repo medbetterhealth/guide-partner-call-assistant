@@ -163,5 +163,8 @@ test("the secured HighLevel migration targets only the GUIDE pipeline and preser
   assert.match(route, /const PIPELINE_NAME = "GUIDE Partner Call Assistant"/);
   assert.match(route, /Opportunity preservation verification failed/);
   assert.match(route, /Another HighLevel pipeline changed unexpectedly/);
+  assert.match(route, /\["Outreach Made", "Outreach Attempted"\]/);
+  assert.match(route, /\["Decision Maker Identified – Email Sent", "Email Sent"\]/);
+  assert.match(route, /\["Onboarding Documents Signed", "Partner Onboarding"\]/);
   assert.doesNotMatch(route, /method: "DELETE"/);
 });

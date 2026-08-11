@@ -27,13 +27,13 @@ const DESIRED_STAGES = [
   { name: "Active Partner", sources: ["Active Partner"] },
 ] as const;
 
-const REQUIRED_EXISTING_SOURCES = [
-  "New Lead",
-  "Outreach Attempted",
-  "Email Sent",
-  "Meeting Scheduled",
-  "Partner Onboarding",
-  "Active Partner",
+const REQUIRED_EXISTING_SOURCE_GROUPS = [
+  ["New Lead"],
+  ["Outreach Made", "Outreach Attempted"],
+  ["Decision Maker Identified – Email Sent", "Email Sent"],
+  ["Meeting Scheduled"],
+  ["Onboarding Documents Signed", "Partner Onboarding"],
+  ["Active Partner"],
 ] as const;
 
 type Stage = {
@@ -172,7 +172,9 @@ export async function POST(request: Request) {
     const currentNames = new Set(currentStages.map((stage) => stage.name));
     const alreadyUpdated = DESIRED_STAGES.every((stage) => currentNames.has(stage.name));
     if (!alreadyUpdated) {
-      const missingRequired = REQUIRED_EXISTING_SOURCES.filter((name) => !currentNames.has(name));
+      const missingRequired = REQUIRED_EXISTING_SOURCE_GROUPS
+        .filter((names) => !names.some((name) => currentNames.has(name)))
+        .map((names) => names.join(" or "));
       if (missingRequired.length) {
         throw new Error(`Cannot safely retain existing stage IDs for: ${missingRequired.join(", ")}`);
       }
