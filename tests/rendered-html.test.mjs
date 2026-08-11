@@ -107,6 +107,14 @@ test("Schedule with Dr. Erik appears only in Step 8", async () => {
   assert.match(html, /onclick="openScheduler\(\)"/);
 });
 
+test("Step 5 uses the requested Medicare partnership explanation", async () => {
+  const html = await readFile(new URL("public/assistant.html", root), "utf8");
+
+  assert.match(html, /Many of your clients have a dementia diagnosis and traditional Medicare\. Through the GUIDE Model, MedBetterHealth handles all Medicare enrollment and billing, your agency delivers the respite care, and we pay you directly at 34\.50\/hour\. You never enroll in Medicare and never file a claim\./);
+  assert.doesNotMatch(html, /However, Medicare saw a major gap/);
+  assert.doesNotMatch(html, /approved respite services/);
+});
+
 test("the assistant pipeline shows the requested numbered stages and hover guidance", async () => {
   const html = await readFile(new URL("public/assistant.html", root), "utf8");
   const start = html.indexOf("const STAGES = [");
