@@ -110,7 +110,10 @@ test("Schedule with Dr. Erik appears only in Step 8", async () => {
 test("Step 5 uses the requested Medicare partnership explanation", async () => {
   const html = await readFile(new URL("public/assistant.html", root), "utf8");
 
-  assert.match(html, /Many of your clients have a dementia diagnosis and traditional Medicare\. Through the GUIDE Model, MedBetterHealth handles all Medicare enrollment and billing, your agency delivers the respite care, and we pay you directly at 34\.50\/hour\. You never enroll in Medicare and never file a claim\./);
+  assert.match(html, /Many of your clients have a dementia diagnosis and traditional Medicare\. Through the GUIDE Model, MedBetterHealth handles all Medicare enrollment and billing, your agency delivers the respite Homecare, and we pay you directly at a rate of 34\.50\/hour/);
+  assert.match(html, /This way, your organization does not bill Medicare\. Instead, your agency bills us directly on the private side\./);
+  assert.doesNotMatch(html, /You never enroll in Medicare and never file a claim/);
+  assert.doesNotMatch(html, /agency bills MedBetterHealth directly/);
   assert.doesNotMatch(html, /However, Medicare saw a major gap/);
   assert.doesNotMatch(html, /approved respite services/);
 });
