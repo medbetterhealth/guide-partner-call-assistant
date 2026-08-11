@@ -364,8 +364,8 @@
             <input type="tel" id="f_agency_phone_number" placeholder="(954) 000-0000" required>
           </div>
           <div class="field">
-            <label>Answered By (Required)</label>
-            <input type="text" id="f_answered_by" placeholder="First and last name" required>
+            <label>Answered By</label>
+            <input type="text" id="f_answered_by" placeholder="First and last name">
           </div>
         </div>
         <div class="row2">
@@ -385,7 +385,7 @@
         <input type="hidden" id="f_counties">
         <input type="hidden" id="f_privateduty">
 
-        <div class="validation" id="validationMsg">Agency Name, Agency Phone Number, and Answered By are required.</div>
+        <div class="validation" id="validationMsg">Agency Name and Agency Phone Number are required.</div>
         <div class="form-actions">
           <button class="btn btn-red" id="saveCall" style="flex:1;">Submit call to pipeline</button>
           <button class="btn btn-outline" id="clearForm">Clear</button>
@@ -1450,8 +1450,8 @@ document.getElementById('clearForm').addEventListener('click', clearForm);
 document.getElementById('saveCall').addEventListener('click', async ()=>{
   const record = collectForm();
   const valMsg = document.getElementById('validationMsg');
-  if(!record.agencyName || !record.agencyPhoneNumber || !record.answeredBy){
-    valMsg.textContent = 'Agency Name, Agency Phone Number, and Answered By are required.';
+  if(!record.agencyName || !record.agencyPhoneNumber){
+    valMsg.textContent = 'Agency Name and Agency Phone Number are required.';
     valMsg.classList.add('show');
     return;
   }

@@ -28,9 +28,9 @@ function validEmail(value: string) {
 export async function POST(request: Request) {
   try {
     const call = await request.json() as Record<string, string>;
-    if (!call.agencyName || !call.agencyPhoneNumber || !call.answeredBy) {
+    if (!call.agencyName || !call.agencyPhoneNumber) {
       return Response.json(
-        { error: "Agency Name, Agency Phone Number, and Answered By are required" },
+        { error: "Agency Name and Agency Phone Number are required" },
         { status: 400 },
       );
     }

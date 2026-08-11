@@ -27,7 +27,10 @@ test("Call Details contains only the six requested fields in order", async () =>
 
   assert.match(card, /Agency Name \(Required\)/);
   assert.match(card, /Agency Phone Number \(Required\)/);
-  assert.match(card, /Answered By \(Required\)/);
+  assert.match(card, /<label>Answered By<\/label>/);
+  assert.match(card, /<input type="text" id="f_answered_by"[^>]*>/);
+  assert.doesNotMatch(card, /id="f_answered_by"[^>]*\brequired\b/);
+  assert.doesNotMatch(card, /Answered By \(Required\)/);
   assert.match(card, /type="email" id="f_decision_maker_email"/);
 });
 
@@ -72,6 +75,8 @@ test("dependent views, CSV, and HighLevel routes use the new field model", async
   }
   assert.match(html, /Answered By','Agency Phone Number','Decision Maker Name','Decision Maker Phone','Decision Maker Email'/);
   assert.match(submitRoute, /Decision Maker Email is invalid/);
+  assert.doesNotMatch(submitRoute, /!call\.answeredBy/);
+  assert.match(submitRoute, /Agency Name and Agency Phone Number are required/);
   assert.match(submitRoute, /item\.name === "New Lead"/);
 });
 
