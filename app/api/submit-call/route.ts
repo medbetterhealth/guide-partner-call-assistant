@@ -25,6 +25,32 @@ function validEmail(value: string) {
   return !value || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
+type LocationCustomField = { id: string; name: string };
+
+function findFieldId(fields: LocationCustomField[], ...names: string[]) {
+  return fields.find((field) =>
+    names.some((name) => field.name.trim().toLowerCase() === name.toLowerCase())
+  )?.id;
+}
+
+async function ensureCallNotesField(fields: LocationCustomField[]) {
+  const existingId = findFieldId(fields, "Partner - Call Notes", "Partner - Notes", "Call Notes");
+  if (existingId) return existingId;
+
+  const created = await ghl(`/locations/${encodeURIComponent(env.GHL_LOCATION_ID)}/customFields`, {
+    method: "POST",
+    body: JSON.stringify({
+      name: "Partner - Call Notes",
+      dataType: "LARGE_TEXT",
+      model: "contact",
+      placeholder: "Conversation notes from GUIDE Partner Call Assistant",
+    }),
+  });
+  const customField = (created.customField || created) as { id?: string };
+  if (!customField.id) throw new Error("HighLevel did not return the Call Notes custom field ID");
+  return customField.id;
+}
+
 export async function POST(request: Request) {
   try {
     const call = await request.json() as Record<string, string>;
@@ -46,16 +72,16 @@ export async function POST(request: Request) {
     );
 
     const fieldsResult = await ghl(`/locations/${encodeURIComponent(env.GHL_LOCATION_ID)}/customFields`).catch(() => ({ customFields: [] }));
-    const fields = (fieldsResult.customFields || []) as Array<{ id: string; name: string }>;
-    const fieldId = (...names: string[]) => fields.find((field) =>
-      names.some((name) => field.name.trim().toLowerCase() === name.toLowerCase())
-    )?.id;
+    const fields = (fieldsResult.customFields || []) as LocationCustomField[];
+    const fieldId = (...names: string[]) => findFieldId(fields, ...names);
+    const callNotesFieldId = call.manualNotes ? await ensureCallNotesField(fields) : undefined;
     const customFields = [
       { id: fieldId("Answered By", "Partner - Answered By"), field_value: call.answeredBy },
       { id: fieldId("Agency Phone Number", "Partner - Agency Phone Number"), field_value: call.agencyPhoneNumber },
       { id: fieldId("Decision Maker Name", "Partner - Decision Maker Name"), field_value: call.decisionMakerName },
       { id: fieldId("Decision Maker Phone", "Partner - Decision Maker Phone"), field_value: call.decisionMakerPhone },
       { id: fieldId("Decision Maker Email", "Partner - Decision Maker Email"), field_value: call.decisionMakerEmail },
+      { id: callNotesFieldId, field_value: call.manualNotes },
       { id: fieldId("Partner - Lead Source"), field_value: "GUIDE Model Outreach" },
       { id: fieldId("Partner - Last Contact Date"), field_value: new Date().toISOString().slice(0, 10) },
     ].filter((field) => field.id && field.field_value);

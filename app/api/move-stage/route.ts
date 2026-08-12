@@ -39,6 +39,7 @@ export async function POST(request: Request) {
       { id: fieldId("Decision Maker Name", "Partner - Decision Maker Name"), field_value: deal.decisionMakerName },
       { id: fieldId("Decision Maker Phone", "Partner - Decision Maker Phone"), field_value: deal.decisionMakerPhone },
       { id: fieldId("Decision Maker Email", "Partner - Decision Maker Email"), field_value: deal.decisionMakerEmail },
+      { id: fieldId("Partner - Call Notes", "Partner - Notes", "Call Notes"), field_value: deal.manualNotes },
     ].filter((field) => field.id && field.field_value);
 
     const primaryName = (deal.decisionMakerName || deal.answeredBy || deal.agencyName).trim();

@@ -4,10 +4,10 @@ import test from "node:test";
 
 const root = new URL("../", import.meta.url);
 
-test("Call Details contains only the six requested fields in order", async () => {
+test("Call Details contains the existing fields plus manual Notes in the requested order", async () => {
   const html = await readFile(new URL("public/assistant.html", root), "utf8");
   const cardStart = html.indexOf("<h2>Call Details</h2>");
-  const cardEnd = html.indexOf('id="validationMsg"', cardStart);
+  const cardEnd = html.indexOf("<!-- Transcription + notes -->", cardStart);
   const card = html.slice(cardStart, cardEnd);
   const fields = [
     "f_agency_name",
@@ -16,6 +16,7 @@ test("Call Details contains only the six requested fields in order", async () =>
     "f_decision_maker_name",
     "f_decision_maker_phone",
     "f_decision_maker_email",
+    "f_manual_notes",
   ];
 
   let previous = -1;
@@ -32,6 +33,8 @@ test("Call Details contains only the six requested fields in order", async () =>
   assert.doesNotMatch(card, /id="f_answered_by"[^>]*\brequired\b/);
   assert.doesNotMatch(card, /Answered By \(Required\)/);
   assert.match(card, /type="email" id="f_decision_maker_email"/);
+  assert.match(card, /<label>Notes<\/label>\s*<textarea id="f_manual_notes" rows="5"/);
+  assert.ok(card.indexOf('id="f_manual_notes"') < card.indexOf('id="saveCall"'));
 });
 
 test("removed fields and their old element IDs are absent", async () => {
@@ -68,6 +71,7 @@ test("dependent views, CSV, and HighLevel routes use the new field model", async
     "decisionMakerName",
     "decisionMakerPhone",
     "decisionMakerEmail",
+    "manualNotes",
   ]) {
     assert.match(html, new RegExp(field));
     assert.match(submitRoute, new RegExp(field));
@@ -78,6 +82,10 @@ test("dependent views, CSV, and HighLevel routes use the new field model", async
   assert.doesNotMatch(submitRoute, /!call\.answeredBy/);
   assert.match(submitRoute, /Agency Name and Agency Phone Number are required/);
   assert.match(submitRoute, /item\.name === "New Lead"/);
+  assert.match(submitRoute, /name: "Partner - Call Notes"/);
+  assert.match(submitRoute, /dataType: "LARGE_TEXT"/);
+  assert.match(submitRoute, /field_value: call\.manualNotes/);
+  assert.match(moveRoute, /field_value: deal\.manualNotes/);
 });
 
 test("Schedule with Dr. Erik discovers the active HighLevel calendar securely", async () => {
@@ -107,10 +115,15 @@ test("Schedule with Dr. Erik appears only in Step 8", async () => {
   assert.match(html, /onclick="openScheduler\(\)"/);
 });
 
-test("Step 5 uses the requested Medicare partnership explanation", async () => {
+test("Steps 4 and 5 use the requested GUIDE partnership wording", async () => {
   const html = await readFile(new URL("public/assistant.html", root), "utf8");
 
-  assert.match(html, /Many of your clients have a dementia diagnosis and traditional Medicare\. Through the GUIDE Model, MedBetterHealth handles all Medicare enrollment and billing, your agency delivers the respite Homecare, and we pay you directly at a rate of 34\.50\/hour/);
+  assert.match(html, /It's a new program for people living with dementia and their family caregivers\./);
+  assert.doesNotMatch(html, /It is a new Medicare program/);
+  assert.match(html, /Now, I know that private duty home care agencies normally do not accept or bill Medicare, right\?/);
+  assert.match(html, /Our company handles all the Medicare enrollment and billing\./);
+  assert.match(html, /Your agency delivers the service, and we will pay you at a rate of \$34\.50 via private pay\./);
+  assert.doesNotMatch(html, /MedBetterHealth handles all Medicare enrollment and billing/);
   assert.match(html, /This way, your organization does not bill Medicare\. Instead, your agency bills us directly on the private side\./);
   assert.doesNotMatch(html, /You never enroll in Medicare and never file a claim/);
   assert.doesNotMatch(html, /agency bills MedBetterHealth directly/);

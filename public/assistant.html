@@ -407,6 +407,10 @@
           <label>Decision Maker Email</label>
           <input type="email" id="f_decision_maker_email" placeholder="name@agency.com">
         </div>
+        <div class="field">
+          <label>Notes</label>
+          <textarea id="f_manual_notes" rows="5" placeholder="Type notes about the conversation"></textarea>
+        </div>
         <input type="hidden" id="f_counties">
         <input type="hidden" id="f_privateduty">
 
@@ -709,15 +713,17 @@ const STEPS = [
     lines: [
       {t:'say', v:"Have you ever heard about the GUIDE Model?"},
       {t:'note', v:"If they say no:"},
-      {t:'say', v:"It is a new Medicare program for people living with dementia and their family caregivers."},
+      {t:'say', v:"It's a new program for people living with dementia and their family caregivers."},
       {t:'say', v:"Many of these individuals have a husband, wife, son, daughter, or another caregiver who becomes overwhelmed and needs respite support."}
     ]
   },
   {
     title: "Explain how the partnership works",
     lines: [
-      {t:'say', v:"Now, I know that private duty home care agencies normally do not accept or bill Medicare."},
-      {t:'say', v:"Many of your clients have a dementia diagnosis and traditional Medicare. Through the GUIDE Model, MedBetterHealth handles all Medicare enrollment and billing, your agency delivers the respite Homecare, and we pay you directly at a rate of 34.50/hour"},
+      {t:'say', v:"Now, I know that private duty home care agencies normally do not accept or bill Medicare, right?"},
+      {t:'say', v:"Many of your clients have a dementia diagnosis and traditional Medicare."},
+      {t:'say', v:"Our company handles all the Medicare enrollment and billing."},
+      {t:'say', v:"Your agency delivers the service, and we will pay you at a rate of $34.50 via private pay."},
       {t:'say', v:"This way, your organization does not bill Medicare. Instead, your agency bills us directly on the private side."}
     ]
   },
@@ -807,6 +813,7 @@ function upgradeCallRecord(record){
     decisionMakerName: record.decisionMakerName || '',
     decisionMakerPhone: record.decisionMakerPhone || '',
     decisionMakerEmail: record.decisionMakerEmail || record.email || '',
+    manualNotes: record.manualNotes || record.callNotes || '',
     counties: record.counties || '',
     privateDuty: record.privateDuty || '',
     notes: record.notes || '',
@@ -824,6 +831,7 @@ function upgradeDealRecord(record){
     decisionMakerName: record.decisionMakerName || '',
     decisionMakerPhone: record.decisionMakerPhone || '',
     decisionMakerEmail: record.decisionMakerEmail || record.email || '',
+    manualNotes: record.manualNotes || record.callNotes || '',
     counties: record.counties || '',
     stage: normalizeStageKey(record.stage),
     createdAt: record.createdAt || '',
@@ -873,6 +881,7 @@ async function upsertDealFromCall(callRecord){
       existingDeal.decisionMakerName = callRecord.decisionMakerName || existingDeal.decisionMakerName;
       existingDeal.decisionMakerPhone = callRecord.decisionMakerPhone || existingDeal.decisionMakerPhone;
       existingDeal.decisionMakerEmail = callRecord.decisionMakerEmail || existingDeal.decisionMakerEmail;
+      existingDeal.manualNotes = callRecord.manualNotes || existingDeal.manualNotes;
       existingDeal.assignedSalesperson = callRecord.loggedBy || existingDeal.assignedSalesperson;
       existingDeal.lastContactDate = now;
       existingDeal.counties = callRecord.counties || existingDeal.counties;
@@ -892,6 +901,7 @@ async function upsertDealFromCall(callRecord){
         decisionMakerName: callRecord.decisionMakerName,
         decisionMakerPhone: callRecord.decisionMakerPhone,
         decisionMakerEmail: callRecord.decisionMakerEmail,
+        manualNotes: callRecord.manualNotes,
         assignedSalesperson: callRecord.loggedBy,
         leadSource: 'GUIDE Model Outreach',
         lastContactDate: now,
@@ -974,6 +984,7 @@ function renderPipeline(){
           <div class="detail-row"><span class="k">Decision Maker</span><span class="v">${escapeHtml(d.decisionMakerName || 'Not yet provided')}</span></div>
           <div class="detail-row"><span class="k">Decision Maker Phone</span><span class="v mono">${escapeHtml(d.decisionMakerPhone || 'Not yet provided')}</span></div>
           <div class="detail-row"><span class="k">Decision Maker Email</span><span class="v">${escapeHtml(d.decisionMakerEmail || 'Not yet provided')}</span></div>
+          <div class="detail-row"><span class="k">Notes</span><span class="v">${escapeHtml(d.manualNotes || 'Not yet provided')}</span></div>
           <div class="detail-row"><span class="k">Counties</span><span class="v">${escapeHtml(d.counties || 'Not yet provided')}</span></div>
           <div style="margin-top:8px;margin-bottom:4px;font-weight:700;font-size:11.5px;color:var(--navy);">History</div>
           ${historyHtml || '<div class="history-line">No history yet.</div>'}
@@ -1549,6 +1560,7 @@ function collectForm(){
     decisionMakerName: document.getElementById('f_decision_maker_name').value.trim(),
     decisionMakerPhone: document.getElementById('f_decision_maker_phone').value.trim(),
     decisionMakerEmail: document.getElementById('f_decision_maker_email').value.trim(),
+    manualNotes: document.getElementById('f_manual_notes').value.trim(),
     counties: document.getElementById('f_counties').value.trim(),
     privateDuty: document.getElementById('f_privateduty').value,
     notes: document.getElementById('f_notes').value.trim(),
@@ -1559,7 +1571,7 @@ function collectForm(){
 }
 
 function clearForm(){
-  ['f_agency_name','f_agency_phone_number','f_answered_by','f_decision_maker_name','f_decision_maker_phone','f_decision_maker_email','f_counties','f_notes'].forEach(id=>{
+  ['f_agency_name','f_agency_phone_number','f_answered_by','f_decision_maker_name','f_decision_maker_phone','f_decision_maker_email','f_manual_notes','f_counties','f_notes'].forEach(id=>{
     document.getElementById(id).value = '';
   });
   document.getElementById('f_privateduty').value = '';
@@ -1572,7 +1584,7 @@ function clearForm(){
 }
 
 function hasUnsavedCallDetails(){
-  const ids = ['f_agency_name','f_agency_phone_number','f_answered_by','f_decision_maker_name','f_decision_maker_phone','f_decision_maker_email','f_counties','f_notes'];
+  const ids = ['f_agency_name','f_agency_phone_number','f_answered_by','f_decision_maker_name','f_decision_maker_phone','f_decision_maker_email','f_manual_notes','f_counties','f_notes'];
   return ids.some(id=>document.getElementById(id).value.trim()) ||
     !!document.getElementById('f_privateduty').value ||
     !!finalTranscript.trim();
@@ -1705,7 +1717,7 @@ function renderLog(){
   const listEl = document.getElementById('logList');
 
   let filtered = allCalls.filter(c=>{
-    const matchesSearch = !search || [c.agencyName,c.answeredBy,c.decisionMakerName,c.decisionMakerPhone,c.decisionMakerEmail,c.counties].join(' ').toLowerCase().includes(search);
+    const matchesSearch = !search || [c.agencyName,c.answeredBy,c.decisionMakerName,c.decisionMakerPhone,c.decisionMakerEmail,c.manualNotes,c.counties].join(' ').toLowerCase().includes(search);
     const matchesFilter = !filter ||
       (filter === 'decision-maker' && !!c.decisionMakerName) ||
       (filter === 'decision-maker-email' && !!c.decisionMakerEmail) ||
@@ -1735,7 +1747,8 @@ function renderLog(){
         <div class="detail-row"><span class="k">Decision Maker Phone</span><span class="v mono">${escapeHtml(c.decisionMakerPhone || '—')}</span></div>
         <div class="detail-row"><span class="k">Decision Maker Email</span><span class="v">${escapeHtml(c.decisionMakerEmail || '—')}</span></div>
         <div class="detail-row"><span class="k">Private duty</span><span class="v">${escapeHtml(c.privateDuty || '—')}</span></div>
-        <div class="detail-row"><span class="k">Notes</span><span class="v">${escapeHtml(c.notes || '—')}</span></div>
+        <div class="detail-row"><span class="k">Notes</span><span class="v">${escapeHtml(c.manualNotes || '—')}</span></div>
+        <div class="detail-row"><span class="k">AI summary</span><span class="v">${escapeHtml(c.notes || '—')}</span></div>
         <div class="detail-row"><span class="k">Logged by</span><span class="v">${escapeHtml(c.loggedBy || '—')} on ${escapeHtml(when)}</span></div>
         <div class="footer-row">
           <button class="btn btn-danger-outline btn-sm delete-btn" data-key="${escapeAttr(c._key)}">Delete entry</button>
@@ -1840,7 +1853,8 @@ function exportCsvForGoHighLevel(){
     const notesParts = [
       c.counties ? 'Counties: ' + c.counties : '',
       c.privateDuty ? 'Private duty: ' + c.privateDuty : '',
-      c.notes ? 'Notes: ' + c.notes : '',
+      c.manualNotes ? 'Notes: ' + c.manualNotes : '',
+      c.notes ? 'AI summary: ' + c.notes : '',
       c.loggedBy ? 'Logged by: ' + c.loggedBy : ''
     ].filter(Boolean).join(' | ');
     return [
