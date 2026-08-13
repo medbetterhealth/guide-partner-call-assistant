@@ -169,7 +169,7 @@ test("the assistant pipeline shows the requested numbered stages and hover guida
   assert.match(html, /data-tooltip="\$\{escapeAttr\(description\)\}"/);
   assert.match(html, /stage-name\.has-description:hover::after/);
   assert.match(html, /3\. Next Contact \/ Email Sent/);
-  assert.match(html, /class="kanban-col kanban-group-col"/);
+  assert.match(html, /class="kanban-col kanban-group-col \$\{extraClass\}"/);
   assert.match(html, /class="kanban-substage kanban-stage-target"/);
   assert.doesNotMatch(html, /text-decoration:underline/);
   assert.doesNotMatch(html, /title="\$\{escapeAttr\(description\)\}"/);
@@ -276,4 +276,14 @@ test("pipeline UI keeps readable horizontally scrolling Kanban cards", async () 
   assert.match(html, /class="card-menu-toggle"/);
   assert.match(html, /class="card-menu">[\s\S]*?class="card-move"/);
   assert.doesNotMatch(html, /<div class="card-move">\s*<label class="card-move-label">Move to<\/label>/);
+});
+
+test("Outreach Made and Follow-Up Needed share one visual column but keep real stage targets", async () => {
+  const html = await readFile(new URL("public/assistant.html", root), "utf8");
+  assert.match(html, /const outreachStages = STAGES\.filter\(\(stage\)=> \['2\.','2\.a'\]\.includes\(stage\.step\)\)/);
+  assert.match(html, /groupedColHtml\(outreachStages, '2\. Outreach', 'kanban-outreach-col'\)/);
+  assert.match(html, /class="kanban-substage kanban-stage-target" data-stage="\$\{stage\.key\}"/);
+  assert.match(html, /kanban-substage-header[\s\S]*?<span class="count">\$\{dealsInStage\.length\}<\/span>/);
+  assert.match(html, /class="kanban-cards" data-stage="\$\{stage\.key\}"/);
+  assert.match(html, /\.kanban-group-col\.kanban-outreach-col/);
 });

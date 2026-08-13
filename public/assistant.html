@@ -308,6 +308,13 @@
   .kanban-stage-target{transition:background .12s,box-shadow .12s;}
   .kanban-stage-target.drop-active{box-shadow:0 0 0 2px var(--navy) inset;background:#DCE6F5;}
   .kanban-group-col{background:#F7F6FA;border:1px solid #B8AED0;}
+  .kanban-group-col.kanban-outreach-col{background:#F3F5F7;border-color:#E1E6EB;}
+  .kanban-group-col.kanban-outreach-col .kanban-substage{
+    background:rgba(255,255,255,.4);border-color:#E1E6EB;
+  }
+  .kanban-group-col.kanban-outreach-col .kanban-substage + .kanban-substage{
+    border-top-color:#CCD4DC;
+  }
   .kanban-substages{display:flex;flex-direction:column;gap:10px;max-height:min(68vh,760px);overflow-y:auto;padding-right:2px;}
   .kanban-substage{
     background:rgba(255,255,255,.48);border:1px solid rgba(157,140,194,.22);
@@ -1281,31 +1288,41 @@ function renderPipeline(){
     `;
   };
 
-  const groupedStages = STAGES.filter((stage)=> ['3.a','3.b','3.c'].includes(stage.step));
-  const groupedStageKeys = new Set(groupedStages.map((stage)=>stage.key));
-  const groupedColHtml = ()=>{
-    const totalDeals = groupedStages.reduce((total, stage)=> total + filtered.filter((deal)=>deal.stage === stage.key).length, 0);
-    const substages = groupedStages.map((stage)=>{
+  const outreachStages = STAGES.filter((stage)=> ['2.','2.a'].includes(stage.step));
+  const outreachStageKeys = new Set(outreachStages.map((stage)=>stage.key));
+  const nextContactStages = STAGES.filter((stage)=> ['3.a','3.b','3.c'].includes(stage.step));
+  const nextContactStageKeys = new Set(nextContactStages.map((stage)=>stage.key));
+
+  const groupedColHtml = (stages, parentLabel, extraClass = '')=>{
+    const totalDeals = stages.reduce((total, stage)=> total + filtered.filter((deal)=>deal.stage === stage.key).length, 0);
+    const substages = stages.map((stage)=>{
       const dealsInStage = filtered.filter((deal)=>deal.stage === stage.key);
       const cards = dealsInStage.map(cardHtml).join('');
       return `
         <div class="kanban-substage kanban-stage-target" data-stage="${stage.key}">
-          <div class="kanban-col-header kanban-substage-header">${stageNameHtml(stage, stage.step + ' ' + stage.label)}</div>
+          <div class="kanban-col-header kanban-substage-header">${stageNameHtml(stage, stage.step + ' ' + stage.label)}<span class="count">${dealsInStage.length}</span></div>
           <div class="kanban-cards" data-stage="${stage.key}">${cards || '<div class="kanban-empty">No leads yet</div>'}</div>
         </div>
       `;
     }).join('');
     return `
-      <div class="kanban-col kanban-group-col">
-        <div class="kanban-col-header"><span class="stage-name">3. Next Contact / Email Sent</span><span class="count">${totalDeals}</span></div>
+      <div class="kanban-col kanban-group-col ${extraClass}">
+        <div class="kanban-col-header"><span class="stage-name">${escapeHtml(parentLabel)}</span><span class="count">${totalDeals}</span></div>
         <div class="kanban-substages">${substages}</div>
       </div>
     `;
   };
 
   const mainHtml = STAGES.reduce((html, stage)=>{
-    if(groupedStageKeys.has(stage.key)){
-      return stage.key === groupedStages[0].key ? html + groupedColHtml() : html;
+    if(outreachStageKeys.has(stage.key)){
+      return stage.key === outreachStages[0].key
+        ? html + groupedColHtml(outreachStages, '2. Outreach', 'kanban-outreach-col')
+        : html;
+    }
+    if(nextContactStageKeys.has(stage.key)){
+      return stage.key === nextContactStages[0].key
+        ? html + groupedColHtml(nextContactStages, '3. Next Contact / Email Sent')
+        : html;
     }
     return html + colHtml(stage, stage.step + ' ' + stage.label);
   }, '');
