@@ -40,13 +40,24 @@ async function ensureField(
   name: string,
   dataType: "TEXT" | "LARGE_TEXT" | "SINGLE_OPTIONS",
   placeholder: string,
-  picklistOptions?: string[],
+  optionLabels?: string[],
 ) {
   const existingId = findFieldId(fields, name);
   if (existingId) return existingId;
   const created = await ghl(`/locations/${encodeURIComponent(env.GHL_LOCATION_ID)}/customFields`, {
     method: "POST",
-    body: JSON.stringify({ name, dataType, model: "contact", placeholder, picklistOptions }),
+    body: JSON.stringify({
+      name,
+      dataType,
+      model: "contact",
+      placeholder,
+      ...(optionLabels?.length ? {
+        options: optionLabels.map((label) => ({
+          key: label.toLowerCase().replace(/[^a-z0-9]+/g, "_"),
+          label,
+        })),
+      } : {}),
+    }),
   }, "v3");
   const customField = (created.customField || created) as { id?: string };
   if (!customField.id) throw new Error(`HighLevel did not return the ${name} custom field ID`);
