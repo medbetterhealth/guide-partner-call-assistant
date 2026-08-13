@@ -251,5 +251,19 @@ test("five outreach pathways use distinct email logic and no patient/client clai
   assert.match(html, /Decision Maker Spoken To/);
   assert.match(html, /DM spoken to/);
   assert.match(html, /Email Status/);
-  assert.match(html, /Notes:<\/strong>/);
+  assert.match(html, /<span class="k">Notes<\/span>/);
+});
+
+test("pipeline UI keeps readable horizontally scrolling Kanban cards", async () => {
+  const html = await readFile(new URL("public/assistant.html", root), "utf8");
+  assert.match(html, /\.kanban-board\{[\s\S]*?flex-wrap:nowrap;[\s\S]*?overflow-x:auto;/);
+  assert.match(html, /\.kanban-col\{[\s\S]*?flex:0 0 340px;[\s\S]*?min-width:340px;/);
+  assert.match(html, /\.kanban-cards\{[\s\S]*?overflow-y:auto;overflow-x:hidden;/);
+  assert.match(html, /grid-template-columns:minmax\(96px,108px\) minmax\(0,1fr\)/);
+  assert.match(html, /class="pipeline-status \$\{spokenClass\}"/);
+  assert.match(html, /class="pipeline-status \$\{emailClass\}"/);
+  assert.match(html, /class="card-activity"/);
+  assert.match(html, /Updated \$\{escapeHtml\(updated\)\}/);
+  assert.match(html, /emailDisplay = emailClass === 'no-email' \? 'No Email'/);
+  assert.match(html, /class="quick-delete deal-delete-btn"/);
 });
