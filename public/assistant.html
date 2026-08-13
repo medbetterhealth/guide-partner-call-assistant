@@ -138,6 +138,9 @@
   .field textarea{resize:vertical;min-height:70px;}
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
   @media(max-width:520px){.row2{grid-template-columns:1fr;}}
+  .inline-check{display:flex;align-items:flex-start;gap:9px;margin:-2px 0 14px;font-size:12.5px;color:var(--ink);}
+  .inline-check input{width:16px;height:16px;margin-top:1px;accent-color:var(--navy);}
+  .field-help{display:block;margin-top:4px;color:var(--muted);font-size:11.5px;line-height:1.4;}
 
   /* Transcription */
   .rec-row{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
@@ -281,7 +284,7 @@
   .card-move-select{width:100%;padding:5px 7px;font-size:12px;border:1.5px solid var(--border);border-radius:6px;font-family:'Inter';background:#fff;color:var(--ink);cursor:pointer;}
   .card-move-select:focus{outline:none;border-color:var(--navy);}
   .deal-card{
-    background:#fff;border:1px solid var(--border);border-radius:10px;padding:11px 12px;cursor:grab;
+    background:#fff;border:1px solid var(--border);border-radius:10px;padding:11px 36px 11px 12px;cursor:grab;position:relative;
   }
   .deal-card:active{cursor:grabbing;}
   .deal-card.dragging{opacity:0.5;}
@@ -294,6 +297,16 @@
   .deal-card .drag-grip{color:var(--muted);font-size:11px;letter-spacing:-1px;margin-right:2px;}
   .deal-card .agency{font-family:'Manrope';font-weight:800;font-size:13px;color:var(--ink);}
   .deal-card .meta{font-size:11.5px;color:var(--muted);margin-top:2px;}
+  .deal-card .quick-details{display:grid;grid-template-columns:auto 1fr;gap:3px 8px;margin-top:8px;font-size:11.5px;line-height:1.35;}
+  .deal-card .quick-details .k{color:var(--muted);font-weight:700;}
+  .deal-card .quick-details .v{color:var(--ink);min-width:0;overflow-wrap:anywhere;}
+  .deal-card .notes-preview{margin-top:7px;padding-top:7px;border-top:1px solid var(--border);font-size:11.5px;color:var(--muted);line-height:1.4;}
+  .deal-card .quick-delete{position:absolute;right:7px;top:7px;width:24px;height:24px;border:1px solid #E4BFC2;border-radius:6px;background:#fff;color:var(--red-dark);font-size:16px;line-height:1;cursor:pointer;padding:0;}
+  .deal-card .quick-delete:hover,.deal-card .quick-delete:focus-visible{background:#FCEAEA;outline:none;}
+  .email-state{font-weight:700;}
+  .email-state.sent,.email-state.delivered,.email-state.opened,.email-state.clicked{color:var(--success);}
+  .email-state.failed{color:var(--red-dark);}
+  .email-state.pending,.email-state.not-sent{color:var(--warn-ink);}
   .deal-card .expand{
     margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:12px;display:none;
   }
@@ -393,6 +406,15 @@
             <input type="text" id="f_answered_by" placeholder="First and last name">
           </div>
         </div>
+        <div class="field">
+          <label>Answered By Email</label>
+          <input type="email" id="f_answered_by_email" placeholder="name@agency.com">
+          <span class="field-help">Use this when a gatekeeper asks you to email the information to them.</span>
+        </div>
+        <label class="inline-check">
+          <input type="checkbox" id="f_answerer_is_decision_maker">
+          <span>The person who answered is the decision maker</span>
+        </label>
         <div class="row2">
           <div class="field">
             <label>Decision Maker Name</label>
@@ -406,6 +428,15 @@
         <div class="field">
           <label>Decision Maker Email</label>
           <input type="email" id="f_decision_maker_email" placeholder="name@agency.com">
+        </div>
+        <div class="field">
+          <label>Decision Maker Spoken To</label>
+          <select id="f_decision_maker_spoken_to">
+            <option value="">Select Yes or No</option>
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+          </select>
+          <span class="field-help">Choose Yes only when the caller actually spoke with the decision maker.</span>
         </div>
         <div class="field">
           <label>Notes</label>
@@ -761,8 +792,9 @@ const STEPS = [
 const STAGES = [
   {key:'new_lead', step:'1.', label:'New Lead'},
   {key:'outreach_made', step:'2.', label:'Outreach Made'},
+  {key:'follow_up_needed', step:'2.a', label:'Follow-Up Needed', description:'The call was saved, but there is not enough usable information yet to send the correct outreach email.'},
   {key:'decision_maker_identified_email_sent', step:'3.a', label:'Decision Maker Identified – Email Sent', description:'Gatekeeper provided the decision maker’s name/contact information. Email was sent, but no conversation with the decision maker yet.'},
-  {key:'decision_maker_contacted_email_sent', step:'3.b', label:'Decision Maker Contacted – Email Sent', description:'Gatekeeper connected you to the decision maker. You spoke with them, then sent the follow-up email.'},
+  {key:'decision_maker_contacted_email_sent', step:'3.b', label:'Decision Maker Contacted', description:'The decision maker was reached directly or after a transfer. A relevant follow-up email was sent.'},
   {key:'not_interested', step:'3.c', label:'Not Interested', description:'You spoke with the gatekeeper or decision maker and they clearly declined.'},
   {key:'meeting_scheduled', step:'4.', label:'Meeting Scheduled'},
   {key:'meeting_held', step:'5.', label:'Meeting Held'},
@@ -778,6 +810,7 @@ const STAGE_ALIASES = {
   new_lead:'new_lead',
   outreach_attempted:'outreach_made',
   outreach_made:'outreach_made',
+  follow_up_needed:'follow_up_needed',
   contacted:'decision_maker_identified_email_sent',
   qualified:'decision_maker_identified_email_sent',
   email_sent:'decision_maker_identified_email_sent',
@@ -810,14 +843,26 @@ function upgradeCallRecord(record){
     agencyName: record.agencyName || record.agency || '',
     agencyPhoneNumber: record.agencyPhoneNumber || record.phone || '',
     answeredBy: record.answeredBy || record.contact || '',
+    answeredByEmail: record.answeredByEmail || '',
+    answererIsDecisionMaker: Boolean(record.answererIsDecisionMaker),
     decisionMakerName: record.decisionMakerName || '',
     decisionMakerPhone: record.decisionMakerPhone || '',
     decisionMakerEmail: record.decisionMakerEmail || record.email || '',
-    manualNotes: record.manualNotes || record.callNotes || '',
+    decisionMakerSpokenTo: record.decisionMakerSpokenTo || '',
+    outreachPathway: record.outreachPathway || '',
+    emailStatus: record.emailStatus || 'Not sent',
+    emailWarning: record.emailWarning || '',
+    emailMessageId: record.emailMessageId || '',
+    emailDeliveredAt: record.emailDeliveredAt || '',
+    emailOpenedAt: record.emailOpenedAt || '',
+    emailClickedAt: record.emailClickedAt || '',
+    crmContactId: record.crmContactId || '',
+    crmOpportunityId: record.crmOpportunityId || '',
+    manualNotes: removeMutualPatientWording(record.manualNotes || record.callNotes || ''),
     counties: record.counties || '',
     privateDuty: record.privateDuty || '',
-    notes: record.notes || '',
-    transcript: record.transcript || '',
+    notes: removeMutualPatientWording(record.notes || ''),
+    transcript: removeMutualPatientWording(record.transcript || ''),
     loggedBy: record.loggedBy || '',
     loggedAt: record.loggedAt || ''
   };
@@ -828,10 +873,22 @@ function upgradeDealRecord(record){
     agencyName: record.agencyName || record.agency || '',
     agencyPhoneNumber: record.agencyPhoneNumber || record.phone || '',
     answeredBy: record.answeredBy || record.contact || '',
+    answeredByEmail: record.answeredByEmail || '',
+    answererIsDecisionMaker: Boolean(record.answererIsDecisionMaker),
     decisionMakerName: record.decisionMakerName || '',
     decisionMakerPhone: record.decisionMakerPhone || '',
     decisionMakerEmail: record.decisionMakerEmail || record.email || '',
-    manualNotes: record.manualNotes || record.callNotes || '',
+    decisionMakerSpokenTo: record.decisionMakerSpokenTo || '',
+    outreachPathway: record.outreachPathway || '',
+    emailStatus: record.emailStatus || 'Not sent',
+    emailWarning: record.emailWarning || '',
+    emailMessageId: record.emailMessageId || '',
+    emailDeliveredAt: record.emailDeliveredAt || '',
+    emailOpenedAt: record.emailOpenedAt || '',
+    emailClickedAt: record.emailClickedAt || '',
+    crmContactId: record.crmContactId || '',
+    crmOpportunityId: record.crmOpportunityId || '',
+    manualNotes: removeMutualPatientWording(record.manualNotes || record.callNotes || ''),
     counties: record.counties || '',
     stage: normalizeStageKey(record.stage),
     createdAt: record.createdAt || '',
@@ -843,7 +900,11 @@ function upgradeDealRecord(record){
     totalReferrals: record.totalReferrals || 0,
     submittedReferrals: record.submittedReferrals || 0,
     approvedReferrals: record.approvedReferrals || 0,
-    history: Array.isArray(record.history) ? record.history.map(item=>({...item, stage:normalizeStageKey(item.stage)})) : []
+    history: Array.isArray(record.history) ? record.history.map(item=>({
+      ...item,
+      stage: normalizeStageKey(item.stage),
+      note: removeMutualPatientWording(item.note || '')
+    })) : []
   };
 }
 
@@ -874,13 +935,23 @@ async function upsertDealFromCall(callRecord){
     const historyNote = 'Call logged' + (callRecord.loggedBy ? ', by ' + callRecord.loggedBy : '') + '.';
 
     if(existingDeal){
-      const newStage = existingDeal.stage || 'new_lead';
+      const earlyStages = new Set(['new_lead','outreach_made','follow_up_needed','decision_maker_identified_email_sent','decision_maker_contacted_email_sent']);
+      const newStage = earlyStages.has(existingDeal.stage) ? (callRecord.pipelineStageKey || existingDeal.stage) : existingDeal.stage;
       existingDeal.agencyName = callRecord.agencyName || existingDeal.agencyName;
       existingDeal.agencyPhoneNumber = callRecord.agencyPhoneNumber || existingDeal.agencyPhoneNumber;
       existingDeal.answeredBy = callRecord.answeredBy || existingDeal.answeredBy;
+      existingDeal.answeredByEmail = callRecord.answeredByEmail || existingDeal.answeredByEmail;
+      existingDeal.answererIsDecisionMaker = callRecord.answererIsDecisionMaker;
       existingDeal.decisionMakerName = callRecord.decisionMakerName || existingDeal.decisionMakerName;
       existingDeal.decisionMakerPhone = callRecord.decisionMakerPhone || existingDeal.decisionMakerPhone;
       existingDeal.decisionMakerEmail = callRecord.decisionMakerEmail || existingDeal.decisionMakerEmail;
+      existingDeal.decisionMakerSpokenTo = callRecord.decisionMakerSpokenTo || existingDeal.decisionMakerSpokenTo;
+      existingDeal.outreachPathway = callRecord.outreachPathway || existingDeal.outreachPathway;
+      existingDeal.emailStatus = callRecord.emailStatus || existingDeal.emailStatus;
+      existingDeal.emailWarning = callRecord.emailWarning || '';
+      existingDeal.emailMessageId = callRecord.emailMessageId || existingDeal.emailMessageId;
+      existingDeal.crmContactId = callRecord.crmContactId || existingDeal.crmContactId;
+      existingDeal.crmOpportunityId = callRecord.crmOpportunityId || existingDeal.crmOpportunityId;
       existingDeal.manualNotes = callRecord.manualNotes || existingDeal.manualNotes;
       existingDeal.assignedSalesperson = callRecord.loggedBy || existingDeal.assignedSalesperson;
       existingDeal.lastContactDate = now;
@@ -898,22 +969,32 @@ async function upsertDealFromCall(callRecord){
         agencyName: callRecord.agencyName,
         agencyPhoneNumber: callRecord.agencyPhoneNumber,
         answeredBy: callRecord.answeredBy,
+        answeredByEmail: callRecord.answeredByEmail,
+        answererIsDecisionMaker: callRecord.answererIsDecisionMaker,
         decisionMakerName: callRecord.decisionMakerName,
         decisionMakerPhone: callRecord.decisionMakerPhone,
         decisionMakerEmail: callRecord.decisionMakerEmail,
+        decisionMakerSpokenTo: callRecord.decisionMakerSpokenTo,
+        outreachPathway: callRecord.outreachPathway,
+        emailStatus: callRecord.emailStatus,
+        emailWarning: callRecord.emailWarning,
+        emailMessageId: callRecord.emailMessageId,
+        crmContactId: callRecord.crmContactId,
+        crmOpportunityId: callRecord.crmOpportunityId,
         manualNotes: callRecord.manualNotes,
         assignedSalesperson: callRecord.loggedBy,
         leadSource: 'GUIDE Model Outreach',
         lastContactDate: now,
         nextFollowUpDate: '',
         counties: callRecord.counties,
-        stage: 'new_lead',
+        stage: callRecord.pipelineStageKey || 'follow_up_needed',
         createdAt: now,
         updatedAt: now,
-        history: [{ts: now, stage: 'new_lead', note: 'Deal created. ' + historyNote}]
+        history: [{ts: now, stage: callRecord.pipelineStageKey || 'follow_up_needed', note: 'Deal created. ' + historyNote}]
       };
       await store.set(dealKey, JSON.stringify(deal));
-      return { agencyName: deal.agencyName, stageLabel: 'New Lead', key: dealKey, stage: 'new_lead' };
+      const createdStage = STAGES.find(s=>s.key===deal.stage);
+      return { agencyName: deal.agencyName, stageLabel: createdStage ? createdStage.label : deal.stage, key: dealKey, stage: deal.stage };
     }
   }catch(e){
     return null;
@@ -936,7 +1017,12 @@ async function loadDeals(){
         if(r && r.value){
           const raw = JSON.parse(r.value);
           const parsed = upgradeDealRecord(raw);
-          if(!raw.agencyName || raw.stage !== parsed.stage) await store.set(k, JSON.stringify(parsed));
+          const needsTextCleanup =
+            removeMutualPatientWording(raw.manualNotes || raw.callNotes || '') !== (raw.manualNotes || raw.callNotes || '') ||
+            (Array.isArray(raw.history) && raw.history.some(item=>removeMutualPatientWording(item.note || '') !== (item.note || '')));
+          if(!raw.agencyName || raw.stage !== parsed.stage || needsTextCleanup){
+            await store.set(k, JSON.stringify(parsed));
+          }
           parsed._key = k;
           deals.push(parsed);
         }
@@ -962,7 +1048,7 @@ function renderPipelineStats(){
 function renderPipeline(){
   const board = document.getElementById('kanbanBoard');
   const search = document.getElementById('pipelineSearch').value.toLowerCase();
-  const filtered = allDeals.filter(d=> !search || [d.agencyName,d.answeredBy,d.decisionMakerName,d.decisionMakerPhone,d.decisionMakerEmail].join(' ').toLowerCase().includes(search));
+  const filtered = allDeals.filter(d=> !search || [d.agencyName,d.agencyPhoneNumber,d.answeredBy,d.answeredByEmail,d.decisionMakerName,d.decisionMakerPhone,d.decisionMakerEmail,d.manualNotes].join(' ').toLowerCase().includes(search));
 
   const cardHtml = (d)=>{
     const updated = d.updatedAt ? new Date(d.updatedAt).toLocaleDateString() : '';
@@ -971,19 +1057,42 @@ function renderPipeline(){
       return `<div class="history-line">${escapeHtml(when)}: ${escapeHtml(h.note || '')}</div>`;
     }).join('');
     const moveOptions = STAGES.map(s=>`<option value="${s.key}" ${s.key===d.stage?'selected':''}>${escapeHtml(s.label)}</option>`).join('');
+    const stageLabel = (STAGES.find(s=>s.key===d.stage) || {}).label || d.stage || 'New Lead';
+    const emailStatus = d.emailStatus || 'Not sent';
+    const emailClass = emailStatus.toLowerCase().replace(/[^a-z]+/g,'-').replace(/^-|-$/g,'');
+    const notesPreview = (d.manualNotes || '').trim();
     return `
       <div class="deal-card" data-key="${d._key}" draggable="true">
+        <button type="button" class="quick-delete deal-delete-btn" data-key="${escapeAttr(d._key)}" aria-label="Delete ${escapeAttr(d.agencyName || 'this lead')}">×</button>
         <div class="agency"><span class="drag-grip" aria-hidden="true">⠿</span> ${escapeHtml(d.agencyName || 'Unnamed agency')}</div>
-        <div class="meta">Answered by ${escapeHtml(d.answeredBy || 'Not yet provided')} &middot; Updated ${escapeHtml(updated)}</div>
+        <div class="meta">Updated ${escapeHtml(updated)}</div>
+        <div class="quick-details">
+          <span class="k">Agency phone</span><span class="v mono">${escapeHtml(d.agencyPhoneNumber || 'Not provided')}</span>
+          <span class="k">Answered by</span><span class="v">${escapeHtml(d.answeredBy || 'Not provided')}</span>
+          <span class="k">Decision maker</span><span class="v">${escapeHtml(d.decisionMakerName || 'Not provided')}</span>
+          <span class="k">DM phone</span><span class="v mono">${escapeHtml(d.decisionMakerPhone || 'Not provided')}</span>
+          <span class="k">DM email</span><span class="v">${escapeHtml(d.decisionMakerEmail || 'Not provided')}</span>
+          <span class="k">DM spoken to</span><span class="v">${escapeHtml(d.decisionMakerSpokenTo || 'Not selected')}</span>
+          <span class="k">Stage</span><span class="v">${escapeHtml(stageLabel)}</span>
+          <span class="k">Email</span><span class="v email-state ${escapeAttr(emailClass)}">${escapeHtml(emailStatus)}</span>
+        </div>
+        <div class="notes-preview"><strong>Notes:</strong> ${escapeHtml(notesPreview ? (notesPreview.length > 120 ? notesPreview.slice(0,117) + '...' : notesPreview) : 'None')}</div>
         <div class="card-move">
           <label class="card-move-label">Move to</label>
           <select class="card-move-select" data-key="${d._key}">${moveOptions}</select>
         </div>
         <div class="expand">
           <div class="detail-row"><span class="k">Agency Phone</span><span class="v mono">${escapeHtml(d.agencyPhoneNumber || 'Not yet provided')}</span></div>
+          <div class="detail-row"><span class="k">Answered By</span><span class="v">${escapeHtml(d.answeredBy || 'Not yet provided')}</span></div>
+          <div class="detail-row"><span class="k">Answered By Email</span><span class="v">${escapeHtml(d.answeredByEmail || 'Not yet provided')}</span></div>
           <div class="detail-row"><span class="k">Decision Maker</span><span class="v">${escapeHtml(d.decisionMakerName || 'Not yet provided')}</span></div>
           <div class="detail-row"><span class="k">Decision Maker Phone</span><span class="v mono">${escapeHtml(d.decisionMakerPhone || 'Not yet provided')}</span></div>
           <div class="detail-row"><span class="k">Decision Maker Email</span><span class="v">${escapeHtml(d.decisionMakerEmail || 'Not yet provided')}</span></div>
+          <div class="detail-row"><span class="k">DM Spoken To</span><span class="v">${escapeHtml(d.decisionMakerSpokenTo || 'Not selected')}</span></div>
+          <div class="detail-row"><span class="k">Outreach Path</span><span class="v">${escapeHtml(d.outreachPathway || 'Follow-Up Needed')}</span></div>
+          <div class="detail-row"><span class="k">Email Status</span><span class="v">${escapeHtml(emailStatus)}</span></div>
+          <div class="detail-row"><span class="k">Last Opened</span><span class="v">${escapeHtml(d.emailOpenedAt ? new Date(d.emailOpenedAt).toLocaleString() : 'Not recorded')}</span></div>
+          <div class="detail-row"><span class="k">Last Clicked</span><span class="v">${escapeHtml(d.emailClickedAt ? new Date(d.emailClickedAt).toLocaleString() : 'Not recorded')}</span></div>
           <div class="detail-row"><span class="k">Notes</span><span class="v">${escapeHtml(d.manualNotes || 'Not yet provided')}</span></div>
           <div class="detail-row"><span class="k">Counties</span><span class="v">${escapeHtml(d.counties || 'Not yet provided')}</span></div>
           <div style="margin-top:8px;margin-bottom:4px;font-weight:700;font-size:11.5px;color:var(--navy);">History</div>
@@ -1068,7 +1177,7 @@ function renderPipeline(){
     let dragStarted = false;
 
     card.addEventListener('click', (e)=>{
-      if(e.target.closest('.card-move, .record-actions')) return;
+      if(e.target.closest('.card-move, .record-actions, .quick-delete')) return;
       if(dragStarted){ dragStarted = false; return; }
       card.classList.toggle('open');
     });
@@ -1145,6 +1254,7 @@ async function moveDeal(key, newStageKey){
     });
     const result = await response.json().catch(()=>({}));
     if(!response.ok) throw new Error(result.error || 'GoHighLevel stage update failed');
+    if(result.opportunityId) deal.crmOpportunityId = result.opportunityId;
     await store.set(deal._key, JSON.stringify(deal));
     showToast('Moved to ' + stageLabel + ' in the dashboard and GoHighLevel.');
     await loadDeals();
@@ -1165,10 +1275,7 @@ async function deleteDealFromAssistant(key, button){
   const deal = allDeals.find(d=>d._key === key);
   if(!deal) return;
   const agencyName = deal.agencyName || 'this agency';
-  const confirmed = window.confirm(
-    'Delete ' + agencyName + ' and its saved call entries from this assistant?\n\n' +
-    'The GoHighLevel contact and opportunity will not be deleted.'
-  );
+  const confirmed = window.confirm('Delete this lead?\n\n' + agencyName + ' will be permanently removed from the Call Assistant.');
   if(!confirmed) return;
 
   if(button){
@@ -1196,11 +1303,11 @@ async function deleteDealFromAssistant(key, button){
     await loadDeals();
     await loadLog();
     renderPartners();
-    showToast('Saved details removed from the assistant. GoHighLevel was not changed.', 5200);
+    showToast('Lead deleted from the Call Assistant. The GoHighLevel contact was preserved.', 5200);
   }catch(e){
     if(button){
       button.disabled = false;
-      button.textContent = 'Delete saved details';
+      button.textContent = button.classList.contains('quick-delete') ? '×' : 'Delete saved details';
     }
     showToast('Could not delete the saved details. Try again.');
   }
@@ -1345,6 +1452,19 @@ document.getElementById('f_decision_maker_email').addEventListener('input', (e)=
   }
 });
 
+function syncAnswererAsDecisionMaker(){
+  const checked = document.getElementById('f_answerer_is_decision_maker').checked;
+  if(!checked) return;
+  const answeredBy = document.getElementById('f_answered_by').value;
+  const answeredByEmail = document.getElementById('f_answered_by_email').value;
+  document.getElementById('f_decision_maker_name').value = answeredBy;
+  document.getElementById('f_decision_maker_email').value = answeredByEmail;
+  document.getElementById('f_decision_maker_spoken_to').value = 'Yes';
+}
+document.getElementById('f_answerer_is_decision_maker').addEventListener('change', syncAnswererAsDecisionMaker);
+document.getElementById('f_answered_by').addEventListener('input', syncAnswererAsDecisionMaker);
+document.getElementById('f_answered_by_email').addEventListener('input', syncAnswererAsDecisionMaker);
+
 // ---------- Tabs ----------
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
@@ -1432,6 +1552,10 @@ let listening = false;
 let finalTranscript = '';
 const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
 
+function removeMutualPatientWording(value){
+  return String(value || '').replace(/\bmutual\s+(?:patient|client)\b/gi, 'person seeking services');
+}
+
 if(!SpeechRecognitionClass){
   document.getElementById('supportNote').classList.add('show');
   document.getElementById('recToggle').disabled = true;
@@ -1446,9 +1570,9 @@ if(!SpeechRecognitionClass){
     for(let i = event.resultIndex; i < event.results.length; i++){
       const text = event.results[i][0].transcript;
       if(event.results[i].isFinal){
-        finalTranscript += text + ' ';
+        finalTranscript += removeMutualPatientWording(text) + ' ';
       } else {
-        interim += text;
+        interim += removeMutualPatientWording(text);
       }
     }
     renderTranscript(interim);
@@ -1557,24 +1681,29 @@ function collectForm(){
     agencyName: document.getElementById('f_agency_name').value.trim(),
     agencyPhoneNumber: document.getElementById('f_agency_phone_number').value.trim(),
     answeredBy: document.getElementById('f_answered_by').value.trim(),
+    answeredByEmail: document.getElementById('f_answered_by_email').value.trim(),
+    answererIsDecisionMaker: document.getElementById('f_answerer_is_decision_maker').checked,
     decisionMakerName: document.getElementById('f_decision_maker_name').value.trim(),
     decisionMakerPhone: document.getElementById('f_decision_maker_phone').value.trim(),
     decisionMakerEmail: document.getElementById('f_decision_maker_email').value.trim(),
-    manualNotes: document.getElementById('f_manual_notes').value.trim(),
+    decisionMakerSpokenTo: document.getElementById('f_decision_maker_spoken_to').value,
+    manualNotes: removeMutualPatientWording(document.getElementById('f_manual_notes').value.trim()),
     counties: document.getElementById('f_counties').value.trim(),
     privateDuty: document.getElementById('f_privateduty').value,
-    notes: document.getElementById('f_notes').value.trim(),
-    transcript: finalTranscript.trim(),
+    notes: removeMutualPatientWording(document.getElementById('f_notes').value.trim()),
+    transcript: removeMutualPatientWording(finalTranscript.trim()),
     loggedBy: callerInput.value.trim(),
     loggedAt: new Date().toISOString()
   };
 }
 
 function clearForm(){
-  ['f_agency_name','f_agency_phone_number','f_answered_by','f_decision_maker_name','f_decision_maker_phone','f_decision_maker_email','f_manual_notes','f_counties','f_notes'].forEach(id=>{
+  ['f_agency_name','f_agency_phone_number','f_answered_by','f_answered_by_email','f_decision_maker_name','f_decision_maker_phone','f_decision_maker_email','f_manual_notes','f_counties','f_notes'].forEach(id=>{
     document.getElementById(id).value = '';
   });
   document.getElementById('f_privateduty').value = '';
+  document.getElementById('f_decision_maker_spoken_to').value = '';
+  document.getElementById('f_answerer_is_decision_maker').checked = false;
   finalTranscript = '';
   renderTranscript('');
   document.getElementById('aiStatus').className = 'ai-status';
@@ -1584,8 +1713,10 @@ function clearForm(){
 }
 
 function hasUnsavedCallDetails(){
-  const ids = ['f_agency_name','f_agency_phone_number','f_answered_by','f_decision_maker_name','f_decision_maker_phone','f_decision_maker_email','f_manual_notes','f_counties','f_notes'];
+  const ids = ['f_agency_name','f_agency_phone_number','f_answered_by','f_answered_by_email','f_decision_maker_name','f_decision_maker_phone','f_decision_maker_email','f_manual_notes','f_counties','f_notes'];
   return ids.some(id=>document.getElementById(id).value.trim()) ||
+    !!document.getElementById('f_decision_maker_spoken_to').value ||
+    document.getElementById('f_answerer_is_decision_maker').checked ||
     !!document.getElementById('f_privateduty').value ||
     !!finalTranscript.trim();
 }
@@ -1608,6 +1739,12 @@ document.getElementById('saveCall').addEventListener('click', async ()=>{
     valMsg.classList.add('show');
     return;
   }
+  const answeredByEmailField = document.getElementById('f_answered_by_email');
+  if(record.answeredByEmail && !answeredByEmailField.checkValidity()){
+    valMsg.textContent = 'Enter a valid Answered By Email.';
+    valMsg.classList.add('show');
+    return;
+  }
   valMsg.classList.remove('show');
 
   const id = Date.now() + '-' + Math.random().toString(36).slice(2,8);
@@ -1616,13 +1753,14 @@ document.getElementById('saveCall').addEventListener('click', async ()=>{
   saveBtn.disabled = true;
   saveBtn.textContent = 'Submitting...';
 
+  let crmResult = {};
   try{
     const crmResponse = await fetch('/api/submit-call', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify(record)
     });
-    const crmResult = await crmResponse.json();
+    crmResult = await crmResponse.json();
     if(!crmResponse.ok) throw new Error(crmResult.error || 'GoHighLevel rejected the submission');
   }catch(e){
     saveBtn.disabled = false;
@@ -1631,6 +1769,14 @@ document.getElementById('saveCall').addEventListener('click', async ()=>{
     valMsg.classList.add('show');
     return;
   }
+
+  record.outreachPathway = crmResult.pathway || 'Follow-Up Needed';
+  record.pipelineStageKey = crmResult.stageKey || 'follow_up_needed';
+  record.emailStatus = crmResult.emailStatus || 'Not sent';
+  record.emailWarning = crmResult.emailWarning || '';
+  record.emailMessageId = crmResult.emailMessageId || '';
+  record.crmContactId = crmResult.contactId || '';
+  record.crmOpportunityId = crmResult.opportunityId || '';
 
   let saved = false;
   let failReason = '';
@@ -1658,7 +1804,10 @@ document.getElementById('saveCall').addEventListener('click', async ()=>{
   }
 
   saveBtn.textContent = 'Submitted';
-  if(dealUpdate){
+  if(record.emailStatus === 'Failed'){
+    showToast(record.agencyName + ' was saved, but the outreach email could not be sent. Check the email permission/configuration.', 6200);
+    highlightDealKey = dealUpdate ? (dealUpdate.key || null) : null;
+  } else if(dealUpdate){
     showToast(dealUpdate.agencyName + ' is now in "' + dealUpdate.stageLabel + '" on the Pipeline tab.');
     highlightDealKey = dealUpdate.key || null;
   } else {
@@ -1689,7 +1838,12 @@ async function loadLog(){
         if(r && r.value){
           const raw = JSON.parse(r.value);
           const parsed = upgradeCallRecord(raw);
-          if(!raw.agencyName) await store.set(k, JSON.stringify(parsed));
+          const needsTextCleanup = ['manualNotes','callNotes','notes','transcript'].some(field=>
+            removeMutualPatientWording(raw[field] || '') !== (raw[field] || '')
+          );
+          if(!raw.agencyName || needsTextCleanup){
+            await store.set(k, JSON.stringify(parsed));
+          }
           parsed._key = k;
           records.push(parsed);
         }
@@ -1717,7 +1871,7 @@ function renderLog(){
   const listEl = document.getElementById('logList');
 
   let filtered = allCalls.filter(c=>{
-    const matchesSearch = !search || [c.agencyName,c.answeredBy,c.decisionMakerName,c.decisionMakerPhone,c.decisionMakerEmail,c.manualNotes,c.counties].join(' ').toLowerCase().includes(search);
+    const matchesSearch = !search || [c.agencyName,c.answeredBy,c.answeredByEmail,c.decisionMakerName,c.decisionMakerPhone,c.decisionMakerEmail,c.manualNotes,c.counties].join(' ').toLowerCase().includes(search);
     const matchesFilter = !filter ||
       (filter === 'decision-maker' && !!c.decisionMakerName) ||
       (filter === 'decision-maker-email' && !!c.decisionMakerEmail) ||
@@ -1743,9 +1897,13 @@ function renderLog(){
       <div class="details">
         <div class="detail-row"><span class="k">Agency Phone</span><span class="v mono">${escapeHtml(c.agencyPhoneNumber || '—')}</span></div>
         <div class="detail-row"><span class="k">Answered By</span><span class="v">${escapeHtml(c.answeredBy || '—')}</span></div>
+        <div class="detail-row"><span class="k">Answered By Email</span><span class="v">${escapeHtml(c.answeredByEmail || '—')}</span></div>
         <div class="detail-row"><span class="k">Decision Maker</span><span class="v">${escapeHtml(c.decisionMakerName || '—')}</span></div>
         <div class="detail-row"><span class="k">Decision Maker Phone</span><span class="v mono">${escapeHtml(c.decisionMakerPhone || '—')}</span></div>
         <div class="detail-row"><span class="k">Decision Maker Email</span><span class="v">${escapeHtml(c.decisionMakerEmail || '—')}</span></div>
+        <div class="detail-row"><span class="k">DM Spoken To</span><span class="v">${escapeHtml(c.decisionMakerSpokenTo || 'Not selected')}</span></div>
+        <div class="detail-row"><span class="k">Outreach Path</span><span class="v">${escapeHtml(c.outreachPathway || 'Follow-Up Needed')}</span></div>
+        <div class="detail-row"><span class="k">Email Status</span><span class="v">${escapeHtml(c.emailStatus || 'Not sent')}</span></div>
         <div class="detail-row"><span class="k">Private duty</span><span class="v">${escapeHtml(c.privateDuty || '—')}</span></div>
         <div class="detail-row"><span class="k">Notes</span><span class="v">${escapeHtml(c.manualNotes || '—')}</span></div>
         <div class="detail-row"><span class="k">AI summary</span><span class="v">${escapeHtml(c.notes || '—')}</span></div>
@@ -1844,7 +2002,7 @@ function toCsvValue(val){
 }
 
 function exportCsvForGoHighLevel(){
-  const headers = ['Business Name','First Name','Last Name','Phone','Email','Answered By','Agency Phone Number','Decision Maker Name','Decision Maker Phone','Decision Maker Email','Tags','Notes'];
+  const headers = ['Business Name','First Name','Last Name','Phone','Email','Answered By','Answered By Email','Agency Phone Number','Decision Maker Name','Decision Maker Phone','Decision Maker Email','Decision Maker Spoken To','Outreach Pathway','Email Status','Tags','Notes'];
   const rows = allCalls.map(c=>{
     const nameParts = (c.decisionMakerName || c.answeredBy || '').trim().split(/\s+/).filter(Boolean);
     const firstName = nameParts[0] || '';
@@ -1862,12 +2020,16 @@ function exportCsvForGoHighLevel(){
       firstName,
       lastName,
       c.decisionMakerPhone || c.agencyPhoneNumber || '',
-      c.decisionMakerEmail || '',
+      c.decisionMakerEmail || c.answeredByEmail || '',
       c.answeredBy || '',
+      c.answeredByEmail || '',
       c.agencyPhoneNumber || '',
       c.decisionMakerName || '',
       c.decisionMakerPhone || '',
       c.decisionMakerEmail || '',
+      c.decisionMakerSpokenTo || '',
+      c.outreachPathway || '',
+      c.emailStatus || '',
       tags,
       notesParts
     ];

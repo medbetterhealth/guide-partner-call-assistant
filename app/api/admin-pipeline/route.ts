@@ -5,13 +5,14 @@ const PIPELINE_NAME = "GUIDE Partner Call Assistant";
 const DESIRED_STAGES = [
   { name: "New Lead", sources: ["New Lead"] },
   { name: "Outreach Made", sources: ["Outreach Made", "Outreach Attempted"] },
+  { name: "Follow-Up Needed", sources: ["Follow-Up Needed"] },
   {
     name: "Decision Maker Identified – Email Sent",
     sources: ["Decision Maker Identified – Email Sent", "Email Sent"],
   },
   {
-    name: "Decision Maker Contacted – Email Sent",
-    sources: ["Decision Maker Contacted – Email Sent"],
+    name: "Decision Maker Contacted",
+    sources: ["Decision Maker Contacted", "Decision Maker Contacted – Email Sent"],
   },
   { name: "Not Interested", sources: ["Not Interested"] },
   { name: "Meeting Scheduled", sources: ["Meeting Scheduled"] },
@@ -31,6 +32,7 @@ const REQUIRED_EXISTING_SOURCE_GROUPS = [
   ["New Lead"],
   ["Outreach Made", "Outreach Attempted"],
   ["Decision Maker Identified – Email Sent", "Email Sent"],
+  ["Decision Maker Contacted", "Decision Maker Contacted – Email Sent"],
   ["Meeting Scheduled"],
   ["Onboarding Documents Signed", "Partner Onboarding"],
   ["Active Partner"],

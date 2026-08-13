@@ -35,10 +35,14 @@ export async function POST(request: Request) {
     )?.id;
     const customFields = [
       { id: fieldId("Answered By", "Partner - Answered By"), field_value: deal.answeredBy },
+      { id: fieldId("Partner - Answered By Email"), field_value: deal.answeredByEmail },
       { id: fieldId("Agency Phone Number", "Partner - Agency Phone Number"), field_value: deal.agencyPhoneNumber },
       { id: fieldId("Decision Maker Name", "Partner - Decision Maker Name"), field_value: deal.decisionMakerName },
       { id: fieldId("Decision Maker Phone", "Partner - Decision Maker Phone"), field_value: deal.decisionMakerPhone },
       { id: fieldId("Decision Maker Email", "Partner - Decision Maker Email"), field_value: deal.decisionMakerEmail },
+      { id: fieldId("Partner - Decision Maker Spoken To"), field_value: deal.decisionMakerSpokenTo },
+      { id: fieldId("Partner - Outreach Pathway"), field_value: deal.outreachPathway },
+      { id: fieldId("Partner - Email Status"), field_value: deal.emailStatus },
       { id: fieldId("Partner - Call Notes", "Partner - Notes", "Call Notes"), field_value: deal.manualNotes },
     ].filter((field) => field.id && field.field_value);
 
@@ -67,7 +71,7 @@ export async function POST(request: Request) {
     const stage = pipeline.stages.find((item) => item.name === deal.stageName);
     if (!stage) throw new Error(`${deal.stageName} stage was not found in HighLevel`);
 
-    await ghl("/opportunities/upsert", {
+    const opportunityResult = await ghl("/opportunities/upsert", {
       method: "POST",
       body: JSON.stringify({
         locationId: env.GHL_LOCATION_ID,
@@ -78,8 +82,9 @@ export async function POST(request: Request) {
         status: deal.stageName === "Active Partner" ? "won" : "open",
       }),
     });
+    const opportunity = (opportunityResult.opportunity || opportunityResult) as { id?: string };
 
-    return Response.json({ ok: true, stage: stage.name });
+    return Response.json({ ok: true, stage: stage.name, opportunityId: opportunity.id || "" });
   } catch (error) {
     return Response.json({ error: error instanceof Error ? error.message : "Stage update failed" }, { status: 502 });
   }
