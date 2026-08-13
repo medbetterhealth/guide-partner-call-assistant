@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     const fieldsResult = await ghl(`/locations/${encodeURIComponent(env.GHL_LOCATION_ID)}/customFields`).catch(() => ({ customFields: [] }));
     const fields = (fieldsResult.customFields || []) as Array<{ id: string; name: string }>;
     const fieldId = (...names: string[]) => fields.find((field) =>
-      names.some((name) => field.name.trim().toLowerCase() === name.toLowerCase())
+      names.some((name) => String(field.name || "").trim().toLowerCase() === name.toLowerCase())
     )?.id;
     const customFields = [
       { id: fieldId("Answered By", "Partner - Answered By"), field_value: deal.answeredBy },
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
       { id: fieldId("Partner - Call Notes", "Partner - Notes", "Call Notes"), field_value: deal.manualNotes },
     ].filter((field) => field.id && field.field_value);
 
-    const primaryName = (deal.decisionMakerName || deal.answeredBy || deal.agencyName).trim();
+    const primaryName = String(deal.decisionMakerName || deal.answeredBy || deal.agencyName || "").trim();
     const names = primaryName.split(/\s+/).filter(Boolean);
     const contactResult = await ghl("/contacts/upsert", {
       method: "POST",

@@ -242,7 +242,8 @@ test("five outreach pathways use distinct email logic and no patient/client clai
   ]) assert.match(outreach, new RegExp(key));
   assert.match(submitRoute, /Pending automation/);
   assert.match(submitRoute, /"SINGLE_OPTIONS"/);
-  assert.match(submitRoute, /options: optionLabels\.map/);
+  assert.match(submitRoute, /options: optionLabels/);
+  assert.doesNotMatch(submitRoute, /optionLabels\.map/);
   assert.match(submitRoute, /\["Yes", "No"\]/);
   assert.doesNotMatch(submitRoute, /picklistOptions/);
   assert.match(outreach, /dr\.erik@medbetterhealth\.org/);

@@ -31,7 +31,7 @@ type LocationCustomField = { id: string; name: string };
 
 function findFieldId(fields: LocationCustomField[], ...names: string[]) {
   return fields.find((field) =>
-    names.some((name) => field.name.trim().toLowerCase() === name.toLowerCase())
+    names.some((name) => String(field.name || "").trim().toLowerCase() === name.toLowerCase())
   )?.id;
 }
 
@@ -51,12 +51,7 @@ async function ensureField(
       dataType,
       model: "contact",
       placeholder,
-      ...(optionLabels?.length ? {
-        options: optionLabels.map((label) => ({
-          key: label.toLowerCase().replace(/[^a-z0-9]+/g, "_"),
-          label,
-        })),
-      } : {}),
+      ...(optionLabels?.length ? { options: optionLabels } : {}),
     }),
   }, "v3");
   const customField = (created.customField || created) as { id?: string };
