@@ -176,6 +176,33 @@
   .stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;}
   .stat .num{font-family:'Manrope';font-weight:800;font-size:26px;color:var(--navy);}
   .stat .lbl{font-size:11.5px;color:var(--muted);font-weight:600;letter-spacing:0.3px;text-transform:uppercase;margin-top:2px;}
+  #view-pipeline.active{position:relative;left:50%;width:calc(100vw - 40px);transform:translateX(-50%);}
+  #pipelineStats .stat{display:flex;align-items:center;gap:14px;padding:13px 16px;min-height:70px;}
+  .pipeline-kpi-icon{
+    width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+    flex:0 0 38px;background:#EAF6EE;color:#168B50;font-size:19px;border:1px solid #CEE9D8;
+  }
+  #pipelineStats .stat:nth-child(2) .pipeline-kpi-icon{background:#EAF3FE;color:#176FD1;border-color:#D0E2F8;}
+  #pipelineStats .stat:nth-child(3) .pipeline-kpi-icon{background:#F2ECFD;color:#7A3BD0;border-color:#E1D3F7;}
+  #pipelineStats .stat:nth-child(4) .pipeline-kpi-icon{background:#EAF6EE;color:#168B50;border-color:#CEE9D8;}
+  .pipeline-kpi-copy{min-width:0;}
+  #pipelineStats .stat .num{font-size:23px;line-height:1;}
+  #pipelineStats .stat .lbl{margin-top:5px;white-space:nowrap;}
+
+  .pipeline-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .pipeline-search-wrap{position:relative;flex:1;min-width:240px;}
+  .pipeline-search-wrap::before{content:'⌕';position:absolute;left:13px;top:50%;transform:translateY(-52%);font-size:18px;color:#718093;}
+  .pipeline-search-wrap input{width:100%;padding-left:39px;}
+  .pipeline-toolbar .btn{height:38px;min-width:92px;}
+  .pipeline-toolbar #toggleAddLead{min-width:108px;}
+  .pipeline-options{
+    display:none;align-items:end;gap:12px;flex-wrap:wrap;background:#fff;border:1px solid var(--border);
+    border-radius:10px;padding:12px 14px;margin:-1px 0 12px;box-shadow:0 5px 16px rgba(9,35,61,.05);
+  }
+  .pipeline-options.show{display:flex;}
+  .pipeline-option{display:flex;flex-direction:column;gap:4px;}
+  .pipeline-option label{font-size:10.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;}
+  .pipeline-option select{min-width:190px;padding:7px 10px;border:1px solid var(--border);border-radius:7px;background:#fff;color:var(--ink);font:12px 'Inter';}
 
   .log-controls{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
   .log-controls input, .log-controls select{
@@ -236,9 +263,9 @@
     scrollbar-gutter:stable;
   }
   .kanban-col{
-    flex:0 0 340px;
-    width:340px;
-    min-width:340px;
+    flex:0 0 318px;
+    width:318px;
+    min-width:318px;
     background:#F3F5F7;
     border-radius:12px;
     border:1px solid #E1E6EB;
@@ -327,10 +354,20 @@
   .pipeline-status.clicked{background:#F0EAF9;color:#6F4AA0;}
   .pipeline-status.neutral,.pipeline-status.no-email,.pipeline-status.pending{background:#EEF1F4;color:#667482;}
   .deal-card .card-activity{
-    display:flex;align-items:center;gap:11px;flex-wrap:wrap;margin-top:11px;padding-top:9px;
+    display:flex;align-items:center;gap:15px;margin-top:11px;padding-top:9px;
     border-top:1px solid #EDF0F2;color:#71808D;font-size:10.5px;font-weight:700;
   }
   .deal-card .card-activity span{white-space:nowrap;}
+  .deal-card .card-menu-wrap{position:relative;margin-left:auto;}
+  .deal-card .card-menu-toggle{border:0;background:transparent;color:#607184;width:24px;height:22px;border-radius:5px;cursor:pointer;font-size:17px;line-height:1;}
+  .deal-card .card-menu-toggle:hover,.deal-card .card-menu-toggle:focus-visible{background:#EEF2F5;outline:none;}
+  .deal-card .card-menu{
+    display:none;position:absolute;right:0;bottom:27px;z-index:30;width:235px;background:#fff;
+    border:1px solid #DDE3E8;border-radius:9px;padding:10px;box-shadow:0 10px 26px rgba(9,35,61,.18);
+  }
+  .deal-card .card-menu.open{display:block;}
+  .deal-card .card-menu .card-move{margin:0;}
+  .deal-card .card-menu .card-move-label{font-size:10.5px;margin-bottom:6px;}
   .deal-card .expand{
     margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:12px;display:none;
   }
@@ -338,8 +375,24 @@
   .record-actions{display:flex;justify-content:flex-end;margin-top:10px;padding-top:9px;border-top:1px solid var(--border);}
   .history-line{color:var(--muted);margin-bottom:4px;line-height:1.5;}
   .kanban-empty{font-size:12px;color:var(--muted);text-align:center;padding:16px 4px;border:1px dashed var(--border);border-radius:8px;}
+  .pipeline-legend{
+    display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-top:4px;padding:10px 14px;
+    background:#fff;border:1px solid var(--border);border-radius:10px;color:#5F6E7D;font-size:11px;
+  }
+  .pipeline-legend strong{color:var(--navy);}
+  .pipeline-legend-group{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+  .pipeline-legend-time{margin-left:auto;color:#718093;white-space:nowrap;}
+  @media(max-width:1180px){
+    #view-pipeline.active{left:auto;width:100%;transform:none;}
+  }
+  @media(max-width:760px){
+    .pipeline-toolbar{flex-wrap:wrap;}
+    .pipeline-search-wrap{flex-basis:100%;}
+    .pipeline-toolbar .btn{flex:1;min-width:74px;}
+    .pipeline-legend-time{width:100%;margin-left:0;}
+  }
   @media(max-width:520px){
-    .kanban-col{flex-basis:320px;width:320px;min-width:320px;}
+    .kanban-col{flex-basis:305px;width:305px;min-width:305px;}
     .deal-card .quick-details{grid-template-columns:92px minmax(0,1fr);gap-column:9px;}
   }
 
@@ -542,16 +595,38 @@
   <!-- PIPELINE VIEW -->
   <div class="view" id="view-pipeline">
     <div class="stats" id="pipelineStats">
-      <div class="stat"><div class="num" id="statOutreach">0</div><div class="lbl">Outreach attempted</div></div>
-      <div class="stat"><div class="num" id="statEmails">0</div><div class="lbl">Emails sent</div></div>
-      <div class="stat"><div class="num" id="statMeetings">0</div><div class="lbl">Meetings scheduled</div></div>
-      <div class="stat"><div class="num" id="statActive">0</div><div class="lbl">Active partners</div></div>
+      <div class="stat"><div class="pipeline-kpi-icon" aria-hidden="true">☎</div><div class="pipeline-kpi-copy"><div class="num" id="statOutreach">0</div><div class="lbl">Outreach attempted</div></div></div>
+      <div class="stat"><div class="pipeline-kpi-icon" aria-hidden="true">✉</div><div class="pipeline-kpi-copy"><div class="num" id="statEmails">0</div><div class="lbl">Emails sent</div></div></div>
+      <div class="stat"><div class="pipeline-kpi-icon" aria-hidden="true">▣</div><div class="pipeline-kpi-copy"><div class="num" id="statMeetings">0</div><div class="lbl">Meetings scheduled</div></div></div>
+      <div class="stat"><div class="pipeline-kpi-icon" aria-hidden="true">●</div><div class="pipeline-kpi-copy"><div class="num" id="statActive">0</div><div class="lbl">Active partners</div></div></div>
     </div>
 
-    <div class="log-controls">
-      <input type="text" id="pipelineSearch" placeholder="Search agency, answered by, or decision maker">
-      <button class="btn btn-ghost btn-sm" id="refreshPipeline">Refresh</button>
+    <div class="pipeline-toolbar">
+      <div class="pipeline-search-wrap"><input type="text" id="pipelineSearch" placeholder="Search agency, answered by, or decision maker..."></div>
+      <button class="btn btn-ghost btn-sm" id="pipelineFilterToggle" aria-expanded="false">☷ Filters</button>
+      <button class="btn btn-ghost btn-sm" id="pipelineSortToggle" aria-expanded="false">⇅ Sort</button>
+      <button class="btn btn-ghost btn-sm" id="refreshPipeline">↻ Refresh</button>
       <button class="btn btn-red btn-sm" id="toggleAddLead">Add lead</button>
+    </div>
+    <div class="pipeline-options" id="pipelineOptions">
+      <div class="pipeline-option">
+        <label for="pipelineFilter">Show leads</label>
+        <select id="pipelineFilter">
+          <option value="all">All leads</option>
+          <option value="decision-maker">Decision maker identified</option>
+          <option value="email">Email available</option>
+          <option value="follow-up">Follow-up needed</option>
+        </select>
+      </div>
+      <div class="pipeline-option">
+        <label for="pipelineSort">Sort cards</label>
+        <select id="pipelineSort">
+          <option value="updated-desc">Recently updated</option>
+          <option value="updated-asc">Oldest updated</option>
+          <option value="agency-asc">Agency A–Z</option>
+          <option value="agency-desc">Agency Z–A</option>
+        </select>
+      </div>
     </div>
 
     <div class="card" id="addLeadForm" style="display:none;">
@@ -572,6 +647,12 @@
     </div>
 
     <div class="kanban-board" id="kanbanBoard"></div>
+    <div class="pipeline-legend" aria-label="Pipeline status legend">
+      <strong>Legend:</strong>
+      <div class="pipeline-legend-group"><span>DM Spoken To</span><span class="pipeline-status yes">Yes</span><span class="pipeline-status no">No</span><span class="pipeline-status neutral">Not Selected</span></div>
+      <div class="pipeline-legend-group"><span>Email Status</span><span class="pipeline-status sent">Sent</span><span class="pipeline-status delivered">Delivered</span><span class="pipeline-status opened">Opened</span><span class="pipeline-status clicked">Clicked</span><span class="pipeline-status no-email">No Email</span></div>
+      <span class="pipeline-legend-time">All times shown in EST</span>
+    </div>
     <p class="footnote">Delete saved details removes the agency and its saved call entries from this assistant only. It does not delete the GoHighLevel contact or opportunity.</p>
   </div>
 
@@ -1076,14 +1157,30 @@ function renderPipelineStats(){
 function renderPipeline(){
   const board = document.getElementById('kanbanBoard');
   const search = document.getElementById('pipelineSearch').value.toLowerCase();
-  const filtered = allDeals.filter(d=> !search || [d.agencyName,d.agencyPhoneNumber,d.answeredBy,d.answeredByEmail,d.decisionMakerName,d.decisionMakerPhone,d.decisionMakerEmail,d.manualNotes].join(' ').toLowerCase().includes(search));
+  const filterMode = document.getElementById('pipelineFilter').value;
+  const sortMode = document.getElementById('pipelineSort').value;
+  let filtered = allDeals.filter(d=> !search || [d.agencyName,d.agencyPhoneNumber,d.answeredBy,d.answeredByEmail,d.decisionMakerName,d.decisionMakerPhone,d.decisionMakerEmail,d.manualNotes].join(' ').toLowerCase().includes(search));
+  filtered = filtered.filter(d=>{
+    if(filterMode === 'decision-maker') return Boolean(d.decisionMakerName || d.decisionMakerEmail || d.decisionMakerPhone);
+    if(filterMode === 'email') return Boolean(d.decisionMakerEmail || d.answeredByEmail);
+    if(filterMode === 'follow-up') return d.stage === 'follow_up_needed';
+    return true;
+  });
+  filtered.sort((a,b)=>{
+    if(sortMode === 'updated-asc') return new Date(a.updatedAt || 0) - new Date(b.updatedAt || 0);
+    if(sortMode === 'agency-asc') return String(a.agencyName || '').localeCompare(String(b.agencyName || ''));
+    if(sortMode === 'agency-desc') return String(b.agencyName || '').localeCompare(String(a.agencyName || ''));
+    return new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0);
+  });
+
+  const formatPipelineDate = (value)=> value ? new Intl.DateTimeFormat('en-US', {
+    timeZone:'America/New_York',year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'
+  }).format(new Date(value)) : 'Not provided';
 
   const cardHtml = (d)=>{
-    const updated = d.updatedAt ? new Date(d.updatedAt).toLocaleString([], {
-      year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'
-    }) : 'Not provided';
+    const updated = formatPipelineDate(d.updatedAt);
     const historyHtml = (d.history || []).slice().reverse().map(h=>{
-      const when = h.ts ? new Date(h.ts).toLocaleString() : '';
+      const when = h.ts ? formatPipelineDate(h.ts) : '';
       return `<div class="history-line">${escapeHtml(when)}: ${escapeHtml(h.note || '')}</div>`;
     }).join('');
     const moveOptions = STAGES.map(s=>`<option value="${s.key}" ${s.key===d.stage?'selected':''}>${escapeHtml(s.label)}</option>`).join('');
@@ -1103,6 +1200,10 @@ function renderPipeline(){
     const spokenDisplay = spokenTo || 'Not Selected';
     const notesPreview = (d.manualNotes || '').trim();
     const historyCount = (d.history || []).length;
+    const emailActivityCount = emailClass === 'no-email' || emailClass === 'neutral' ? 0 : 1;
+    const meetingStageIndex = STAGES.findIndex(stage=>stage.key === 'meeting_scheduled');
+    const currentStageIndex = STAGES.findIndex(stage=>stage.key === d.stage);
+    const meetingActivityCount = currentStageIndex >= meetingStageIndex && meetingStageIndex >= 0 ? 1 : 0;
     const cardValue = (value, extraClass)=>{
       const supplied = String(value || '').trim();
       return `<span class="v${extraClass ? ' ' + extraClass : ''}${supplied ? '' : ' missing'}">${escapeHtml(supplied || 'Not provided')}</span>`;
@@ -1122,13 +1223,19 @@ function renderPipeline(){
           <span class="k">Email status</span><span class="v"><span class="pipeline-status ${emailClass}">${escapeHtml(emailDisplay)}</span></span>
         </div>
         <div class="card-activity" aria-label="Lead activity">
-          <span title="Notes">&#128172; ${notesPreview ? 'Notes 1' : 'No notes'}</span>
-          <span title="Email activity">&#9993; ${escapeHtml(emailDisplay)}</span>
-          <span title="Activity history">&#8635; ${historyCount} update${historyCount === 1 ? '' : 's'}</span>
-        </div>
-        <div class="card-move">
-          <label class="card-move-label">Move to</label>
-          <select class="card-move-select" data-key="${d._key}">${moveOptions}</select>
+          <span title="Notes">&#128172; ${notesPreview ? 1 : 0}</span>
+          <span title="Email activity">&#9993; ${emailActivityCount}</span>
+          <span title="Meetings">&#128197; ${meetingActivityCount}</span>
+          <span title="Updates">&#8635; ${historyCount}</span>
+          <div class="card-menu-wrap">
+            <button type="button" class="card-menu-toggle" aria-label="Lead actions" aria-expanded="false">⋮</button>
+            <div class="card-menu">
+              <div class="card-move">
+                <label class="card-move-label">Move to stage</label>
+                <select class="card-move-select" data-key="${d._key}">${moveOptions}</select>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="expand">
           <div class="detail-row"><span class="k">Agency Phone</span><span class="v mono">${escapeHtml(d.agencyPhoneNumber || 'Not yet provided')}</span></div>
@@ -1207,6 +1314,20 @@ function renderPipeline(){
 
   let draggedKey = null;
 
+  board.querySelectorAll('.card-menu-toggle').forEach(button=>{
+    button.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const menu = button.nextElementSibling;
+      const willOpen = !menu.classList.contains('open');
+      board.querySelectorAll('.card-menu.open').forEach(openMenu=>openMenu.classList.remove('open'));
+      board.querySelectorAll('.card-menu-toggle[aria-expanded="true"]').forEach(openButton=>openButton.setAttribute('aria-expanded','false'));
+      if(willOpen){
+        menu.classList.add('open');
+        button.setAttribute('aria-expanded','true');
+      }
+    });
+  });
+
   board.querySelectorAll('.card-move-select').forEach(sel=>{
     sel.addEventListener('click', (e)=> e.stopPropagation());
     sel.addEventListener('pointerdown', (e)=> e.stopPropagation());
@@ -1227,7 +1348,7 @@ function renderPipeline(){
     let dragStarted = false;
 
     card.addEventListener('click', (e)=>{
-      if(e.target.closest('.card-move, .record-actions, .quick-delete')) return;
+      if(e.target.closest('.card-menu-wrap, .record-actions, .quick-delete')) return;
       if(dragStarted){ dragStarted = false; return; }
       card.classList.toggle('open');
     });
@@ -1991,6 +2112,22 @@ function renderLog(){
 document.getElementById('logSearch').addEventListener('input', renderLog);
 document.getElementById('pipelineSearch').addEventListener('input', renderPipeline);
 document.getElementById('refreshPipeline').addEventListener('click', loadDeals);
+document.getElementById('pipelineFilter').addEventListener('change', renderPipeline);
+document.getElementById('pipelineSort').addEventListener('change', renderPipeline);
+
+function togglePipelineOptions(){
+  const options = document.getElementById('pipelineOptions');
+  const isOpen = options.classList.toggle('show');
+  document.getElementById('pipelineFilterToggle').setAttribute('aria-expanded', String(isOpen));
+  document.getElementById('pipelineSortToggle').setAttribute('aria-expanded', String(isOpen));
+}
+document.getElementById('pipelineFilterToggle').addEventListener('click', togglePipelineOptions);
+document.getElementById('pipelineSortToggle').addEventListener('click', togglePipelineOptions);
+document.addEventListener('click', (event)=>{
+  if(event.target.closest('.card-menu-wrap')) return;
+  document.querySelectorAll('.card-menu.open').forEach(menu=>menu.classList.remove('open'));
+  document.querySelectorAll('.card-menu-toggle[aria-expanded="true"]').forEach(button=>button.setAttribute('aria-expanded','false'));
+});
 
 document.getElementById('toggleAddLead').addEventListener('click', ()=>{
   const form = document.getElementById('addLeadForm');
