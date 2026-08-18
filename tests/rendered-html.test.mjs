@@ -27,6 +27,10 @@ test("call script preserves requested wording and county question", async () => 
   assert.match(html, /Who would be the best person in your company to speak to about this\?/);
   assert.match(html, /scheduling the call is the main objective/);
   assert.doesNotMatch(html, /mutual\s+(?:patient|client)/i);
+  assert.doesNotMatch(html, /id="f_counties_visible"/);
+  assert.doesNotMatch(html, /id="newLeadCounties"/);
+  assert.doesNotMatch(html, /id="stepCountiesInput"/);
+  assert.doesNotMatch(html, />Counties Served</i);
 });
 
 test("New Call does not expose five pipeline stages and final step has only simple end statuses", async () => {
@@ -62,6 +66,8 @@ test("checkbox sync is non-destructive", async () => {
   const block = html.slice(start, end);
   assert.match(block, /Non-destructive sync/);
   assert.match(block, /if\(source && !target\.value\.trim\(\)\) target\.value = source/);
+  assert.match(block, /spokenTo\.value = 'Yes'/);
+  assert.doesNotMatch(block, /if\(!spokenTo\.value\)/);
   assert.doesNotMatch(block, /document\.getElementById\('f_decision_maker_name'\)\.value = answeredBy/);
 });
 
@@ -103,12 +109,18 @@ test("email draft source removes Dementia Times and uses teammate wording", asyn
   assert.match(outreach, /\$34\.50 per hour/);
   assert.doesNotMatch(outreach, /Dementia Times/i);
   assert.doesNotMatch(outreach, /great speaking with you today/i);
+  assert.match(outreach, /subject = `\$\{greeting\} – GUIDE Model Private Duty Partnership & Revenue Opportunity`/);
+  assert.match(outreach, /signatureMode: "existing_outlook_graphical"/);
+  assert.match(outreach, /OUTREACH_BROCHURE_PATH/);
+  assert.doesNotMatch(outreach, /function signature\(/);
 });
 
 test("all email metadata carries GuideTeam2 CC", async () => {
   const outreach = await read("app/api/outreach.ts");
   assert.match(outreach, /OUTREACH_EMAIL_CC = "GuideTeam2@medbetterhealth\.org"/);
+  assert.match(outreach, /OUTREACH_FROM_EMAIL = "dr\.erik@medbetterhealth\.org"/);
   assert.match(outreach, /cc: OUTREACH_EMAIL_CC/);
+  assert.match(outreach, /from: OUTREACH_FROM_EMAIL/);
 });
 
 test("appointment scheduled email intentionally has no new booking CTA", async () => {

@@ -7,6 +7,8 @@ export type OutreachPathKey =
   | "follow_up_needed";
 
 export const OUTREACH_EMAIL_CC = "GuideTeam2@medbetterhealth.org";
+export const OUTREACH_FROM_EMAIL = "dr.erik@medbetterhealth.org";
+export const OUTREACH_BROCHURE_PATH = "/MedBetterHealth_GUIDE_Partner_OnePager.pdf";
 
 export type OutreachCall = Record<string, string | boolean | undefined>;
 
@@ -101,7 +103,7 @@ export function classifyOutreach(call: OutreachCall): OutreachPath {
   if (spokenTo === "Yes") {
     return { ...PATHS.decision_maker_reached_not_scheduled, recipientEmail: decisionMakerEmail || answeredByEmail };
   }
-  if (spokenTo === "No" && decisionMakerEmail) {
+  if (spokenTo !== "Yes" && decisionMakerName && decisionMakerEmail) {
     return { ...PATHS.decision_maker_identified, recipientEmail: decisionMakerEmail };
   }
   if (answeredByEmail && !hasDecisionMakerDetails) {
@@ -124,24 +126,14 @@ function greetingName(call: OutreachCall, path: OutreachPath) {
   return text(call.decisionMakerName) || text(call.answeredBy) || "there";
 }
 
-function signature(booking: string) {
-  return `<p><strong>Dr. Erik Ilyayev</strong><br>
-    CEO<br>
-    M: 718-781-8858<br>
-    P: (305) 339-1756<br>
-    E: <a href="mailto:dr.erik@medbetterhealth.org">dr.erik@medbetterhealth.org</a></p>
-    <p><strong>MedBetterHealth</strong><br>
-    3100 Ray Ferrero Jr Blvd Suite 5030 | Davie, FL 33314<br>
-    <a href="https://medbetterhealth.org/">MedBetterHealth.org</a>${booking ? `<br><a href="${booking}">Book time to meet with me</a>` : ""}</p>`;
-}
-
 export function buildOutreachEmail(call: OutreachCall, path: OutreachPath, calendarUrl: string) {
   const greeting = escapeHtml(greetingName(call, path));
   const booking = escapeHtml(calendarUrl);
   const agency = escapeHtml(call.agencyName) || "your agency";
   const gatekeeper = escapeHtml(call.answeredBy);
-  let subject = "GUIDE Model Private Duty Partnership & Revenue Opportunity";
+  let subject = `${greeting} – GUIDE Model Private Duty Partnership & Revenue Opportunity`;
   let body = "";
+  let closing = "<p>Looking forward to connecting.</p>";
   let includeBooking = false;
 
   if (path.key === "gatekeeper_only") {
@@ -162,12 +154,13 @@ export function buildOutreachEmail(call: OutreachCall, path: OutreachPath, calen
       <p>Please select a convenient date and time using my calendar link below.</p>`;
     includeBooking = true;
   } else if (path.key === "decision_maker_reached_scheduled") {
-    subject = "Your Upcoming GUIDE Model Partnership Meeting";
+    subject = `${greeting} – Your Upcoming GUIDE Model Partnership Meeting`;
     body = `<p>I understand you recently spoke with a member of my team about the GUIDE Model and MedBetterHealth's private-duty home care partnership opportunity.</p>
       <p>I'm glad we were able to get a meeting scheduled, and I look forward to speaking with you personally.</p>
       <p>As my team shared, MedBetterHealth can pay your agency <strong>$34.50 per hour</strong> to provide eligible private-duty respite care services for individuals living with dementia. Your agency provides the care and bills MedBetterHealth directly on the private-pay side.</p>
       <p>I've attached our GUIDE Model informational brochure so you can review the partnership before our conversation.</p>
       <p>I look forward to meeting with you and discussing how MedBetterHealth and ${agency} may be able to work together.</p>`;
+    closing = "<p>Talk to you soon,</p>";
   } else if (path.key === "decision_maker_reached_not_scheduled") {
     body = `<p>I understand you recently spoke with a member of my team regarding the GUIDE Model and our private-duty home care partnership opportunity.</p>
       <p>MedBetterHealth is looking to partner with reliable private-duty home care agencies to provide respite care services for individuals living with dementia.</p>
@@ -177,11 +170,12 @@ export function buildOutreachEmail(call: OutreachCall, path: OutreachPath, calen
       <p>Please use my calendar link below to schedule a quick 15-minute call at a time that works best for you.</p>`;
     includeBooking = true;
   } else if (path.key === "not_interested") {
-    subject = "GUIDE Model Partnership Information";
+    subject = `${greeting} – GUIDE Model Partnership Information`;
     body = `<p>I understand you recently spoke with a member of my team regarding MedBetterHealth's GUIDE Model private-duty home care partnership opportunity.</p>
       <p>I understand that this may not be the right opportunity for your agency at this time.</p>
       <p>I've attached our informational brochure for your reference. If anything changes in the future, or if you would like to learn more about the opportunity for agencies to receive <strong>$34.50 per hour</strong> for eligible private-duty respite care services, we would be happy to reconnect.</p>
       <p>Thank you for your time and consideration.</p>`;
+    closing = "";
   } else {
     body = `<p>I'm following up regarding the GUIDE Model partnership opportunity for ${agency}. Once we have the appropriate contact information, a member of our team will follow up.</p>`;
   }
@@ -189,11 +183,16 @@ export function buildOutreachEmail(call: OutreachCall, path: OutreachPath, calen
   const bookingBlock = includeBooking && booking
     ? `<p><a href="${booking}">Schedule a 15-minute call</a></p>`
     : "";
-  const html = `<p>Hi ${greeting},</p>${body}${bookingBlock}<p>Looking forward to connecting.</p>${signature(includeBooking ? booking : "")}`;
+  // The live GoHighLevel workflows append Dr. Erik's existing Outlook
+  // graphical/social signature. Do not duplicate it here as plain text.
+  const html = `<p>Hi ${greeting},</p>${body}${bookingBlock}${closing}`;
 
   return {
     subject,
+    from: OUTREACH_FROM_EMAIL,
     cc: OUTREACH_EMAIL_CC,
+    attachmentPath: OUTREACH_BROCHURE_PATH,
+    signatureMode: "existing_outlook_graphical",
     html,
     message: html.replace(/<br\s*\/?\s*>/gi, "\n").replace(/<[^>]+>/g, " ").replace(/\s+\n/g, "\n").replace(/[ \t]+/g, " ").trim(),
   };

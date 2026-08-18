@@ -507,11 +507,6 @@
           </div>
         </div>
         <div class="field">
-          <label>Counties Served</label>
-          <input type="text" id="f_counties_visible" placeholder="e.g. Broward, Palm Beach">
-          <span class="field-help">Capture the service area discussed during the call.</span>
-        </div>
-        <div class="field">
           <label>Gatekeeper Email</label>
           <input type="email" id="f_answered_by_email" placeholder="name@agency.com">
           <span class="field-help">Use this when a gatekeeper asks you to email the information to them.</span>
@@ -656,15 +651,9 @@
     </div>
 
     <div class="card" id="addLeadForm" style="display:none;">
-      <div class="row2">
-        <div class="field">
-          <label>Agency name</label>
-          <input type="text" id="newLeadAgency" placeholder="e.g. Comfort Keepers of Broward">
-        </div>
-        <div class="field">
-          <label>Counties served</label>
-          <input type="text" id="newLeadCounties" placeholder="e.g. Broward, Palm Beach">
-        </div>
+      <div class="field">
+        <label>Agency name</label>
+        <input type="text" id="newLeadAgency" placeholder="e.g. Comfort Keepers of Broward">
       </div>
       <div class="form-actions">
         <button class="btn btn-primary btn-sm" id="saveNewLead">Add to pipeline</button>
@@ -1539,7 +1528,7 @@ function renderStep(){
   contentEl.innerHTML = `<div class="step-title">${step.title}</div>` +
     step.lines.map(l=>{
       if(l.t === 'say') return `<div class="say-line">"${l.v}"</div>`;
-      if(l.t === 'input') return `<div class="field" style="margin:-2px 0 12px;"><label>Counties served</label><input type="text" id="stepCountiesInput" placeholder="e.g. Broward, Palm Beach"></div>`;
+      if(l.t === 'input') return ``;
       if(l.t === 'input-privateduty') return `
         <div class="field" style="margin:-2px 0 12px;">
           <label>Provides private duty</label>
@@ -1579,7 +1568,6 @@ function renderStep(){
   if(inlineCounties){
     inlineCounties.value = document.getElementById('f_counties').value;
     inlineCounties.addEventListener('input', (e)=>{
-      document.getElementById('f_counties').value = e.target.value; const vis=document.getElementById('f_counties_visible'); if(vis && vis.value!==e.target.value) vis.value=e.target.value;
     });
   }
 
@@ -1703,7 +1691,7 @@ function syncAnswererAsDecisionMaker(){
   });
 
   const spokenTo = document.getElementById('f_decision_maker_spoken_to');
-  if(!spokenTo.value) spokenTo.value = 'Yes';
+  spokenTo.value = 'Yes';
 }
 document.getElementById('f_answerer_is_decision_maker').addEventListener('change', syncAnswererAsDecisionMaker);
 document.getElementById('f_answered_by').addEventListener('input', syncAnswererAsDecisionMaker);
@@ -2229,12 +2217,10 @@ document.getElementById('toggleAddLead').addEventListener('click', ()=>{
 });
 document.getElementById('cancelNewLead').addEventListener('click', ()=>{
   document.getElementById('newLeadAgency').value = '';
-  document.getElementById('newLeadCounties').value = '';
   document.getElementById('addLeadForm').style.display = 'none';
 });
 document.getElementById('saveNewLead').addEventListener('click', async ()=>{
   const agencyName = document.getElementById('newLeadAgency').value.trim();
-  const counties = document.getElementById('newLeadCounties').value.trim();
   if(!agencyName){
     showToast('Enter an agency name first.');
     return;
@@ -2248,7 +2234,7 @@ document.getElementById('saveNewLead').addEventListener('click', async ()=>{
     decisionMakerName: '',
     decisionMakerPhone: '',
     decisionMakerEmail: '',
-    counties: counties,
+    counties: '',
     stage: 'new_lead',
     createdAt: now,
     updatedAt: now,
@@ -2261,8 +2247,7 @@ document.getElementById('saveNewLead').addEventListener('click', async ()=>{
   try{
     await store.set('deals:' + id, JSON.stringify(deal));
     document.getElementById('newLeadAgency').value = '';
-    document.getElementById('newLeadCounties').value = '';
-    document.getElementById('addLeadForm').style.display = 'none';
+      document.getElementById('addLeadForm').style.display = 'none';
     showToast(agencyName + ' added as a New Lead.');
     await loadDeals();
   }catch(e){
@@ -2567,16 +2552,6 @@ document.getElementById('refreshDash').addEventListener('click', loadDashboard);
 
 
 
-// Keep the visible Counties Served field synced to the existing hidden f_counties field.
-const visibleCountiesField = document.getElementById('f_counties_visible');
-if (visibleCountiesField) {
-  visibleCountiesField.value = document.getElementById('f_counties').value || '';
-  visibleCountiesField.addEventListener('input', (e) => {
-    document.getElementById('f_counties').value = e.target.value;
-    const inline = document.getElementById('stepCountiesInput');
-    if (inline && inline.value !== e.target.value) inline.value = e.target.value;
-  });
-}
 
 </script>
 <div class="toast" id="toast"></div>
