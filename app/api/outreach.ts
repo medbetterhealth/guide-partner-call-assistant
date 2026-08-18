@@ -6,8 +6,8 @@ export type OutreachPathKey =
   | "not_interested"
   | "follow_up_needed";
 
-export const OUTREACH_EMAIL_CC = "GuideTeam2@medbetterhealth.org";
-export const OUTREACH_FROM_EMAIL = "dr.erik@medbetterhealth.org";
+export const OUTREACH_EMAIL_CC = "dr.erik@medbetterhealth.org";
+export const OUTREACH_FROM_EMAIL = "GuideTeam2@medbetterhealth.org";
 export const OUTREACH_BROCHURE_PATH = "/MedBetterHealth_GUIDE_Partner_OnePager.pdf";
 
 export type OutreachCall = Record<string, string | boolean | undefined>;
@@ -127,55 +127,61 @@ function greetingName(call: OutreachCall, path: OutreachPath) {
 }
 
 export function buildOutreachEmail(call: OutreachCall, path: OutreachPath, calendarUrl: string) {
-  const greeting = escapeHtml(greetingName(call, path));
+  const resolvedGreeting = greetingName(call, path);
+  const firstName = escapeHtml(resolvedGreeting.split(/\s+/)[0] || "there");
+  const greeting = path.key === "gatekeeper_only" ? firstName : escapeHtml(resolvedGreeting);
   const booking = escapeHtml(calendarUrl);
   const agency = escapeHtml(call.agencyName) || "your agency";
   const gatekeeper = escapeHtml(call.answeredBy);
-  let subject = `${greeting} – GUIDE Model Private Duty Partnership & Revenue Opportunity`;
+  let subject = `${firstName} – GUIDE Model Private Duty Partnership & Revenue Opportunity`;
   let body = "";
-  let closing = "<p>Looking forward to connecting.</p>";
+  let closing = "<p>Best,<br>MedBetterHealth GUIDE Team</p>";
   let includeBooking = false;
 
   if (path.key === "gatekeeper_only") {
-    body = `<p>A member of my team recently spoke with you regarding the GUIDE Model and an opportunity for your agency to partner with MedBetterHealth.</p>
-      <p>Through this partnership, your agency can provide eligible private-duty respite care services for individuals living with dementia, and MedBetterHealth will pay your agency <strong>$34.50 per hour</strong> for those services.</p>
-      <p>Your agency provides the care and bills MedBetterHealth directly on the private-pay side. Your agency does not bill Medicare for these services.</p>
-      <p>I've attached a brief informational brochure with additional details about the GUIDE Model and how the partnership works.</p>
-      <p>If possible, please share this information with the appropriate decision maker at your agency. I would be happy to schedule a quick 15-minute call with them to explain the program, answer any questions, and discuss the partnership opportunity.</p>
-      <p>Please use my calendar link below to select a convenient time.</p>`;
+    subject = `${firstName} – Great Speaking With You Today | GUIDE Model Private Duty Partnership Opportunity`;
+    body = `<p>It was great speaking with you today about the GUIDE Model and the opportunity for your agency to provide private-duty home care services for individuals living with dementia.</p>
+      <p>Through this partnership, MedBetterHealth will pay your agency <strong>$34.50 per hour</strong> to provide eligible private-duty respite care services. This can create additional paid home care hours and a new revenue opportunity for your agency.</p>
+      <p>I've attached a brief informational brochure with more details about the GUIDE Model and how the partnership works.</p>
+      <p>I'd appreciate it if you could share this information with the appropriate decision maker at your agency.</p>
+      <p>I'm copying our CEO, Dr. Erik Ilyayev, on this email. He would be happy to schedule a quick 15-minute conversation with the appropriate person to explain the program, answer any questions, and discuss the partnership opportunity.</p>
+      <p>You can use Dr. Erik's calendar link below to select a convenient time.</p>
+      <p>Looking forward to connecting again.</p>`;
     includeBooking = true;
   } else if (path.key === "decision_maker_identified") {
-    body = `<p>A member of my team recently spoke with ${gatekeeper || "a member of your team"} at ${agency}, who provided your contact information regarding a potential partnership through the GUIDE Model.</p>
-      <p>MedBetterHealth is looking to partner with reliable private-duty home care agencies to provide respite care services for individuals living with dementia.</p>
-      <p>Through this partnership, MedBetterHealth will pay your agency <strong>$34.50 per hour</strong> for eligible private-duty respite care services. Your agency provides the care and bills MedBetterHealth directly on the private-pay side, so your agency does not bill Medicare for these services.</p>
-      <p>This can provide your agency with additional paid referrals and additional home care hours.</p>
-      <p>I've attached a brief informational brochure with more information about the program.</p>
-      <p>I'd love to schedule a quick 15-minute call with you to explain how the partnership works, answer your questions, and discuss the opportunity for ${agency}.</p>
-      <p>Please select a convenient date and time using my calendar link below.</p>`;
+    body = `<p>I recently spoke with ${gatekeeper || "a member of your team"} at ${agency} regarding the GUIDE Model and the opportunity for your agency to partner with MedBetterHealth.</p>
+      <p>Through this program, your agency can provide eligible private-duty respite care services for individuals living with dementia, and MedBetterHealth will pay your agency <strong>$34.50 per hour</strong> for those services.</p>
+      <p>Your agency provides the care and bills MedBetterHealth directly on the private-pay side, so your agency does not bill Medicare for these services.</p>
+      <p>This partnership can provide your agency with additional paid referrals and additional home care hours.</p>
+      <p>I've attached a brief informational brochure with more details about the program.</p>
+      <p>I'm copying our CEO, Dr. Erik Ilyayev, on this email. He would love to schedule a quick 15-minute call with you to explain how the partnership works, answer any questions, and discuss the opportunity for ${agency}.</p>
+      <p>Please use Dr. Erik's calendar link below to select a convenient date and time.</p>
+      <p>We look forward to connecting with you.</p>`;
     includeBooking = true;
   } else if (path.key === "decision_maker_reached_scheduled") {
-    subject = `${greeting} – Your Upcoming GUIDE Model Partnership Meeting`;
-    body = `<p>I understand you recently spoke with a member of my team about the GUIDE Model and MedBetterHealth's private-duty home care partnership opportunity.</p>
-      <p>I'm glad we were able to get a meeting scheduled, and I look forward to speaking with you personally.</p>
-      <p>As my team shared, MedBetterHealth can pay your agency <strong>$34.50 per hour</strong> to provide eligible private-duty respite care services for individuals living with dementia. Your agency provides the care and bills MedBetterHealth directly on the private-pay side.</p>
-      <p>I've attached our GUIDE Model informational brochure so you can review the partnership before our conversation.</p>
-      <p>I look forward to meeting with you and discussing how MedBetterHealth and ${agency} may be able to work together.</p>`;
-    closing = "<p>Talk to you soon,</p>";
+    subject = `${firstName} – Your Upcoming GUIDE Model Partnership Meeting`;
+    body = `<p>It was great speaking with you today about the GUIDE Model and MedBetterHealth's private-duty home care partnership opportunity.</p>
+      <p>As we discussed, MedBetterHealth can pay your agency <strong>$34.50 per hour</strong> to provide eligible private-duty respite care services for individuals living with dementia. Your agency provides the care and bills MedBetterHealth directly on the private-pay side.</p>
+      <p>I've attached our GUIDE Model informational brochure so you can review some additional information before your upcoming conversation.</p>
+      <p>I'm copying our CEO, Dr. Erik Ilyayev, on this email. He looks forward to speaking with you and discussing how MedBetterHealth and ${agency} can work together.</p>
+      <p>We look forward to the conversation.</p>`;
   } else if (path.key === "decision_maker_reached_not_scheduled") {
-    body = `<p>I understand you recently spoke with a member of my team regarding the GUIDE Model and our private-duty home care partnership opportunity.</p>
-      <p>MedBetterHealth is looking to partner with reliable private-duty home care agencies to provide respite care services for individuals living with dementia.</p>
+    subject = `${firstName} – Great Speaking With You Today | GUIDE Model Private Duty Partnership Opportunity`;
+    body = `<p>It was great speaking with you today about the GUIDE Model and MedBetterHealth's private-duty home care partnership opportunity.</p>
+      <p>As we discussed, MedBetterHealth is looking to partner with reliable private-duty home care agencies to provide respite services for individuals living with dementia.</p>
       <p>Through this partnership, MedBetterHealth will pay your agency <strong>$34.50 per hour</strong> for eligible private-duty respite care services. Your agency provides the care and bills MedBetterHealth directly on the private-pay side.</p>
-      <p>I've attached a brief informational brochure with additional details about the program and partnership.</p>
-      <p>I'd be happy to speak with you personally, answer any questions you may have, and discuss how ${agency} could work with MedBetterHealth.</p>
-      <p>Please use my calendar link below to schedule a quick 15-minute call at a time that works best for you.</p>`;
+      <p>I've attached a brief informational brochure with additional details about the program.</p>
+      <p>I'm copying our CEO, Dr. Erik Ilyayev, on this email so you can connect with him directly. He would be happy to answer any additional questions and discuss how ${agency} can work with MedBetterHealth.</p>
+      <p>Please use Dr. Erik's calendar link below to schedule a quick 15-minute conversation at a time that works best for you.</p>
+      <p>Looking forward to connecting again.</p>`;
     includeBooking = true;
   } else if (path.key === "not_interested") {
-    subject = `${greeting} – GUIDE Model Partnership Information`;
-    body = `<p>I understand you recently spoke with a member of my team regarding MedBetterHealth's GUIDE Model private-duty home care partnership opportunity.</p>
+    subject = `${firstName} – GUIDE Model Private Duty Partnership Information`;
+    body = `<p>Thank you for taking the time to speak with me today about the GUIDE Model and MedBetterHealth's private-duty home care partnership opportunity.</p>
       <p>I understand that this may not be the right opportunity for your agency at this time.</p>
-      <p>I've attached our informational brochure for your reference. If anything changes in the future, or if you would like to learn more about the opportunity for agencies to receive <strong>$34.50 per hour</strong> for eligible private-duty respite care services, we would be happy to reconnect.</p>
-      <p>Thank you for your time and consideration.</p>`;
-    closing = "";
+      <p>I've attached our informational brochure for your reference. If anything changes in the future, or if your agency would like to learn more about the opportunity to receive <strong>$34.50 per hour</strong> for eligible private-duty respite care services, we'd be happy to reconnect.</p>
+      <p>I'm copying our CEO, Dr. Erik Ilyayev, so you have his information should you wish to connect in the future.</p>
+      <p>Thank you again for your time.</p>`;
   } else {
     body = `<p>I'm following up regarding the GUIDE Model partnership opportunity for ${agency}. Once we have the appropriate contact information, a member of our team will follow up.</p>`;
   }
@@ -183,8 +189,8 @@ export function buildOutreachEmail(call: OutreachCall, path: OutreachPath, calen
   const bookingBlock = includeBooking && booking
     ? `<p><a href="${booking}">Schedule a 15-minute call</a></p>`
     : "";
-  // The live GoHighLevel workflows append Dr. Erik's existing Outlook
-  // graphical/social signature. Do not duplicate it here as plain text.
+  // The live GoHighLevel workflows use the existing GuideTeam2 mailbox or
+  // approved GUIDE Team signature. Do not invent or duplicate branding here.
   const html = `<p>Hi ${greeting},</p>${body}${bookingBlock}${closing}`;
 
   return {
@@ -192,7 +198,7 @@ export function buildOutreachEmail(call: OutreachCall, path: OutreachPath, calen
     from: OUTREACH_FROM_EMAIL,
     cc: OUTREACH_EMAIL_CC,
     attachmentPath: OUTREACH_BROCHURE_PATH,
-    signatureMode: "existing_outlook_graphical",
+    signatureMode: "existing_guide_team_mailbox",
     html,
     message: html.replace(/<br\s*\/?\s*>/gi, "\n").replace(/<[^>]+>/g, " ").replace(/\s+\n/g, "\n").replace(/[ \t]+/g, " ").trim(),
   };

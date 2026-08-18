@@ -102,23 +102,23 @@ test("outreach classifier supports all five selected outcomes", async () => {
   assert.match(outreach, /follow_up_needed:[\s\S]*?shouldEmail: false/);
 });
 
-test("email draft source removes Dementia Times and uses teammate wording", async () => {
+test("email draft source removes Dementia Times and uses approved GUIDE Team wording", async () => {
   const outreach = await read("app/api/outreach.ts");
-  assert.match(outreach, /A member of my team recently spoke with you/);
-  assert.match(outreach, /I understand you recently spoke with a member of my team/);
+  assert.match(outreach, /I'm copying our CEO, Dr\. Erik Ilyayev/);
+  assert.match(outreach, /Best,<br>MedBetterHealth GUIDE Team/);
   assert.match(outreach, /\$34\.50 per hour/);
   assert.doesNotMatch(outreach, /Dementia Times/i);
-  assert.doesNotMatch(outreach, /great speaking with you today/i);
-  assert.match(outreach, /subject = `\$\{greeting\} – GUIDE Model Private Duty Partnership & Revenue Opportunity`/);
-  assert.match(outreach, /signatureMode: "existing_outlook_graphical"/);
+  assert.match(outreach, /Great Speaking With You Today \| GUIDE Model Private Duty Partnership Opportunity/);
+  assert.match(outreach, /subject = `\$\{firstName\} – GUIDE Model Private Duty Partnership & Revenue Opportunity`/);
+  assert.match(outreach, /signatureMode: "existing_guide_team_mailbox"/);
   assert.match(outreach, /OUTREACH_BROCHURE_PATH/);
   assert.doesNotMatch(outreach, /function signature\(/);
 });
 
-test("all email metadata carries GuideTeam2 CC", async () => {
+test("all email metadata uses GuideTeam2 sender and Dr. Erik CC", async () => {
   const outreach = await read("app/api/outreach.ts");
-  assert.match(outreach, /OUTREACH_EMAIL_CC = "GuideTeam2@medbetterhealth\.org"/);
-  assert.match(outreach, /OUTREACH_FROM_EMAIL = "dr\.erik@medbetterhealth\.org"/);
+  assert.match(outreach, /OUTREACH_EMAIL_CC = "dr\.erik@medbetterhealth\.org"/);
+  assert.match(outreach, /OUTREACH_FROM_EMAIL = "GuideTeam2@medbetterhealth\.org"/);
   assert.match(outreach, /cc: OUTREACH_EMAIL_CC/);
   assert.match(outreach, /from: OUTREACH_FROM_EMAIL/);
 });
