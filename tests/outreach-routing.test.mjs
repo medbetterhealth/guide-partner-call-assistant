@@ -57,12 +57,12 @@ test("email drafts resolve names and preserve booking rules", () => {
     assert.ok(!draft.html.includes("Hi ,"));
     assert.equal(draft.from, "GuideTeam2@medbetterhealth.org");
     assert.equal(draft.cc, "dr.erik@medbetterhealth.org");
-    assert.equal(draft.signatureMode, "existing_guide_team_mailbox");
+    assert.equal(draft.signatureMode, "existing_guideteam2_outlook_graphical");
     assert.equal(draft.attachmentPath, "/MedBetterHealth_GUIDE_Partner_OnePager.pdf");
     const shouldBook = key === "gatekeeper_only" || key === "decision_maker_identified" || key === "decision_maker_reached_not_scheduled";
     assert.equal(draft.html.includes(calendarUrl), shouldBook);
     assert.doesNotMatch(draft.html, /Dementia Times|DementiaTimes\.com/i);
     assert.match(draft.html, /copying our CEO, Dr\. Erik Ilyayev/i);
-    assert.match(draft.html, /Best,<br>MedBetterHealth GUIDE Team/);
+    assert.doesNotMatch(draft.html, /Best,<br>MedBetterHealth GUIDE Team/);
   }
 });

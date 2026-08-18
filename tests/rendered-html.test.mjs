@@ -105,12 +105,12 @@ test("outreach classifier supports all five selected outcomes", async () => {
 test("email draft source removes Dementia Times and uses approved GUIDE Team wording", async () => {
   const outreach = await read("app/api/outreach.ts");
   assert.match(outreach, /I'm copying our CEO, Dr\. Erik Ilyayev/);
-  assert.match(outreach, /Best,<br>MedBetterHealth GUIDE Team/);
+  assert.match(outreach, /Ekaterina Sbitneva-Bixler's existing/);
   assert.match(outreach, /\$34\.50 per hour/);
   assert.doesNotMatch(outreach, /Dementia Times/i);
   assert.match(outreach, /Great Speaking With You Today \| GUIDE Model Private Duty Partnership Opportunity/);
   assert.match(outreach, /subject = `\$\{firstName\} – GUIDE Model Private Duty Partnership & Revenue Opportunity`/);
-  assert.match(outreach, /signatureMode: "existing_guide_team_mailbox"/);
+  assert.match(outreach, /signatureMode: "existing_guideteam2_outlook_graphical"/);
   assert.match(outreach, /OUTREACH_BROCHURE_PATH/);
   assert.doesNotMatch(outreach, /function signature\(/);
 });

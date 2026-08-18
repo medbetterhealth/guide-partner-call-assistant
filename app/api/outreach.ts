@@ -135,7 +135,9 @@ export function buildOutreachEmail(call: OutreachCall, path: OutreachPath, calen
   const gatekeeper = escapeHtml(call.answeredBy);
   let subject = `${firstName} – GUIDE Model Private Duty Partnership & Revenue Opportunity`;
   let body = "";
-  let closing = "<p>Best,<br>MedBetterHealth GUIDE Team</p>";
+  // The exact saved GuideTeam2 Outlook signature is appended by the delivery
+  // flow, so the generated copy intentionally contains no duplicate sign-off.
+  const closing = "";
   let includeBooking = false;
 
   if (path.key === "gatekeeper_only") {
@@ -189,8 +191,9 @@ export function buildOutreachEmail(call: OutreachCall, path: OutreachPath, calen
   const bookingBlock = includeBooking && booking
     ? `<p><a href="${booking}">Schedule a 15-minute call</a></p>`
     : "";
-  // The live GoHighLevel workflows use the existing GuideTeam2 mailbox or
-  // approved GUIDE Team signature. Do not invent or duplicate branding here.
+  // The live delivery flow must append Ekaterina Sbitneva-Bixler's existing
+  // GuideTeam2 Outlook graphical signature, including its live calendar/social
+  // links and banner. Do not flatten, recreate, or duplicate it in this body.
   const html = `<p>Hi ${greeting},</p>${body}${bookingBlock}${closing}`;
 
   return {
@@ -198,7 +201,7 @@ export function buildOutreachEmail(call: OutreachCall, path: OutreachPath, calen
     from: OUTREACH_FROM_EMAIL,
     cc: OUTREACH_EMAIL_CC,
     attachmentPath: OUTREACH_BROCHURE_PATH,
-    signatureMode: "existing_guide_team_mailbox",
+    signatureMode: "existing_guideteam2_outlook_graphical",
     html,
     message: html.replace(/<br\s*\/?\s*>/gi, "\n").replace(/<[^>]+>/g, " ").replace(/\s+\n/g, "\n").replace(/[ \t]+/g, " ").trim(),
   };
