@@ -1,0 +1,2585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>GUIDE Partner Call Assistant</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0F2A46;
+    --navy-dark:#0A1D33;
+    --red:#C6202E;
+    --red-dark:#9E1A26;
+    --bg:#F3F5F8;
+    --card:#FFFFFF;
+    --ink:#16202B;
+    --muted:#5B6B7F;
+    --border:#DFE4EA;
+    --success:#1E8E5A;
+    --success-bg:#E7F5EE;
+    --warn-bg:#FBF0DD;
+    --warn-ink:#8A5A00;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{font-family:'Manrope',system-ui,sans-serif;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+
+  /* Header */
+  .topbar{
+    background:linear-gradient(135deg,var(--navy) 0%,var(--navy-dark) 100%);
+    color:#fff;
+    padding:20px 28px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:14px;
+  }
+  .brand{display:flex;align-items:center;gap:14px;}
+  .brand-mark{
+    width:42px;height:42px;border-radius:10px;
+    background:var(--red);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Manrope';font-weight:800;font-size:15px;
+    letter-spacing:0.5px;
+    flex-shrink:0;
+  }
+  .brand-text h1{margin:0;font-size:19px;font-weight:800;letter-spacing:0.2px;}
+  .brand-text p{margin:2px 0 0;font-size:12.5px;color:#B9C6D6;}
+  .tabs{display:flex;gap:6px;background:rgba(255,255,255,0.08);padding:4px;border-radius:10px;}
+  .tab-btn{
+    border:none;background:transparent;color:#CFDAE6;
+    padding:9px 16px;border-radius:8px;font-size:13.5px;font-weight:600;
+    cursor:pointer;font-family:'Inter';transition:all .15s;
+  }
+  .tab-btn.active{background:#fff;color:var(--navy);}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:24px 20px 60px;}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  .grid{display:grid;grid-template-columns:1.05fr 1fr;gap:20px;align-items:start;}
+  @media(max-width:900px){.grid{grid-template-columns:1fr;}}
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:22px 22px 24px;
+    margin-bottom:20px;
+  }
+  .card h2{margin:0 0 4px;font-size:15px;letter-spacing:0.3px;color:var(--navy);}
+  .card .sub{margin:0 0 18px;font-size:12.5px;color:var(--muted);}
+
+  /* Stepper */
+  .step-dots{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap;}
+  .dot{
+    width:26px;height:26px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:700;font-family:'Manrope';
+    background:#EDF1F5;color:var(--muted);
+    border:1.5px solid transparent;
+    cursor:pointer;flex-shrink:0;
+    transition:all .15s;
+  }
+  .dot.done{background:var(--success-bg);color:var(--success);}
+  .dot.current{background:var(--red);color:#fff;border-color:var(--red-dark);}
+
+  .step-title{font-size:16px;font-weight:800;margin:0 0 12px;color:var(--ink);}
+  .say-line{
+    background:#F7F4EC;
+    border-left:3px solid var(--red);
+    padding:12px 14px;
+    border-radius:0 8px 8px 0;
+    font-size:14.5px;
+    line-height:1.55;
+    margin-bottom:10px;
+    font-style:italic;
+    color:#2A2113;
+  }
+  .note-line{
+    font-size:12.5px;
+    color:var(--muted);
+    margin:-2px 0 10px 2px;
+  }
+  .step-nav{display:flex;justify-content:space-between;margin-top:18px;gap:10px;}
+  .btn{
+    border:none;border-radius:9px;padding:10px 18px;font-size:13.5px;font-weight:700;
+    cursor:pointer;font-family:'Inter';transition:opacity .15s,transform .1s;
+  }
+  .btn:active{transform:scale(0.98);}
+  .btn:disabled{opacity:0.35;cursor:not-allowed;}
+  .btn-primary{background:var(--navy);color:#fff;}
+  .btn-red{background:var(--red);color:#fff;}
+  .btn-ghost{background:#EDF1F5;color:var(--navy);}
+  .btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--muted);}
+  .btn-danger-outline{background:#fff;border:1.5px solid #D8A4A8;color:var(--red-dark);}
+  .btn-sm{padding:7px 12px;font-size:12.5px;}
+
+  /* Form */
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12px;font-weight:700;color:var(--navy);margin-bottom:5px;letter-spacing:0.2px;}
+  .field input, .field select, .field textarea{
+    width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;
+    font-size:13.5px;font-family:'Inter';color:var(--ink);background:#fff;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{
+    outline:none;border-color:var(--navy);
+  }
+  .field textarea{resize:vertical;min-height:70px;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media(max-width:520px){.row2{grid-template-columns:1fr;}}
+  .inline-check{display:flex;align-items:flex-start;gap:9px;margin:-2px 0 14px;font-size:12.5px;color:var(--ink);}
+  .inline-check input{width:16px;height:16px;margin-top:1px;accent-color:var(--navy);}
+  .field-help{display:block;margin-top:4px;color:var(--muted);font-size:11.5px;line-height:1.4;}
+
+  /* Transcription */
+  .rec-row{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+  .rec-dot{
+    width:11px;height:11px;border-radius:50%;background:#C7CFD8;flex-shrink:0;
+  }
+  .rec-dot.live{background:var(--red);animation:pulse 1.3s infinite;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(198,32,46,0.5);}70%{box-shadow:0 0 0 9px rgba(198,32,46,0);}100%{box-shadow:0 0 0 0 rgba(198,32,46,0);}}
+  .rec-status{font-size:12.5px;color:var(--muted);font-weight:600;}
+  .transcript-box{
+    background:#FAFBFC;border:1.5px solid var(--border);border-radius:10px;
+    padding:12px 14px;min-height:90px;max-height:220px;overflow-y:auto;
+    font-size:13px;line-height:1.6;color:#2E3B47;white-space:pre-wrap;
+  }
+  .transcript-box .placeholder{color:#A6B1BC;font-style:italic;}
+  .interim{color:#A6B1BC;}
+  .ai-status{font-size:12.5px;margin-top:10px;padding:8px 12px;border-radius:8px;display:none;}
+  .ai-status.show{display:block;}
+  .ai-status.loading{background:#EEF2FA;color:var(--navy);}
+  .ai-status.error{background:#FCEAEA;color:var(--red-dark);}
+  .ai-status.ok{background:var(--success-bg);color:var(--success);}
+
+  .support-note{font-size:12px;color:var(--muted);background:var(--warn-bg);color:var(--warn-ink);padding:9px 12px;border-radius:8px;margin-bottom:14px;display:none;}
+  .support-note.show{display:block;}
+
+  .form-actions{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;}
+  .validation{font-size:12.5px;color:var(--red-dark);margin-top:8px;display:none;}
+  .validation.show{display:block;}
+
+  /* Log view */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+  @media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr);}}
+  .stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;}
+  .stat .num{font-family:'Manrope';font-weight:800;font-size:26px;color:var(--navy);}
+  .stat .lbl{font-size:11.5px;color:var(--muted);font-weight:600;letter-spacing:0.3px;text-transform:uppercase;margin-top:2px;}
+  #view-pipeline.active{position:relative;left:50%;width:calc(100vw - 40px);transform:translateX(-50%);}
+  #pipelineStats .stat{display:flex;align-items:center;gap:14px;padding:13px 16px;min-height:70px;}
+  .pipeline-kpi-icon{
+    width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+    flex:0 0 38px;background:#EAF6EE;color:#168B50;font-size:19px;border:1px solid #CEE9D8;
+  }
+  #pipelineStats .stat:nth-child(2) .pipeline-kpi-icon{background:#EAF3FE;color:#176FD1;border-color:#D0E2F8;}
+  #pipelineStats .stat:nth-child(3) .pipeline-kpi-icon{background:#F2ECFD;color:#7A3BD0;border-color:#E1D3F7;}
+  #pipelineStats .stat:nth-child(4) .pipeline-kpi-icon{background:#EAF6EE;color:#168B50;border-color:#CEE9D8;}
+  .pipeline-kpi-copy{min-width:0;}
+  #pipelineStats .stat .num{font-size:23px;line-height:1;}
+  #pipelineStats .stat .lbl{margin-top:5px;white-space:nowrap;}
+
+  .pipeline-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .pipeline-search-wrap{position:relative;flex:1;min-width:240px;}
+  .pipeline-search-wrap::before{content:'⌕';position:absolute;left:13px;top:50%;transform:translateY(-52%);font-size:18px;color:#718093;}
+  .pipeline-search-wrap input{width:100%;padding-left:39px;}
+  .pipeline-toolbar .btn{height:38px;min-width:92px;}
+  .pipeline-toolbar #toggleAddLead{min-width:108px;}
+  .pipeline-options{
+    display:none;align-items:end;gap:12px;flex-wrap:wrap;background:#fff;border:1px solid var(--border);
+    border-radius:10px;padding:12px 14px;margin:-1px 0 12px;box-shadow:0 5px 16px rgba(9,35,61,.05);
+  }
+  .pipeline-options.show{display:flex;}
+  .pipeline-option{display:flex;flex-direction:column;gap:4px;}
+  .pipeline-option label{font-size:10.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;}
+  .pipeline-option select{min-width:190px;padding:7px 10px;border:1px solid var(--border);border-radius:7px;background:#fff;color:var(--ink);font:12px 'Inter';}
+
+  .log-controls{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+  .log-controls input, .log-controls select{
+    padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:'Inter';
+  }
+  .log-controls input{flex:1;min-width:180px;}
+
+  .log-empty{
+    text-align:center;padding:50px 20px;color:var(--muted);
+    background:var(--card);border:1.5px dashed var(--border);border-radius:14px;font-size:14px;
+  }
+
+  .log-item{
+    background:var(--card);border:1px solid var(--border);border-radius:12px;
+    padding:16px 18px;margin-bottom:10px;cursor:pointer;
+  }
+  .log-item .top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;}
+  .log-item .agency{font-weight:800;font-family:'Manrope';font-size:15px;color:var(--ink);}
+  .log-item .meta{font-size:12.5px;color:var(--muted);margin-top:3px;}
+  .badge{
+    font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;letter-spacing:0.2px;white-space:nowrap;
+  }
+  .badge.hot{background:#FCEAEA;color:var(--red-dark);}
+  .badge.warm{background:var(--warn-bg);color:var(--warn-ink);}
+  .badge.cold{background:#EDF1F5;color:var(--muted);}
+  .badge.na{background:#EDF1F5;color:var(--muted);}
+  .log-item .details{
+    margin-top:12px;padding-top:12px;border-top:1px solid var(--border);
+    font-size:13px;display:none;
+  }
+  .log-item.open .details{display:block;}
+  .detail-row{display:flex;gap:8px;margin-bottom:6px;}
+  .detail-row .k{color:var(--muted);min-width:110px;font-weight:600;font-size:12px;}
+  .detail-row .v{color:var(--ink);}
+  .log-item .footer-row{display:flex;justify-content:flex-end;margin-top:10px;}
+
+  .caller-bar{display:flex;align-items:center;gap:10px;margin-bottom:18px;font-size:12.5px;color:var(--muted);flex-wrap:wrap;}
+  .caller-bar input{padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:12.5px;width:170px;}
+  .caller-bar .saved-tick{color:var(--success);font-weight:700;display:none;}
+  .caller-bar .saved-tick.show{display:inline;}
+
+  .footnote{font-size:11.5px;color:var(--muted);text-align:center;margin-top:30px;line-height:1.6;}
+
+  .toast{
+    position:fixed;bottom:26px;left:50%;
+    transform:translateX(-50%) translateY(16px);
+    background:var(--navy);color:#fff;padding:12px 20px;border-radius:10px;
+    font-size:13px;font-weight:600;opacity:0;pointer-events:none;
+    transition:opacity .2s ease, transform .2s ease;
+    box-shadow:0 10px 28px rgba(0,0,0,0.22);
+    z-index:999;max-width:360px;text-align:center;line-height:1.4;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  .kanban-board{
+    display:flex;flex-wrap:nowrap;gap:16px;align-items:flex-start;
+    overflow-x:auto;overscroll-behavior-x:contain;padding:4px 2px 16px;
+    scrollbar-gutter:stable;
+  }
+  .kanban-col{
+    flex:0 0 318px;
+    width:318px;
+    min-width:318px;
+    background:#F3F5F7;
+    border-radius:12px;
+    border:1px solid #E1E6EB;
+    padding:12px 11px;
+    display:flex;
+    flex-direction:column;
+  }
+  .kanban-col.side{background:#F3ECEC;border:1px solid #E8D5D5;}
+  .kanban-col-header{
+    display:flex;justify-content:space-between;align-items:center;
+    gap:12px;font-family:'Manrope';font-weight:800;font-size:12.5px;color:var(--navy);
+    margin-bottom:11px;padding:1px 2px;
+  }
+  .kanban-col-header .stage-name{position:relative;flex:1;line-height:1.35;}
+  .kanban-col-header .stage-name.has-description{
+    cursor:help;
+  }
+  .kanban-col-header .stage-name.has-description::after{
+    content:attr(data-tooltip);position:absolute;left:0;top:calc(100% + 8px);z-index:20;
+    width:min(300px,75vw);padding:10px 12px;border-radius:8px;background:var(--navy);
+    color:#fff;font-family:'Inter';font-size:11.5px;font-weight:500;line-height:1.45;
+    box-shadow:0 8px 22px rgba(0,0,0,.22);opacity:0;visibility:hidden;pointer-events:none;
+    transform:translateY(-3px);transition:opacity .15s ease,transform .15s ease,visibility .15s ease;
+  }
+  .kanban-col-header .stage-name.has-description:hover::after,
+  .kanban-col-header .stage-name.has-description:focus-visible::after{
+    opacity:1;visibility:visible;transform:translateY(0);
+  }
+  .kanban-col-header .count{
+    min-width:26px;text-align:center;background:#fff;border:1px solid #E2E7EC;
+    border-radius:20px;padding:2px 8px;font-size:11px;color:var(--muted);
+  }
+  .kanban-col.win{background:var(--success-bg);border:1px solid #B9E3CD;}
+  .kanban-col.win .kanban-col-header{color:var(--success);}
+  .kanban-col.side .kanban-col-header{color:var(--red-dark);}
+  .kanban-cards{
+    min-height:64px;max-height:min(68vh,760px);overflow-y:auto;overflow-x:hidden;
+    display:flex;flex-direction:column;gap:10px;padding:1px 3px 2px 1px;border-radius:8px;
+  }
+  .kanban-stage-target{transition:background .12s,box-shadow .12s;}
+  .kanban-stage-target.drop-active{box-shadow:0 0 0 2px var(--navy) inset;background:#DCE6F5;}
+  .kanban-group-col{background:#F7F6FA;border:1px solid #B8AED0;}
+  .kanban-group-col.kanban-outreach-col{background:#F3F5F7;border-color:#E1E6EB;}
+  .kanban-group-col.kanban-outreach-col .kanban-substage{
+    background:rgba(255,255,255,.4);border-color:#E1E6EB;
+  }
+  .kanban-group-col.kanban-outreach-col .kanban-substage + .kanban-substage{
+    border-top-color:#CCD4DC;
+  }
+  .kanban-outreach-col .kanban-substage{position:relative;border-left-width:4px;}
+  .kanban-outreach-col .kanban-substage.outreach-gatekeeper{border-left-color:#7A8794;background:#F8F9FA;}
+  .kanban-outreach-col .kanban-substage.outreach-identified{border-left-color:#4278B8;background:#F5F9FD;}
+  .kanban-outreach-col .kanban-substage.outreach-scheduled{border-left-color:#2D8A5B;background:#F3FAF6;}
+  .kanban-outreach-col .kanban-substage.outreach-pending{border-left-color:#B47A1F;background:#FFF9EF;}
+  .kanban-outreach-col .kanban-substage.outreach-declined{border-left-color:#B0525A;background:#FFF6F6;}
+  .outreach-code{
+    width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 22px;
+    border-radius:6px;background:#fff;border:1px solid #DDE3E8;color:var(--navy);font:800 10.5px 'Manrope';
+  }
+  .kanban-substage-header .stage-name{min-width:0;}
+  .kanban-substages{display:flex;flex-direction:column;gap:10px;max-height:min(68vh,760px);overflow-y:auto;padding-right:2px;}
+  .kanban-substage{
+    background:rgba(255,255,255,.48);border:1px solid rgba(157,140,194,.22);
+    border-radius:9px;padding:10px;
+  }
+  .kanban-substage-header{margin-bottom:8px;padding:0;font-size:11.5px;}
+  .kanban-substage .kanban-cards{max-height:none;overflow:visible;}
+  .card-move{margin-top:8px;}
+  .card-move-label{display:block;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.3px;margin-bottom:3px;}
+  .card-move-select{width:100%;padding:5px 7px;font-size:12px;border:1.5px solid var(--border);border-radius:6px;font-family:'Inter';background:#fff;color:var(--ink);cursor:pointer;}
+  .card-move-select:focus{outline:none;border-color:var(--navy);}
+  .deal-card{
+    background:#fff;border:1px solid #DDE3E8;border-radius:10px;padding:14px 38px 12px 14px;
+    cursor:grab;position:relative;box-shadow:0 1px 3px rgba(9,35,61,.05);
+  }
+  .deal-card:active{cursor:grabbing;}
+  .deal-card.dragging{opacity:0.5;}
+  .deal-card.just-added{animation:cardPop 2.6s ease;}
+  @keyframes cardPop{
+    0%{background:#FBE3B6;border-color:var(--red);box-shadow:0 0 0 3px rgba(198,32,46,0.25);}
+    70%{background:#FBE3B6;border-color:var(--red);box-shadow:0 0 0 3px rgba(198,32,46,0.15);}
+    100%{background:#fff;border-color:var(--border);box-shadow:none;}
+  }
+  .deal-card .drag-grip{color:var(--muted);font-size:11px;letter-spacing:-1px;margin-right:2px;}
+  .deal-card .agency{font-family:'Manrope';font-weight:800;font-size:14px;line-height:1.35;color:var(--ink);padding-right:3px;}
+  .deal-card .meta{font-size:11px;color:var(--muted);margin-top:3px;}
+  .deal-card .quick-details{
+    display:grid;grid-template-columns:minmax(96px,108px) minmax(0,1fr);
+    gap:7px 12px;margin-top:12px;font-size:12px;line-height:1.35;
+  }
+  .deal-card .quick-details .k{color:#687786;font-weight:700;}
+  .deal-card .quick-details .v{color:var(--ink);min-width:0;word-break:normal;overflow-wrap:break-word;}
+  .deal-card .quick-details .v.email-value{overflow-wrap:anywhere;}
+  .deal-card .quick-details .v.missing{color:#98A3AD;font-style:italic;}
+  .deal-card .quick-delete{position:absolute;right:7px;top:7px;width:24px;height:24px;border:1px solid #E4BFC2;border-radius:6px;background:#fff;color:var(--red-dark);font-size:16px;line-height:1;cursor:pointer;padding:0;}
+  .deal-card .quick-delete:hover,.deal-card .quick-delete:focus-visible{background:#FCEAEA;outline:none;}
+  .pipeline-status{
+    display:inline-flex;align-items:center;justify-content:center;width:max-content;max-width:100%;
+    border-radius:999px;padding:3px 8px;font-size:10.5px;font-weight:800;line-height:1.25;
+  }
+  .pipeline-status.yes,.pipeline-status.sent{background:#E7F5EC;color:#247A48;}
+  .pipeline-status.no,.pipeline-status.failed{background:#FBECEC;color:#A43D46;}
+  .pipeline-status.delivered,.pipeline-status.opened{background:#E8F1FB;color:#286BA6;}
+  .pipeline-status.clicked{background:#F0EAF9;color:#6F4AA0;}
+  .pipeline-status.neutral,.pipeline-status.no-email,.pipeline-status.pending{background:#EEF1F4;color:#667482;}
+  .deal-card .card-activity{
+    display:flex;align-items:center;gap:15px;margin-top:11px;padding-top:9px;
+    border-top:1px solid #EDF0F2;color:#71808D;font-size:10.5px;font-weight:700;
+  }
+  .deal-card .card-activity span{white-space:nowrap;}
+  .deal-card .card-menu-wrap{position:relative;margin-left:auto;}
+  .deal-card .card-menu-toggle{border:0;background:transparent;color:#607184;width:24px;height:22px;border-radius:5px;cursor:pointer;font-size:17px;line-height:1;}
+  .deal-card .card-menu-toggle:hover,.deal-card .card-menu-toggle:focus-visible{background:#EEF2F5;outline:none;}
+  .deal-card .card-menu{
+    display:none;position:absolute;right:0;bottom:27px;z-index:30;width:235px;background:#fff;
+    border:1px solid #DDE3E8;border-radius:9px;padding:10px;box-shadow:0 10px 26px rgba(9,35,61,.18);
+  }
+  .deal-card .card-menu.open{display:block;}
+  .deal-card .card-menu .card-move{margin:0;}
+  .deal-card .card-menu .card-move-label{font-size:10.5px;margin-bottom:6px;}
+  .deal-card .expand{
+    margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:12px;display:none;
+  }
+  .deal-card.open .expand{display:block;}
+  .record-actions{display:flex;justify-content:flex-end;margin-top:10px;padding-top:9px;border-top:1px solid var(--border);}
+  .history-line{color:var(--muted);margin-bottom:4px;line-height:1.5;}
+  .kanban-empty{font-size:12px;color:var(--muted);text-align:center;padding:16px 4px;border:1px dashed var(--border);border-radius:8px;}
+  .pipeline-legend{
+    display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-top:4px;padding:10px 14px;
+    background:#fff;border:1px solid var(--border);border-radius:10px;color:#5F6E7D;font-size:11px;
+  }
+  .pipeline-legend strong{color:var(--navy);}
+  .pipeline-legend-group{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+  .pipeline-legend-time{margin-left:auto;color:#718093;white-space:nowrap;}
+  @media(max-width:1180px){
+    #view-pipeline.active{left:auto;width:100%;transform:none;}
+  }
+  @media(max-width:760px){
+    .pipeline-toolbar{flex-wrap:wrap;}
+    .pipeline-search-wrap{flex-basis:100%;}
+    .pipeline-toolbar .btn{flex:1;min-width:74px;}
+    .pipeline-legend-time{width:100%;margin-left:0;}
+  }
+  @media(max-width:520px){
+    .kanban-col{flex-basis:305px;width:305px;min-width:305px;}
+    .deal-card .quick-details{grid-template-columns:92px minmax(0,1fr);gap-column:9px;}
+  }
+
+  .dash-controls{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-bottom:20px;}
+  .dash-range-btns{display:flex;gap:4px;background:#EDF1F5;padding:4px;border-radius:9px;}
+  .dash-range{background:transparent;}
+  .dash-range.active{background:#fff;color:var(--navy);}
+  .dash-custom{display:flex;align-items:center;gap:8px;}
+  .dash-custom input{padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:12.5px;font-family:'Inter';}
+  .dash-quota{display:flex;align-items:center;gap:8px;}
+  .dash-quota input{padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:'Inter';}
+  .dash-table-wrap{overflow-x:auto;}
+  .dash-table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  .dash-table th{
+    text-align:left;padding:13px 16px;font-size:11px;font-weight:700;letter-spacing:0.3px;
+    text-transform:uppercase;color:var(--muted);border-bottom:1.5px solid var(--border);white-space:nowrap;
+  }
+  .dash-table th:not(:first-child), .dash-table td:not(:first-child){text-align:center;}
+  .dash-table td{padding:13px 16px;border-bottom:1px solid var(--border);color:var(--ink);}
+  .dash-table tbody tr:last-child td{border-bottom:none;}
+  .dash-table .rep-name{font-weight:700;font-family:'Manrope';color:var(--navy);}
+  .dash-table .big{font-family:'Manrope';font-weight:800;font-size:16px;}
+  .dash-table tr.team-total{background:#F7F9FB;}
+  .dash-table tr.team-total td{font-weight:700;border-top:2px solid var(--border);}
+  .quota-cell{display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .quota-bar{width:90px;height:6px;background:#E5E9EF;border-radius:3px;overflow:hidden;}
+  .quota-fill{height:100%;border-radius:3px;background:var(--navy);}
+  .quota-fill.met{background:var(--success);}
+  .rate-pill{display:inline-block;padding:3px 10px;border-radius:20px;font-weight:700;font-size:12.5px;}
+  .dash-empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:14px;}
+
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark">MBH</div>
+    <div class="brand-text">
+      <h1>GUIDE Partner Call Assistant</h1>
+      <p>Home care agency outreach, live on the call</p>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn active" data-view="call">New Call</button>
+    <button class="tab-btn" data-view="log">Call Log</button>
+    <button class="tab-btn" data-view="pipeline">Pipeline</button>
+    <button class="tab-btn" data-view="partners">Partners</button>
+    <button class="tab-btn" data-view="dashboard">Team Dashboard</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- NEW CALL VIEW -->
+  <div class="view active" id="view-call">
+
+    <div class="caller-bar">
+      <span>Logged by</span>
+      <input type="text" id="callerName" placeholder="Your name">
+      <span class="saved-tick" id="callerSavedTick">saved</span>
+    </div>
+
+    <div class="grid">
+      <!-- Script panel -->
+      <div class="card">
+        <h2>Call Script</h2>
+        <p class="sub">Step <span id="stepNum">1</span> of 6</p>
+        <div class="step-dots" id="stepDots"></div>
+        <div id="stepContent"></div>
+        <div class="step-nav">
+          <button class="btn btn-outline" id="prevStep">Back</button>
+          <button class="btn btn-primary" id="nextStep">Next step</button>
+        </div>
+      </div>
+
+      <!-- Data capture panel -->
+      <div class="card">
+        <h2>Call Details</h2>
+        <p class="sub">Captured as you go. Nothing is saved until you tap Submit call to pipeline.</p>
+
+        <div class="field">
+          <label>Agency Name (Required)</label>
+          <input type="text" id="f_agency_name" placeholder="e.g. Comfort Keepers of Broward" required>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>Agency Phone Number (Required)</label>
+            <input type="tel" id="f_agency_phone_number" placeholder="(954) 000-0000" required>
+          </div>
+          <div class="field">
+            <label>Gatekeeper Name</label>
+            <input type="text" id="f_answered_by" placeholder="First and last name">
+          </div>
+        </div>
+        <div class="field">
+          <label>Counties Served</label>
+          <input type="text" id="f_counties_visible" placeholder="e.g. Broward, Palm Beach">
+          <span class="field-help">Capture the service area discussed during the call.</span>
+        </div>
+        <div class="field">
+          <label>Gatekeeper Email</label>
+          <input type="email" id="f_answered_by_email" placeholder="name@agency.com">
+          <span class="field-help">Use this when a gatekeeper asks you to email the information to them.</span>
+        </div>
+        <label class="inline-check">
+          <input type="checkbox" id="f_answerer_is_decision_maker">
+          <span>The person who answered is the decision maker</span>
+        </label>
+        <div class="row2">
+          <div class="field">
+            <label>Decision Maker Name</label>
+            <input type="text" id="f_decision_maker_name" placeholder="First and last name">
+          </div>
+          <div class="field">
+            <label>Decision Maker Phone</label>
+            <input type="tel" id="f_decision_maker_phone" placeholder="(954) 000-0000">
+          </div>
+        </div>
+        <div class="field">
+          <label>Decision Maker Email</label>
+          <input type="email" id="f_decision_maker_email" placeholder="name@agency.com">
+        </div>
+        <div class="field">
+          <label>Decision Maker Spoken To</label>
+          <select id="f_decision_maker_spoken_to">
+            <option value="">Select Yes or No</option>
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+          </select>
+          <span class="field-help">Choose Yes only when the caller actually spoke with the decision maker.</span>
+        </div>
+        <div class="field">
+          <label>Notes</label>
+          <textarea id="f_manual_notes" rows="5" placeholder="Type notes about the conversation"></textarea>
+        </div>
+        <input type="hidden" id="f_counties">
+        <input type="hidden" id="f_privateduty">
+        <input type="hidden" id="f_appointment_scheduled" value="No">
+        <input type="hidden" id="f_not_interested" value="No">
+
+        <div class="validation" id="validationMsg">Agency Name and Agency Phone Number are required.</div>
+        <div class="form-actions">
+          <button class="btn btn-red" id="saveCall" style="flex:1;">Submit call to pipeline</button>
+          <button class="btn btn-outline" id="clearForm">Clear all fields</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transcription + notes -->
+    <div class="card">
+      <h2>Live Notes</h2>
+      <p class="sub">Free, browser based transcription. Works best in Chrome, on speaker or a headset that also picks up the caller.</p>
+
+      <div class="support-note" id="supportNote">
+        Live transcription is not available in this browser. It works in desktop Chrome. You can still type notes directly below.
+      </div>
+
+      <div class="rec-row">
+        <button class="btn btn-red" id="recToggle">Start listening</button>
+        <span class="rec-dot" id="recDot"></span>
+        <span class="rec-status" id="recStatus">Not listening</span>
+        <button class="btn btn-ghost btn-sm" id="clearTranscript">Clear transcript</button>
+      </div>
+
+      <div class="transcript-box" id="transcriptBox"><span class="placeholder">Transcript will appear here once you start listening.</span></div>
+
+      <div class="form-actions">
+        <button class="btn btn-primary" id="genSummary">Generate AI summary from transcript</button>
+      </div>
+      <div class="ai-status" id="aiStatus"></div>
+
+      <div class="field" style="margin-top:16px;">
+        <label>Notes</label>
+        <textarea id="f_notes" placeholder="AI summary will appear here. You can edit it before saving."></textarea>
+      </div>
+    </div>
+
+    <p class="footnote">
+      Submitted calls are saved so the team can see the pipeline. If shared storage is unavailable, they are saved to this device instead. Live transcription runs through your browser's built in speech service and is not stored by MedBetterHealth beyond what appears here, but audio is processed off device, so avoid it for anything containing patient health information.
+    </p>
+  </div>
+
+  <!-- CALL LOG VIEW -->
+  <div class="view" id="view-log">
+    <div class="stats">
+      <div class="stat"><div class="num" id="statTotal">0</div><div class="lbl">Calls logged</div></div>
+      <div class="stat"><div class="num" id="logStatAgencies">0</div><div class="lbl">Agencies</div></div>
+      <div class="stat"><div class="num" id="statDecisionMakers">0</div><div class="lbl">Decision makers</div></div>
+      <div class="stat"><div class="num" id="statDecisionMakerEmails">0</div><div class="lbl">Decision maker emails</div></div>
+    </div>
+
+    <div class="log-controls">
+      <input type="text" id="logSearch" placeholder="Search agency, gatekeeper, or decision maker">
+      <select id="logFilter">
+        <option value="">All calls</option>
+        <option value="decision-maker">Decision maker identified</option>
+        <option value="decision-maker-email">Decision maker email provided</option>
+        <option value="no-decision-maker">Decision maker not identified</option>
+      </select>
+      <button class="btn btn-ghost btn-sm" id="refreshLog">Refresh</button>
+      <button class="btn btn-ghost btn-sm" id="exportCsvBtn">Export CSV for GoHighLevel</button>
+    </div>
+
+    <div id="logList"></div>
+  </div>
+
+  <!-- PIPELINE VIEW -->
+  <div class="view" id="view-pipeline">
+    <div class="stats" id="pipelineStats">
+      <div class="stat"><div class="pipeline-kpi-icon" aria-hidden="true">☎</div><div class="pipeline-kpi-copy"><div class="num" id="statOutreach">0</div><div class="lbl">Outreach attempted</div></div></div>
+      <div class="stat"><div class="pipeline-kpi-icon" aria-hidden="true">✉</div><div class="pipeline-kpi-copy"><div class="num" id="statEmails">0</div><div class="lbl">Emails sent</div></div></div>
+      <div class="stat"><div class="pipeline-kpi-icon" aria-hidden="true">▣</div><div class="pipeline-kpi-copy"><div class="num" id="statMeetings">0</div><div class="lbl">Meetings scheduled</div></div></div>
+      <div class="stat"><div class="pipeline-kpi-icon" aria-hidden="true">●</div><div class="pipeline-kpi-copy"><div class="num" id="statActive">0</div><div class="lbl">Active partners</div></div></div>
+    </div>
+
+    <div class="pipeline-toolbar">
+      <div class="pipeline-search-wrap"><input type="text" id="pipelineSearch" placeholder="Search agency, gatekeeper, or decision maker..."></div>
+      <button class="btn btn-ghost btn-sm" id="pipelineFilterToggle" aria-expanded="false">☷ Filters</button>
+      <button class="btn btn-ghost btn-sm" id="pipelineSortToggle" aria-expanded="false">⇅ Sort</button>
+      <button class="btn btn-ghost btn-sm" id="refreshPipeline">↻ Refresh</button>
+      <button class="btn btn-red btn-sm" id="toggleAddLead">Add lead</button>
+    </div>
+    <div class="pipeline-options" id="pipelineOptions">
+      <div class="pipeline-option">
+        <label for="pipelineFilter">Show leads</label>
+        <select id="pipelineFilter">
+          <option value="all">All leads</option>
+          <option value="decision-maker">Decision maker identified</option>
+          <option value="email">Email available</option>
+          <option value="follow-up">Follow-up needed</option>
+        </select>
+      </div>
+      <div class="pipeline-option">
+        <label for="pipelineSort">Sort cards</label>
+        <select id="pipelineSort">
+          <option value="updated-desc">Recently updated</option>
+          <option value="updated-asc">Oldest updated</option>
+          <option value="agency-asc">Agency A–Z</option>
+          <option value="agency-desc">Agency Z–A</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="card" id="addLeadForm" style="display:none;">
+      <div class="row2">
+        <div class="field">
+          <label>Agency name</label>
+          <input type="text" id="newLeadAgency" placeholder="e.g. Comfort Keepers of Broward">
+        </div>
+        <div class="field">
+          <label>Counties served</label>
+          <input type="text" id="newLeadCounties" placeholder="e.g. Broward, Palm Beach">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary btn-sm" id="saveNewLead">Add to pipeline</button>
+        <button class="btn btn-outline btn-sm" id="cancelNewLead">Cancel</button>
+      </div>
+    </div>
+
+    <div class="kanban-board" id="kanbanBoard"></div>
+    <div class="pipeline-legend" aria-label="Pipeline status legend">
+      <strong>Legend:</strong>
+      <div class="pipeline-legend-group"><span>DM Spoken To</span><span class="pipeline-status yes">Yes</span><span class="pipeline-status no">No</span><span class="pipeline-status neutral">Not Selected</span></div>
+      <div class="pipeline-legend-group"><span>Email Status</span><span class="pipeline-status sent">Sent</span><span class="pipeline-status delivered">Delivered</span><span class="pipeline-status opened">Opened</span><span class="pipeline-status clicked">Clicked</span><span class="pipeline-status no-email">No Email</span></div>
+      <span class="pipeline-legend-time">All times shown in EST</span>
+    </div>
+    <p class="footnote">Delete saved details removes the agency and its saved call entries from this assistant only. It does not delete the GoHighLevel contact or opportunity.</p>
+  </div>
+
+  <!-- PARTNERS VIEW -->
+  <div class="view" id="view-partners">
+    <div class="stats" id="partnerStats"></div>
+    <div class="log-controls">
+      <input type="text" id="partnerSearch" placeholder="Search agency, gatekeeper, decision maker, phone, or email">
+      <select id="partnerStage"><option value="">All pipeline stages</option></select>
+      <select id="partnerStatus">
+        <option value="">All partner statuses</option>
+        <option value="active">Active partners</option>
+        <option value="pending">Pending partners</option>
+        <option value="followup">Follow-up overdue</option>
+        <option value="inactive">No recent activity</option>
+      </select>
+      <button class="btn btn-ghost btn-sm" id="refreshPartners">Refresh</button>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden;">
+      <div class="dash-table-wrap">
+        <table class="dash-table">
+          <thead><tr><th>Agency</th><th>Decision Maker</th><th>Salesperson</th><th>Stage</th><th>Partner status</th><th>Referrals</th><th>Approval rate</th><th>Last contact</th><th>Next follow-up</th><th>Actions</th></tr></thead>
+          <tbody id="partnersTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <p class="footnote">Approval rate = approved referrals ÷ valid submitted referrals. Incomplete or invalid records are excluded. Delete saved details affects this assistant only and leaves GoHighLevel unchanged.</p>
+  </div>
+
+  <!-- TEAM DASHBOARD VIEW -->
+  <div class="view" id="view-dashboard">
+    <div class="dash-controls">
+      <div class="dash-range-btns">
+        <button class="btn btn-ghost btn-sm dash-range active" data-range="today">Today</button>
+        <button class="btn btn-ghost btn-sm dash-range" data-range="week">This week</button>
+        <button class="btn btn-ghost btn-sm dash-range" data-range="custom">Custom</button>
+      </div>
+      <div class="dash-custom" id="dashCustom" style="display:none;">
+        <input type="date" id="dashFrom">
+        <span style="color:var(--muted);font-size:12px;">to</span>
+        <input type="date" id="dashTo">
+      </div>
+      <div class="dash-quota">
+        <label style="font-size:12px;font-weight:700;color:var(--navy);">Daily call quota</label>
+        <input type="number" id="dashQuota" min="0" value="40" style="width:70px;">
+      </div>
+      <button class="btn btn-ghost btn-sm" id="refreshDash">Refresh</button>
+    </div>
+
+    <div class="stats" id="dashTotals"></div>
+
+    <div class="card" style="padding:0;overflow:hidden;">
+      <div class="dash-table-wrap">
+        <table class="dash-table" id="dashTable">
+          <thead>
+            <tr>
+              <th>Rep</th>
+              <th>Calls</th>
+              <th>Quota</th>
+              <th>Meetings scheduled</th>
+              <th>Booking rate</th>
+              <th>Emails sent</th>
+              <th>Partners activated</th>
+            </tr>
+          </thead>
+          <tbody id="dashTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <p class="footnote" id="dashNote"></p>
+  </div>
+
+</div>
+
+<script>
+// Browser-persistent adapter used by the hosted assistant. It mirrors the
+// window.storage interface expected by the original prototype.
+if (!window.storage) {
+  window.storage = {
+    async set(key, value) {
+      if (key === 'caller_name') {
+        localStorage.setItem('guide:' + key, value);
+        return { key, value };
+      }
+      const response = await fetch('/api/store', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({key,value})});
+      if (!response.ok) throw new Error('Shared storage is unavailable');
+      return { key, value };
+    },
+    async get(key) {
+      if (key === 'caller_name') {
+        const value = localStorage.getItem('guide:' + key);
+        return value === null ? null : { key, value };
+      }
+      const response = await fetch('/api/store?key=' + encodeURIComponent(key));
+      if (!response.ok) throw new Error('Shared storage is unavailable');
+      const result = await response.json();
+      const value = result.value;
+      return value === null ? null : { key, value };
+    },
+    async list(prefix) {
+      const response = await fetch('/api/store?prefix=' + encodeURIComponent(prefix));
+      if (!response.ok) throw new Error('Shared storage is unavailable');
+      return response.json();
+    },
+    async delete(key) {
+      const response = await fetch('/api/store?key=' + encodeURIComponent(key), {method:'DELETE'});
+      if (!response.ok) throw new Error('Shared storage is unavailable');
+      return { key };
+    }
+  };
+}
+// ---------- Resilient storage ----------
+// Uses window.storage when it exists (persists across sessions / shared with team).
+// When it is unavailable, falls back to an in-memory store so the tool still
+// works fully for the current session.
+const memStore = {};
+const hasShared = (typeof window !== 'undefined' && window.storage && typeof window.storage.set === 'function');
+let SHARED_OK = hasShared;
+
+const store = {
+  async set(key, value){
+    if(SHARED_OK){
+      try{ return await window.storage.set(key, value, true); }
+      catch(e){ SHARED_OK = false; }
+    }
+    if(hasShared){
+      try{ return await window.storage.set(key, value, false); }
+      catch(e){ /* fall through to memory */ }
+    }
+    memStore[key] = value;
+    return { key, value };
+  },
+  async get(key){
+    if(SHARED_OK){
+      try{ const r = await window.storage.get(key, true); if(r) return r; }
+      catch(e){ /* fall through */ }
+    }
+    if(hasShared){
+      try{ const r = await window.storage.get(key, false); if(r) return r; }
+      catch(e){ /* fall through */ }
+    }
+    return (key in memStore) ? { key, value: memStore[key] } : null;
+  },
+  async list(prefix){
+    const keys = new Set();
+    if(SHARED_OK){
+      try{
+        const r = await window.storage.list(prefix, true);
+        if(r && r.keys) r.keys.forEach(k=>keys.add(k));
+      }catch(e){ SHARED_OK = false; }
+    }
+    if(hasShared){
+      try{
+        const r = await window.storage.list(prefix, false);
+        if(r && r.keys) r.keys.forEach(k=>keys.add(k));
+      }catch(e){ /* fall through */ }
+    }
+    Object.keys(memStore).forEach(k=>{ if(k.indexOf(prefix) === 0) keys.add(k); });
+    return { keys: Array.from(keys) };
+  },
+  async delete(key){
+    if(hasShared){
+      try{ await window.storage.delete(key, true); }catch(e){}
+      try{ await window.storage.delete(key, false); }catch(e){}
+    }
+    delete memStore[key];
+    return true;
+  }
+};
+
+// ---------- Script content ----------
+const STEPS = [
+  {
+    title: "Confirm they provide private duty",
+    lines: [
+      {t:'say', v:"Hi, my name is [Name]. Quick question, do you provide private duty home care?"},
+      {t:'input-privateduty'},
+      {t:'note', v:"If they say no, thank them and end the call."},
+      {t:'say', v:"Wonderful. We are actually looking for private duty home care agencies because we have clients who need private duty services."}
+    ]
+  },
+  {
+    title: "Confirm their service area",
+    lines: [
+      {t:'say', v:"Um… Which counties do you currently serve?"},
+      {t:'input'},
+      {t:'say', v:"Perfect. That is exactly the area we need!"},
+      {t:'say', v:"Have you ever heard about the GUIDE Model?"}
+    ]
+  },
+  {
+    title: "Explain the GUIDE Model",
+    lines: [
+      {t:'note', v:"If they say No:"},
+      {t:'say', v:"Well, it's a new program for people living with dementia and their family caregivers."},
+      {t:'say', v:"Many of these individuals have a husband, wife, son, daughter, who become overwhelmed and need respite support."},
+      {t:'say', v:"So this is a Medicare Program and I know that private duty home care agencies normally do not accept or bill Medicare."}
+    ]
+  },
+  {
+    title: "Explain how the partnership works",
+    lines: [
+      {t:'say', v:"This is where we come in. Our company handles all the enrollment and billing."},
+      {t:'say', v:"Your agency delivers the service, and we will pay you at a rate of $34.50 via private pay. This way, your organization does not bill Medicare. Instead, your agency bills us directly on the private side."},
+      {t:'say', v:"This can bring your agency additional paid referrals and additional home care hours. We already work with over 70 private duty home care agencies like Senior Helpers, ComForCare, Wisdom Senior Care, Catholic Health, Trilogy, and TheKey."}
+    ]
+  },
+  {
+    title: "Reach the decision maker",
+    lines: [
+      {t:'say', v:"We have participants who need private duty home care, so we are looking for reliable agencies that we can partner with and refer clients to. Who would be the best person in your company to speak to about this? Great, what is their name?"},
+      {t:'say', v:"What is the decision maker's name, phone number, and best email in case the call gets disconnected?"},
+      {t:'input-contact'},
+      {t:'note', v:"Capture Decision Maker Name, Decision Maker Phone, and Decision Maker Email before attempting the transfer."},
+      {t:'note', v:"Preserve Agency Name, Agency Phone Number, Answered By, and County information."}
+    ]
+  },
+  {
+    title: "Transfer and schedule",
+    lines: [
+      {t:'note', v:"After being transferred, or if the person is interested in setting up a call, scheduling the call is the main objective."},
+      {t:'say', v:"That sounds great. I have access to Dr. Erik's calendar. Let me pull it up now so we can schedule a brief conversation."},
+      {t:'say', v:"I see Dr. Erik is available on [date] at [time]. Would that work for you?"},
+      {t:'note', v:"If not, offer another available time. Once they agree, confirm Full Name, Direct Phone Number, and Best Email Address."},
+      {t:'say', v:"Great, you are scheduled with Dr. Erik for [date] at [time]. You'll get a calendar invite and an email with information on MedBetterHealth and the GUIDE Model."}
+    ]
+  }
+];
+
+// ---------- Pipeline stages ----------
+const STAGES = [
+  {key:'new_lead', step:'1.', label:'New Lead'},
+  {key:'gatekeeper_only', step:'2.a', code:'A', tone:'gatekeeper', label:'Gatekeeper Only – No Decision Maker Information', description:'Spoke only with the gatekeeper. No usable decision-maker information was obtained.'},
+  {key:'decision_maker_identified_email_sent', step:'2.b', code:'B', tone:'identified', label:'Decision Maker Identified – Email Provided', description:'The gatekeeper provided the decision maker’s name or contact information, but the decision maker was not reached.'},
+  {key:'decision_maker_appointment_not_scheduled', step:'2.c', code:'C', tone:'pending', label:'Decision Maker Reached – Appointment Not Scheduled', description:'The decision maker was reached, but a meeting was not scheduled during the call.'},
+  {key:'decision_maker_appointment_scheduled', step:'2.d', code:'D', tone:'scheduled', label:'Decision Maker Reached – Appointment Scheduled', description:'The decision maker was reached and a meeting with Dr. Erik was successfully scheduled.'},
+  {key:'not_interested', step:'2.e', code:'E', tone:'declined', label:'Not Interested', description:'The gatekeeper or decision maker clearly declined the partnership opportunity.'},
+  {key:'meeting_held', step:'3.', label:'Meeting Held'},
+  {key:'onboarding_documents_signed', step:'4.', label:'Onboarding Documents Signed'},
+  {key:'submitted_to_medicare', step:'5.', label:'Submitted to Medicare'},
+  {key:'partner_training', step:'6.', label:'Partner Training'},
+  {key:'medicare_approved', step:'7.', label:'Medicare Approved'},
+  {key:'partner_onboarding_call', step:'8.', label:'Partner Onboarding Call'},
+  {key:'active_partner', step:'9.', label:'Active Partner', terminal:'win'}
+];
+
+const STAGE_ALIASES = {
+  new_lead:'new_lead',
+  outreach_attempted:'gatekeeper_only',
+  outreach_made:'gatekeeper_only',
+  follow_up_needed:'gatekeeper_only',
+  gatekeeper_only:'gatekeeper_only',
+  contacted:'decision_maker_identified_email_sent',
+  qualified:'decision_maker_identified_email_sent',
+  email_sent:'decision_maker_identified_email_sent',
+  decision_maker_identified_email_sent:'decision_maker_identified_email_sent',
+  decision_maker_contacted_email_sent:'decision_maker_appointment_not_scheduled',
+  decision_maker_appointment_scheduled:'decision_maker_appointment_scheduled',
+  decision_maker_appointment_not_scheduled:'decision_maker_appointment_not_scheduled',
+  meeting_scheduled:'decision_maker_appointment_scheduled',
+  meeting_held:'meeting_held',
+  pathway_pending:'onboarding_documents_signed',
+  pathway_completed:'onboarding_documents_signed',
+  contract_pending:'onboarding_documents_signed',
+  contract_signed:'onboarding_documents_signed',
+  partner_onboarding:'onboarding_documents_signed',
+  onboarding_documents_signed:'onboarding_documents_signed',
+  submitted_medicare:'submitted_to_medicare',
+  submitted_to_medicare:'submitted_to_medicare',
+  partner_training:'partner_training',
+  medicare_approved:'medicare_approved',
+  partner_onboarding_call:'partner_onboarding_call',
+  active_partner:'active_partner',
+  not_interested:'not_interested',
+  no_response:'gatekeeper_only',
+  disqualified:'gatekeeper_only'
+};
+
+function normalizeStageKey(value){
+  return STAGE_ALIASES[value] || 'new_lead';
+}
+function upgradeCallRecord(record){
+  return {
+    agencyName: record.agencyName || record.agency || '',
+    agencyPhoneNumber: record.agencyPhoneNumber || record.phone || '',
+    answeredBy: record.answeredBy || record.contact || '',
+    answeredByEmail: record.answeredByEmail || '',
+    answererIsDecisionMaker: Boolean(record.answererIsDecisionMaker),
+    decisionMakerName: record.decisionMakerName || '',
+    decisionMakerPhone: record.decisionMakerPhone || '',
+    decisionMakerEmail: record.decisionMakerEmail || record.email || '',
+    decisionMakerSpokenTo: record.decisionMakerSpokenTo || '',
+    outreachPathway: record.outreachPathway || '',
+    emailStatus: record.emailStatus || 'Not sent',
+    emailWarning: record.emailWarning || '',
+    emailMessageId: record.emailMessageId || '',
+    emailDeliveredAt: record.emailDeliveredAt || '',
+    emailOpenedAt: record.emailOpenedAt || '',
+    emailClickedAt: record.emailClickedAt || '',
+    crmContactId: record.crmContactId || '',
+    crmOpportunityId: record.crmOpportunityId || '',
+    manualNotes: removeMutualPatientWording(record.manualNotes || record.callNotes || ''),
+    counties: record.counties || '',
+    privateDuty: record.privateDuty || '',
+    notes: removeMutualPatientWording(record.notes || ''),
+    transcript: removeMutualPatientWording(record.transcript || ''),
+    loggedBy: record.loggedBy || '',
+    loggedAt: record.loggedAt || ''
+  };
+}
+
+function upgradeDealRecord(record){
+  return {
+    agencyName: record.agencyName || record.agency || '',
+    agencyPhoneNumber: record.agencyPhoneNumber || record.phone || '',
+    answeredBy: record.answeredBy || record.contact || '',
+    answeredByEmail: record.answeredByEmail || '',
+    answererIsDecisionMaker: Boolean(record.answererIsDecisionMaker),
+    decisionMakerName: record.decisionMakerName || '',
+    decisionMakerPhone: record.decisionMakerPhone || '',
+    decisionMakerEmail: record.decisionMakerEmail || record.email || '',
+    decisionMakerSpokenTo: record.decisionMakerSpokenTo || '',
+    outreachPathway: record.outreachPathway || '',
+    emailStatus: record.emailStatus || 'Not sent',
+    emailWarning: record.emailWarning || '',
+    emailMessageId: record.emailMessageId || '',
+    emailDeliveredAt: record.emailDeliveredAt || '',
+    emailOpenedAt: record.emailOpenedAt || '',
+    emailClickedAt: record.emailClickedAt || '',
+    crmContactId: record.crmContactId || '',
+    crmOpportunityId: record.crmOpportunityId || '',
+    manualNotes: removeMutualPatientWording(record.manualNotes || record.callNotes || ''),
+    counties: record.counties || '',
+    stage: normalizeStageKey(record.stage),
+    createdAt: record.createdAt || '',
+    updatedAt: record.updatedAt || '',
+    assignedSalesperson: record.assignedSalesperson || '',
+    leadSource: record.leadSource || '',
+    lastContactDate: record.lastContactDate || '',
+    nextFollowUpDate: record.nextFollowUpDate || '',
+    totalReferrals: record.totalReferrals || 0,
+    submittedReferrals: record.submittedReferrals || 0,
+    approvedReferrals: record.approvedReferrals || 0,
+    history: Array.isArray(record.history) ? record.history.map(item=>({
+      ...item,
+      stage: normalizeStageKey(item.stage),
+      note: removeMutualPatientWording(item.note || '')
+    })) : []
+  };
+}
+
+async function upsertDealFromCall(callRecord){
+  try{
+    let keys = [];
+    try{
+      const keysRes = await store.list('deals:');
+      keys = (keysRes && keysRes.keys) ? keysRes.keys : [];
+    }catch(e){ keys = []; }
+    let existingKey = null;
+    let existingDeal = null;
+    for(const k of keys){
+      try{
+        const r = await store.get(k);
+        if(r && r.value){
+          const parsed = upgradeDealRecord(JSON.parse(r.value));
+          if((parsed.agencyName || '').trim().toLowerCase() === (callRecord.agencyName || '').trim().toLowerCase()){
+            existingKey = k;
+            existingDeal = parsed;
+            break;
+          }
+        }
+      }catch(e){ /* skip unreadable entry */ }
+    }
+
+    const now = new Date().toISOString();
+    const historyNote = 'Call logged' + (callRecord.loggedBy ? ', by ' + callRecord.loggedBy : '') + '.';
+
+    if(existingDeal){
+      const earlyStages = new Set(['new_lead','gatekeeper_only','decision_maker_identified_email_sent','decision_maker_appointment_scheduled','decision_maker_appointment_not_scheduled','not_interested']);
+      const returnedStage = normalizeStageKey(callRecord.pipelineStageKey || existingDeal.stage);
+      const newStage = earlyStages.has(existingDeal.stage) ? returnedStage : existingDeal.stage;
+      existingDeal.agencyName = callRecord.agencyName || existingDeal.agencyName;
+      existingDeal.agencyPhoneNumber = callRecord.agencyPhoneNumber || existingDeal.agencyPhoneNumber;
+      existingDeal.answeredBy = callRecord.answeredBy || existingDeal.answeredBy;
+      existingDeal.answeredByEmail = callRecord.answeredByEmail || existingDeal.answeredByEmail;
+      existingDeal.answererIsDecisionMaker = callRecord.answererIsDecisionMaker;
+      existingDeal.decisionMakerName = callRecord.decisionMakerName || existingDeal.decisionMakerName;
+      existingDeal.decisionMakerPhone = callRecord.decisionMakerPhone || existingDeal.decisionMakerPhone;
+      existingDeal.decisionMakerEmail = callRecord.decisionMakerEmail || existingDeal.decisionMakerEmail;
+      existingDeal.decisionMakerSpokenTo = callRecord.decisionMakerSpokenTo || existingDeal.decisionMakerSpokenTo;
+      existingDeal.outreachPathway = callRecord.outreachPathway || existingDeal.outreachPathway;
+      existingDeal.emailStatus = callRecord.emailStatus || existingDeal.emailStatus;
+      existingDeal.emailWarning = callRecord.emailWarning || '';
+      existingDeal.emailMessageId = callRecord.emailMessageId || existingDeal.emailMessageId;
+      existingDeal.crmContactId = callRecord.crmContactId || existingDeal.crmContactId;
+      existingDeal.crmOpportunityId = callRecord.crmOpportunityId || existingDeal.crmOpportunityId;
+      existingDeal.manualNotes = callRecord.manualNotes || existingDeal.manualNotes;
+      existingDeal.assignedSalesperson = callRecord.loggedBy || existingDeal.assignedSalesperson;
+      existingDeal.lastContactDate = now;
+      existingDeal.counties = callRecord.counties || existingDeal.counties;
+      existingDeal.stage = newStage;
+      existingDeal.updatedAt = now;
+      existingDeal.history = existingDeal.history || [];
+      existingDeal.history.push({ts: now, stage:newStage, note: historyNote});
+      await store.set(existingKey, JSON.stringify(existingDeal));
+      return { agencyName: existingDeal.agencyName, stageLabel: (STAGES.find(s=>s.key===newStage)||{}).label || newStage, key: existingKey, stage: newStage };
+    } else {
+      const id = Date.now() + '-' + Math.random().toString(36).slice(2,8);
+      const dealKey = 'deals:' + id;
+      const deal = {
+        agencyName: callRecord.agencyName,
+        agencyPhoneNumber: callRecord.agencyPhoneNumber,
+        answeredBy: callRecord.answeredBy,
+        answeredByEmail: callRecord.answeredByEmail,
+        answererIsDecisionMaker: callRecord.answererIsDecisionMaker,
+        decisionMakerName: callRecord.decisionMakerName,
+        decisionMakerPhone: callRecord.decisionMakerPhone,
+        decisionMakerEmail: callRecord.decisionMakerEmail,
+        decisionMakerSpokenTo: callRecord.decisionMakerSpokenTo,
+        outreachPathway: callRecord.outreachPathway,
+        emailStatus: callRecord.emailStatus,
+        emailWarning: callRecord.emailWarning,
+        emailMessageId: callRecord.emailMessageId,
+        crmContactId: callRecord.crmContactId,
+        crmOpportunityId: callRecord.crmOpportunityId,
+        manualNotes: callRecord.manualNotes,
+        assignedSalesperson: callRecord.loggedBy,
+        leadSource: 'GUIDE Model Outreach',
+        lastContactDate: now,
+        nextFollowUpDate: '',
+        counties: callRecord.counties,
+        stage: normalizeStageKey(callRecord.pipelineStageKey || 'follow_up_needed'),
+        createdAt: now,
+        updatedAt: now,
+        history: [{ts: now, stage: normalizeStageKey(callRecord.pipelineStageKey || 'follow_up_needed'), note: 'Deal created. ' + historyNote}]
+      };
+      await store.set(dealKey, JSON.stringify(deal));
+      const createdStage = STAGES.find(s=>s.key===deal.stage);
+      return { agencyName: deal.agencyName, stageLabel: createdStage ? createdStage.label : deal.stage, key: dealKey, stage: deal.stage };
+    }
+  }catch(e){
+    return null;
+  }
+}
+
+let allDeals = [];
+let highlightDealKey = null;
+
+async function loadDeals(){
+  const board = document.getElementById('kanbanBoard');
+  board.innerHTML = '<div class="kanban-empty">Loading pipeline...</div>';
+  try{
+    const keysRes = await store.list('deals:');
+    const keys = (keysRes && keysRes.keys) ? keysRes.keys : [];
+    const deals = [];
+    for(const k of keys){
+      try{
+        const r = await store.get(k);
+        if(r && r.value){
+          const raw = JSON.parse(r.value);
+          const parsed = upgradeDealRecord(raw);
+          const needsTextCleanup =
+            removeMutualPatientWording(raw.manualNotes || raw.callNotes || '') !== (raw.manualNotes || raw.callNotes || '') ||
+            (Array.isArray(raw.history) && raw.history.some(item=>removeMutualPatientWording(item.note || '') !== (item.note || '')));
+          if(!raw.agencyName || raw.stage !== parsed.stage || needsTextCleanup){
+            await store.set(k, JSON.stringify(parsed));
+          }
+          parsed._key = k;
+          deals.push(parsed);
+        }
+      }catch(e){ /* skip unreadable entry */ }
+    }
+    deals.sort((a,b)=> new Date(b.updatedAt) - new Date(a.updatedAt));
+    allDeals = deals;
+    renderPipelineStats();
+    renderPipeline();
+  }catch(e){
+    board.innerHTML = '<div class="kanban-empty">Could not load the pipeline. Try refreshing.</div>';
+  }
+}
+
+function renderPipelineStats(){
+  const inStage = (key)=> allDeals.filter(d=>d.stage === key).length;
+  document.getElementById('statOutreach').textContent = inStage('gatekeeper_only') + inStage('decision_maker_identified_email_sent') + inStage('decision_maker_appointment_scheduled') + inStage('decision_maker_appointment_not_scheduled') + inStage('not_interested');
+  document.getElementById('statEmails').textContent = inStage('gatekeeper_only') + inStage('decision_maker_identified_email_sent') + inStage('decision_maker_appointment_scheduled') + inStage('decision_maker_appointment_not_scheduled') + inStage('not_interested');
+  document.getElementById('statMeetings').textContent = inStage('decision_maker_appointment_scheduled');
+  document.getElementById('statActive').textContent = inStage('active_partner');
+}
+
+function renderPipeline(){
+  const board = document.getElementById('kanbanBoard');
+  const search = document.getElementById('pipelineSearch').value.toLowerCase();
+  const filterMode = document.getElementById('pipelineFilter').value;
+  const sortMode = document.getElementById('pipelineSort').value;
+  let filtered = allDeals.filter(d=> !search || [d.agencyName,d.agencyPhoneNumber,d.answeredBy,d.answeredByEmail,d.decisionMakerName,d.decisionMakerPhone,d.decisionMakerEmail,d.manualNotes].join(' ').toLowerCase().includes(search));
+  filtered = filtered.filter(d=>{
+    if(filterMode === 'decision-maker') return Boolean(d.decisionMakerName || d.decisionMakerEmail || d.decisionMakerPhone);
+    if(filterMode === 'email') return Boolean(d.decisionMakerEmail || d.answeredByEmail);
+    if(filterMode === 'follow-up') return d.stage === 'gatekeeper_only' || d.stage === 'decision_maker_appointment_not_scheduled';
+    return true;
+  });
+  filtered.sort((a,b)=>{
+    if(sortMode === 'updated-asc') return new Date(a.updatedAt || 0) - new Date(b.updatedAt || 0);
+    if(sortMode === 'agency-asc') return String(a.agencyName || '').localeCompare(String(b.agencyName || ''));
+    if(sortMode === 'agency-desc') return String(b.agencyName || '').localeCompare(String(a.agencyName || ''));
+    return new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0);
+  });
+
+  const formatPipelineDate = (value)=> value ? new Intl.DateTimeFormat('en-US', {
+    timeZone:'America/New_York',year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'
+  }).format(new Date(value)) : 'Not provided';
+
+  const cardHtml = (d)=>{
+    const updated = formatPipelineDate(d.updatedAt);
+    const historyHtml = (d.history || []).slice().reverse().map(h=>{
+      const when = h.ts ? formatPipelineDate(h.ts) : '';
+      return `<div class="history-line">${escapeHtml(when)}: ${escapeHtml(h.note || '')}</div>`;
+    }).join('');
+    const moveOptions = STAGES.map(s=>`<option value="${s.key}" ${s.key===d.stage?'selected':''}>${escapeHtml(s.label)}</option>`).join('');
+    const stageLabel = (STAGES.find(s=>s.key===d.stage) || {}).label || d.stage || 'New Lead';
+    const emailStatus = d.emailStatus || 'Not sent';
+    const emailStatusLower = emailStatus.toLowerCase();
+    const emailClass = emailStatusLower.includes('clicked') ? 'clicked'
+      : emailStatusLower.includes('opened') ? 'opened'
+      : emailStatusLower.includes('delivered') ? 'delivered'
+      : emailStatusLower.includes('failed') ? 'failed'
+      : emailStatusLower.includes('pending') ? 'pending'
+      : emailStatusLower.includes('not sent') || emailStatusLower.includes('no email') ? 'no-email'
+      : emailStatusLower.includes('sent') ? 'sent' : 'neutral';
+    const emailDisplay = emailClass === 'no-email' ? 'No Email' : emailStatus;
+    const spokenTo = String(d.decisionMakerSpokenTo || '').trim();
+    const spokenClass = spokenTo.toLowerCase() === 'yes' ? 'yes' : (spokenTo.toLowerCase() === 'no' ? 'no' : 'neutral');
+    const spokenDisplay = spokenTo || 'Not Selected';
+    const notesPreview = (d.manualNotes || '').trim();
+    const historyCount = (d.history || []).length;
+    const emailActivityCount = emailClass === 'no-email' || emailClass === 'neutral' ? 0 : 1;
+    const meetingStageIndex = STAGES.findIndex(stage=>stage.key === 'decision_maker_appointment_scheduled');
+    const currentStageIndex = STAGES.findIndex(stage=>stage.key === d.stage);
+    const meetingActivityCount = currentStageIndex >= meetingStageIndex && meetingStageIndex >= 0 ? 1 : 0;
+    const cardValue = (value, extraClass)=>{
+      const supplied = String(value || '').trim();
+      return `<span class="v${extraClass ? ' ' + extraClass : ''}${supplied ? '' : ' missing'}">${escapeHtml(supplied || 'Not provided')}</span>`;
+    };
+    return `
+      <div class="deal-card" data-key="${d._key}" draggable="true">
+        <button type="button" class="quick-delete deal-delete-btn" data-key="${escapeAttr(d._key)}" aria-label="Delete ${escapeAttr(d.agencyName || 'this lead')}">×</button>
+        <div class="agency"><span class="drag-grip" aria-hidden="true">⠿</span> ${escapeHtml(d.agencyName || 'Unnamed agency')}</div>
+        <div class="meta">Updated ${escapeHtml(updated)}</div>
+        <div class="quick-details">
+          <span class="k">☎ Agency phone</span>${cardValue(d.agencyPhoneNumber, 'mono')}
+          <span class="k">Answered by</span>${cardValue(d.answeredBy)}
+          <span class="k">Decision maker</span>${cardValue(d.decisionMakerName)}
+          <span class="k">DM phone</span>${cardValue(d.decisionMakerPhone, 'mono')}
+          <span class="k">DM email</span>${cardValue(d.decisionMakerEmail, 'email-value')}
+          <span class="k">DM spoken to</span><span class="v"><span class="pipeline-status ${spokenClass}">${escapeHtml(spokenDisplay)}</span></span>
+          <span class="k">Email status</span><span class="v"><span class="pipeline-status ${emailClass}">${escapeHtml(emailDisplay)}</span></span>
+        </div>
+        <div class="card-activity" aria-label="Lead activity">
+          <span title="Notes">&#128172; ${notesPreview ? 1 : 0}</span>
+          <span title="Email activity">&#9993; ${emailActivityCount}</span>
+          <span title="Meetings">&#128197; ${meetingActivityCount}</span>
+          <span title="Updates">&#8635; ${historyCount}</span>
+          <div class="card-menu-wrap">
+            <button type="button" class="card-menu-toggle" aria-label="Lead actions" aria-expanded="false">⋮</button>
+            <div class="card-menu">
+              <div class="card-move">
+                <label class="card-move-label">Move to stage</label>
+                <select class="card-move-select" data-key="${d._key}">${moveOptions}</select>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="expand">
+          <div class="detail-row"><span class="k">Agency Phone</span><span class="v mono">${escapeHtml(d.agencyPhoneNumber || 'Not yet provided')}</span></div>
+          <div class="detail-row"><span class="k">Gatekeeper</span><span class="v">${escapeHtml(d.answeredBy || 'Not yet provided')}</span></div>
+          <div class="detail-row"><span class="k">Gatekeeper Email</span><span class="v">${escapeHtml(d.answeredByEmail || 'Not yet provided')}</span></div>
+          <div class="detail-row"><span class="k">Decision Maker</span><span class="v">${escapeHtml(d.decisionMakerName || 'Not yet provided')}</span></div>
+          <div class="detail-row"><span class="k">Decision Maker Phone</span><span class="v mono">${escapeHtml(d.decisionMakerPhone || 'Not yet provided')}</span></div>
+          <div class="detail-row"><span class="k">Decision Maker Email</span><span class="v">${escapeHtml(d.decisionMakerEmail || 'Not yet provided')}</span></div>
+          <div class="detail-row"><span class="k">DM Spoken To</span><span class="v">${escapeHtml(d.decisionMakerSpokenTo || 'Not selected')}</span></div>
+          <div class="detail-row"><span class="k">Current Stage</span><span class="v">${escapeHtml(stageLabel)}</span></div>
+          <div class="detail-row"><span class="k">Outreach Path</span><span class="v">${escapeHtml(d.outreachPathway || 'Follow-Up Needed')}</span></div>
+          <div class="detail-row"><span class="k">Email Status</span><span class="v">${escapeHtml(emailStatus)}</span></div>
+          <div class="detail-row"><span class="k">Last Opened</span><span class="v">${escapeHtml(d.emailOpenedAt ? new Date(d.emailOpenedAt).toLocaleString() : 'Not recorded')}</span></div>
+          <div class="detail-row"><span class="k">Last Clicked</span><span class="v">${escapeHtml(d.emailClickedAt ? new Date(d.emailClickedAt).toLocaleString() : 'Not recorded')}</span></div>
+          <div class="detail-row"><span class="k">Notes</span><span class="v">${escapeHtml(d.manualNotes || 'Not yet provided')}</span></div>
+          <div class="detail-row"><span class="k">Counties</span><span class="v">${escapeHtml(d.counties || 'Not yet provided')}</span></div>
+          <div style="margin-top:8px;margin-bottom:4px;font-weight:700;font-size:11.5px;color:var(--navy);">History</div>
+          ${historyHtml || '<div class="history-line">No history yet.</div>'}
+          <div class="record-actions">
+            <button class="btn btn-danger-outline btn-sm deal-delete-btn" data-key="${escapeAttr(d._key)}">Delete saved details</button>
+          </div>
+        </div>
+      </div>
+    `;
+  };
+
+  const stageNameHtml = (stage, label)=>{
+    const description = stage.description || '';
+    const helpClass = description ? ' has-description' : '';
+    const helpAttrs = description ? ` tabindex="0" aria-label="${escapeAttr(stage.step + ' ' + stage.label + '. ' + description)}" data-tooltip="${escapeAttr(description)}"` : '';
+    return `<span class="stage-name${helpClass}"${helpAttrs}>${escapeHtml(label)}</span>`;
+  };
+
+  const colHtml = (stage, label)=>{
+    const dealsInStage = filtered.filter(d=>d.stage === stage.key);
+    const colClass = stage.terminal === 'win' ? 'win' : (stage.side ? 'side' : '');
+    const cards = dealsInStage.map(cardHtml).join('');
+    return `
+      <div class="kanban-col kanban-stage-target ${colClass}" data-stage="${stage.key}">
+        <div class="kanban-col-header">${stageNameHtml(stage, label)}<span class="count">${dealsInStage.length}</span></div>
+        <div class="kanban-cards" data-stage="${stage.key}">${cards || '<div class="kanban-empty">No leads yet</div>'}</div>
+      </div>
+    `;
+  };
+
+  const outreachStages = STAGES.filter((stage)=> ['2.a','2.b','2.c','2.d','2.e'].includes(stage.step));
+  const outreachStageKeys = new Set(outreachStages.map((stage)=>stage.key));
+
+  const groupedColHtml = (stages, parentLabel, extraClass = '')=>{
+    const totalDeals = stages.reduce((total, stage)=> total + filtered.filter((deal)=>deal.stage === stage.key).length, 0);
+    const substages = stages.map((stage)=>{
+      const dealsInStage = filtered.filter((deal)=>deal.stage === stage.key);
+      const cards = dealsInStage.map(cardHtml).join('');
+      return `
+        <div class="kanban-substage kanban-stage-target outreach-${escapeAttr(stage.tone || 'default')}" data-stage="${stage.key}">
+          <div class="kanban-col-header kanban-substage-header">
+            <span class="outreach-code">${escapeHtml(stage.code || '')}</span>
+            ${stageNameHtml(stage, stage.step + ' ' + stage.label)}
+            <span class="count">${dealsInStage.length}</span>
+          </div>
+          <div class="kanban-cards" data-stage="${stage.key}">${cards || '<div class="kanban-empty">No leads yet</div>'}</div>
+        </div>
+      `;
+    }).join('');
+    return `
+      <div class="kanban-col kanban-group-col ${extraClass}">
+        <div class="kanban-col-header"><span class="stage-name">${escapeHtml(parentLabel)}</span><span class="count">${totalDeals}</span></div>
+        <div class="kanban-substages">${substages}</div>
+      </div>
+    `;
+  };
+
+  const mainHtml = STAGES.reduce((html, stage)=>{
+    if(outreachStageKeys.has(stage.key)){
+      return stage.key === outreachStages[0].key
+        ? html + groupedColHtml(outreachStages, '2. Outreach Outcomes', 'kanban-outreach-col')
+        : html;
+    }
+    return html + colHtml(stage, stage.step + ' ' + stage.label);
+  }, '');
+
+  board.innerHTML = mainHtml;
+
+  let draggedKey = null;
+
+  board.querySelectorAll('.card-menu-toggle').forEach(button=>{
+    button.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const menu = button.nextElementSibling;
+      const willOpen = !menu.classList.contains('open');
+      board.querySelectorAll('.card-menu.open').forEach(openMenu=>openMenu.classList.remove('open'));
+      board.querySelectorAll('.card-menu-toggle[aria-expanded="true"]').forEach(openButton=>openButton.setAttribute('aria-expanded','false'));
+      if(willOpen){
+        menu.classList.add('open');
+        button.setAttribute('aria-expanded','true');
+      }
+    });
+  });
+
+  board.querySelectorAll('.card-move-select').forEach(sel=>{
+    sel.addEventListener('click', (e)=> e.stopPropagation());
+    sel.addEventListener('pointerdown', (e)=> e.stopPropagation());
+    sel.addEventListener('change', async (e)=>{
+      e.stopPropagation();
+      await moveDeal(sel.dataset.key, sel.value);
+    });
+  });
+
+  board.querySelectorAll('.deal-delete-btn').forEach(btn=>{
+    btn.addEventListener('click', async (e)=>{
+      e.stopPropagation();
+      await deleteDealFromAssistant(btn.dataset.key, btn);
+    });
+  });
+
+  board.querySelectorAll('.deal-card').forEach(card=>{
+    let dragStarted = false;
+
+    card.addEventListener('click', (e)=>{
+      if(e.target.closest('.card-menu-wrap, .record-actions, .quick-delete')) return;
+      if(dragStarted){ dragStarted = false; return; }
+      card.classList.toggle('open');
+    });
+    card.addEventListener('dragstart', (e)=>{
+      dragStarted = true;
+      draggedKey = card.dataset.key;
+      card.classList.add('dragging');
+      if(e.dataTransfer){
+        e.dataTransfer.effectAllowed = 'move';
+        try{ e.dataTransfer.setData('text/plain', card.dataset.key); }catch(err){}
+      }
+    });
+    card.addEventListener('dragend', ()=>{
+      card.classList.remove('dragging');
+      board.querySelectorAll('.kanban-stage-target').forEach(c=>c.classList.remove('drop-active'));
+    });
+  });
+
+  const handleDrop = async (colEl)=>{
+    const key = draggedKey;
+    const targetStage = colEl.dataset.stage;
+    draggedKey = null;
+    colEl.classList.remove('drop-active');
+    if(!key || !targetStage) return;
+    const deal = allDeals.find(d=>d._key === key);
+    if(deal && deal.stage === targetStage) return;
+    await moveDeal(key, targetStage);
+  };
+
+  board.querySelectorAll('.kanban-stage-target').forEach(colEl=>{
+    colEl.addEventListener('dragover', (e)=>{
+      e.preventDefault();
+      if(e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+      colEl.classList.add('drop-active');
+    });
+    colEl.addEventListener('dragleave', (e)=>{
+      if(!colEl.contains(e.relatedTarget)) colEl.classList.remove('drop-active');
+    });
+    colEl.addEventListener('drop', async (e)=>{
+      e.preventDefault();
+      await handleDrop(colEl);
+    });
+  });
+
+  if(highlightDealKey){
+    const card = board.querySelector('.deal-card[data-key="' + highlightDealKey + '"]');
+    if(card){
+      const col = card.closest('.kanban-col');
+      if(col && col.scrollIntoView){
+        col.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+      }
+      card.classList.add('just-added');
+      setTimeout(()=>card.classList.remove('just-added'), 2600);
+    }
+    highlightDealKey = null;
+  }
+}
+
+async function moveDeal(key, newStageKey){
+  const deal = allDeals.find(d=>d._key === key);
+  if(!deal) return;
+  const stageLabel = (STAGES.find(s=>s.key===newStageKey) || {}).label || newStageKey;
+  const callerName = (document.getElementById('callerName').value || '').trim();
+  // The dashboard and GoHighLevel now use the same five outreach stage names.
+  // Keeping one canonical name is what allows each GHL stage-entry workflow to
+  // send the correct email without changing the compact UI.
+  const ghlStageName = stageLabel;
+  try{
+    const response = await fetch('/api/move-stage', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({...deal, stageName:ghlStageName})
+    });
+    const result = await response.json().catch(()=>({}));
+    if(!response.ok) throw new Error(result.error || 'GoHighLevel stage update failed');
+    const now = new Date().toISOString();
+    deal.stage = newStageKey;
+    deal.updatedAt = now;
+    deal.history = deal.history || [];
+    deal.history.push({ts: now, stage:newStageKey, by: callerName, note: 'Moved to ' + stageLabel + (callerName ? ', by ' + callerName : '') + '.'});
+    if(result.opportunityId) deal.crmOpportunityId = result.opportunityId;
+    if(result.emailStatus) deal.emailStatus = result.emailStatus;
+    await store.set(deal._key, JSON.stringify(deal));
+    showToast('Moved to ' + stageLabel + ' in the dashboard and GoHighLevel.');
+    await loadDeals();
+  }catch(e){
+    showToast((e && e.message) ? e.message : 'Could not update the pipeline. Try again.');
+  }
+}
+
+function normalizeRecordName(value){
+  return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+function normalizeRecordPhone(value){
+  return String(value || '').replace(/\D/g, '');
+}
+
+async function deleteDealFromAssistant(key, button){
+  const deal = allDeals.find(d=>d._key === key);
+  if(!deal) return;
+  const agencyName = deal.agencyName || 'this agency';
+  const confirmed = window.confirm('Delete this lead?\n\n' + agencyName + ' will be permanently removed from the Call Assistant.');
+  if(!confirmed) return;
+
+  if(button){
+    button.disabled = true;
+    button.textContent = 'Deleting...';
+  }
+
+  try{
+    await store.delete(key);
+    const targetName = normalizeRecordName(deal.agencyName);
+    const targetPhone = normalizeRecordPhone(deal.agencyPhoneNumber);
+    const keysRes = await store.list('calls:');
+    const callKeys = (keysRes && keysRes.keys) ? keysRes.keys : [];
+    for(const callKey of callKeys){
+      try{
+        const response = await store.get(callKey);
+        if(!response || !response.value) continue;
+        const call = upgradeCallRecord(JSON.parse(response.value));
+        const sameName = targetName && normalizeRecordName(call.agencyName) === targetName;
+        const callPhone = normalizeRecordPhone(call.agencyPhoneNumber);
+        const sameRecord = sameName && (!targetPhone || !callPhone || callPhone === targetPhone);
+        if(sameRecord) await store.delete(callKey);
+      }catch(e){ /* leave unreadable or unrelated call entries untouched */ }
+    }
+    await loadDeals();
+    await loadLog();
+    renderPartners();
+    showToast('Lead deleted from the Call Assistant. The GoHighLevel contact was preserved.', 5200);
+  }catch(e){
+    if(button){
+      button.disabled = false;
+      button.textContent = button.classList.contains('quick-delete') ? '×' : 'Delete saved details';
+    }
+    showToast('Could not delete the saved details. Try again.');
+  }
+}
+
+let currentStep = 0;
+
+function formatPhoneNumber(value){
+  const digits = value.replace(/\D/g, '').slice(0, 10);
+  const len = digits.length;
+  if(len === 0) return '';
+  if(len < 4) return '(' + digits;
+  if(len < 7) return '(' + digits.slice(0,3) + ') ' + digits.slice(3);
+  return '(' + digits.slice(0,3) + ') ' + digits.slice(3,6) + '-' + digits.slice(6);
+}
+
+function renderStep(){
+  document.getElementById('stepNum').textContent = currentStep + 1;
+  const dotsEl = document.getElementById('stepDots');
+  dotsEl.innerHTML = STEPS.map((s,i)=>{
+    let cls = 'dot';
+    if(i === currentStep) cls += ' current';
+    else if(i < currentStep) cls += ' done';
+    return `<div class="${cls}" data-idx="${i}">${i+1}</div>`;
+  }).join('');
+  dotsEl.querySelectorAll('.dot').forEach(d=>{
+    d.addEventListener('click', ()=>{ currentStep = parseInt(d.dataset.idx); renderStep(); });
+  });
+
+  const step = STEPS[currentStep];
+  const contentEl = document.getElementById('stepContent');
+  contentEl.innerHTML = `<div class="step-title">${step.title}</div>` +
+    step.lines.map(l=>{
+      if(l.t === 'say') return `<div class="say-line">"${l.v}"</div>`;
+      if(l.t === 'input') return `<div class="field" style="margin:-2px 0 12px;"><label>Counties served</label><input type="text" id="stepCountiesInput" placeholder="e.g. Broward, Palm Beach"></div>`;
+      if(l.t === 'input-privateduty') return `
+        <div class="field" style="margin:-2px 0 12px;">
+          <label>Provides private duty</label>
+          <select id="stepPrivateDutyInput">
+            <option value="">Select one</option>
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+            <option value="Unsure">Unsure</option>
+          </select>
+        </div>
+      `;
+      if(l.t === 'input-contact') return `
+        <div class="row2" style="margin:-2px 0 12px;">
+          <div class="field"><label>Decision Maker Name</label><input type="text" id="stepDecisionMakerNameInput" placeholder="First and last name"></div>
+          <div class="field"><label>Decision Maker Phone</label><input type="tel" id="stepDecisionMakerPhoneInput" placeholder="(954) 000-0000"></div>
+        </div>
+        <div class="field" style="margin:-2px 0 12px;"><label>Decision Maker Email</label><input type="email" id="stepDecisionMakerEmailInput" placeholder="name@agency.com"></div>
+      `;
+      return `<div class="note-line">${l.v}</div>`;
+    }).join('') +
+    (currentStep === STEPS.length - 1 ? `
+      <button class="btn btn-red" style="margin-top:6px;" onclick="openScheduler()" type="button">Schedule with Dr. Erik</button>
+      <div class="note-line" style="margin-top:8px;">Opens in a small window over this page. If a Decision Maker Email is entered in Call Details, it is copied to your clipboard first.</div>
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
+        <label class="inline-check" style="margin-bottom:8px;">
+          <input type="checkbox" id="stepAppointmentScheduled">
+          <span>Appointment successfully scheduled with Dr. Erik</span>
+        </label>
+        <label class="inline-check" style="margin-bottom:0;">
+          <input type="checkbox" id="stepNotInterested">
+          <span>Contact is not interested</span>
+        </label>
+      </div>
+    ` : '');
+
+  const inlineCounties = document.getElementById('stepCountiesInput');
+  if(inlineCounties){
+    inlineCounties.value = document.getElementById('f_counties').value;
+    inlineCounties.addEventListener('input', (e)=>{
+      document.getElementById('f_counties').value = e.target.value; const vis=document.getElementById('f_counties_visible'); if(vis && vis.value!==e.target.value) vis.value=e.target.value;
+    });
+  }
+
+  const inlinePrivateDuty = document.getElementById('stepPrivateDutyInput');
+  if(inlinePrivateDuty){
+    inlinePrivateDuty.value = document.getElementById('f_privateduty').value;
+    inlinePrivateDuty.addEventListener('change', (e)=>{
+      document.getElementById('f_privateduty').value = e.target.value;
+    });
+  }
+
+  const inlineDecisionMakerName = document.getElementById('stepDecisionMakerNameInput');
+  if(inlineDecisionMakerName){
+    inlineDecisionMakerName.value = document.getElementById('f_decision_maker_name').value;
+    inlineDecisionMakerName.addEventListener('input', (e)=>{
+      document.getElementById('f_decision_maker_name').value = e.target.value;
+    });
+  }
+  const inlineDecisionMakerPhone = document.getElementById('stepDecisionMakerPhoneInput');
+  if(inlineDecisionMakerPhone){
+    inlineDecisionMakerPhone.value = document.getElementById('f_decision_maker_phone').value;
+    inlineDecisionMakerPhone.addEventListener('input', (e)=>{
+      const formatted = formatPhoneNumber(e.target.value);
+      e.target.value = formatted;
+      document.getElementById('f_decision_maker_phone').value = formatted;
+    });
+  }
+  const inlineDecisionMakerEmail = document.getElementById('stepDecisionMakerEmailInput');
+  if(inlineDecisionMakerEmail){
+    inlineDecisionMakerEmail.value = document.getElementById('f_decision_maker_email').value;
+    inlineDecisionMakerEmail.addEventListener('input', (e)=>{
+      document.getElementById('f_decision_maker_email').value = e.target.value;
+    });
+  }
+
+  const appointmentScheduled = document.getElementById('stepAppointmentScheduled');
+  if(appointmentScheduled){
+    appointmentScheduled.checked = document.getElementById('f_appointment_scheduled').value === 'Yes';
+    appointmentScheduled.addEventListener('change', (e)=>{
+      document.getElementById('f_appointment_scheduled').value = e.target.checked ? 'Yes' : 'No';
+      if(e.target.checked){
+        document.getElementById('f_not_interested').value = 'No';
+        const notInterested = document.getElementById('stepNotInterested');
+        if(notInterested) notInterested.checked = false;
+      }
+    });
+  }
+  const notInterested = document.getElementById('stepNotInterested');
+  if(notInterested){
+    notInterested.checked = document.getElementById('f_not_interested').value === 'Yes';
+    notInterested.addEventListener('change', (e)=>{
+      document.getElementById('f_not_interested').value = e.target.checked ? 'Yes' : 'No';
+      if(e.target.checked){
+        document.getElementById('f_appointment_scheduled').value = 'No';
+        const scheduled = document.getElementById('stepAppointmentScheduled');
+        if(scheduled) scheduled.checked = false;
+      }
+    });
+  }
+
+  document.getElementById('prevStep').disabled = currentStep === 0;
+  const nextBtn = document.getElementById('nextStep');
+  if(currentStep === STEPS.length - 1){
+    nextBtn.textContent = 'Last step';
+    nextBtn.disabled = true;
+  } else {
+    nextBtn.textContent = 'Next step';
+    nextBtn.disabled = false;
+  }
+}
+
+document.getElementById('prevStep').addEventListener('click', ()=>{
+  if(currentStep > 0){ currentStep--; renderStep(); }
+});
+document.getElementById('nextStep').addEventListener('click', ()=>{
+  if(currentStep < STEPS.length - 1){ currentStep++; renderStep(); }
+});
+renderStep();
+
+document.getElementById('f_decision_maker_name').addEventListener('input', (e)=>{
+  const inlineDecisionMakerName = document.getElementById('stepDecisionMakerNameInput');
+  if(inlineDecisionMakerName && inlineDecisionMakerName.value !== e.target.value){
+    inlineDecisionMakerName.value = e.target.value;
+  }
+});
+document.getElementById('f_agency_phone_number').addEventListener('input', (e)=>{
+  const formatted = formatPhoneNumber(e.target.value);
+  e.target.value = formatted;
+  syncAnswererAsDecisionMaker();
+});
+document.getElementById('f_decision_maker_phone').addEventListener('input', (e)=>{
+  const formatted = formatPhoneNumber(e.target.value);
+  e.target.value = formatted;
+  const inlineDecisionMakerPhone = document.getElementById('stepDecisionMakerPhoneInput');
+  if(inlineDecisionMakerPhone && inlineDecisionMakerPhone.value !== formatted){
+    inlineDecisionMakerPhone.value = formatted;
+  }
+});
+document.getElementById('f_decision_maker_email').addEventListener('input', (e)=>{
+  const inlineDecisionMakerEmail = document.getElementById('stepDecisionMakerEmailInput');
+  if(inlineDecisionMakerEmail && inlineDecisionMakerEmail.value !== e.target.value){
+    inlineDecisionMakerEmail.value = e.target.value;
+  }
+});
+
+function syncAnswererAsDecisionMaker(){
+  const checked = document.getElementById('f_answerer_is_decision_maker').checked;
+  if(!checked) return;
+
+  // Non-destructive sync: this checkbox must never erase or overwrite information
+  // the caller has already typed into the Decision Maker fields.
+  const mappings = [
+    ['f_answered_by', 'f_decision_maker_name'],
+    ['f_agency_phone_number', 'f_decision_maker_phone'],
+    ['f_answered_by_email', 'f_decision_maker_email']
+  ];
+  mappings.forEach(([sourceId, targetId])=>{
+    const source = document.getElementById(sourceId).value.trim();
+    const target = document.getElementById(targetId);
+    if(source && !target.value.trim()) target.value = source;
+  });
+
+  const spokenTo = document.getElementById('f_decision_maker_spoken_to');
+  if(!spokenTo.value) spokenTo.value = 'Yes';
+}
+document.getElementById('f_answerer_is_decision_maker').addEventListener('change', syncAnswererAsDecisionMaker);
+document.getElementById('f_answered_by').addEventListener('input', syncAnswererAsDecisionMaker);
+document.getElementById('f_answered_by_email').addEventListener('input', syncAnswererAsDecisionMaker);
+
+// ---------- Tabs ----------
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.getElementById('view-' + btn.dataset.view).classList.add('active');
+    if(btn.dataset.view === 'log') loadLog();
+    if(btn.dataset.view === 'pipeline') loadDeals();
+    if(btn.dataset.view === 'partners') loadPartners();
+    if(btn.dataset.view === 'dashboard') loadDashboard();
+  });
+});
+
+// ---------- Scheduling ----------
+let SCHEDULE_URL = '';
+fetch('/api/config').then(r=>r.json()).then(config=>{ SCHEDULE_URL = config.calendarUrl || ''; }).catch(()=>{});
+
+let toastTimer;
+function showToast(msg, duration = 3600){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> t.classList.remove('show'), duration);
+}
+
+async function openScheduler(){
+  if(!SCHEDULE_URL){
+    showToast('The active Dr. Erik calendar could not be found in GoHighLevel. Ask a manager to confirm the calendar name and status.');
+    return;
+  }
+  const emailField = document.getElementById('f_decision_maker_email');
+  const email = emailField ? emailField.value.trim() : '';
+
+  if(email){
+    try{
+      await navigator.clipboard.writeText(email);
+      showToast('Copied ' + email + '. Paste it into the email field on the calendar page.');
+    }catch(e){
+      // Clipboard blocked by the browser, still open the scheduler
+    }
+  }
+
+  const w = 480, h = 760;
+  const left = Math.max(0, (window.screen.width - w) / 2);
+  const top = Math.max(0, (window.screen.height - h) / 2);
+  const popup = window.open(
+    SCHEDULE_URL,
+    'scheduleDrErik',
+    `width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=yes`
+  );
+  if(!popup){
+    // Popup blocked by the browser, fall back to a new tab
+    window.open(SCHEDULE_URL, '_blank');
+  } else {
+    popup.focus();
+  }
+}
+
+// ---------- Caller name (personal setting) ----------
+const callerInput = document.getElementById('callerName');
+(async function loadCallerName(){
+  try{
+    const res = await store.get('caller_name');
+    if(res && res.value) callerInput.value = res.value;
+  }catch(e){ /* no saved name yet */ }
+})();
+let callerSaveTimer;
+callerInput.addEventListener('input', ()=>{
+  clearTimeout(callerSaveTimer);
+  callerSaveTimer = setTimeout(async ()=>{
+    try{
+      await store.set('caller_name', callerInput.value);
+      const tick = document.getElementById('callerSavedTick');
+      tick.classList.add('show');
+      setTimeout(()=>tick.classList.remove('show'), 1500);
+    }catch(e){}
+  }, 600);
+});
+
+// ---------- Speech recognition ----------
+let recognition = null;
+let listening = false;
+let finalTranscript = '';
+const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+function removeMutualPatientWording(value){
+  return String(value || '').replace(/\bmutual\s+(?:patient|client)\b/gi, 'person seeking services');
+}
+
+if(!SpeechRecognitionClass){
+  document.getElementById('supportNote').classList.add('show');
+  document.getElementById('recToggle').disabled = true;
+} else {
+  recognition = new SpeechRecognitionClass();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = 'en-US';
+
+  recognition.onresult = (event)=>{
+    let interim = '';
+    for(let i = event.resultIndex; i < event.results.length; i++){
+      const text = event.results[i][0].transcript;
+      if(event.results[i].isFinal){
+        finalTranscript += removeMutualPatientWording(text) + ' ';
+      } else {
+        interim += removeMutualPatientWording(text);
+      }
+    }
+    renderTranscript(interim);
+  };
+  recognition.onerror = (e)=>{
+    document.getElementById('recStatus').textContent = 'Mic error: ' + e.error;
+  };
+  recognition.onend = ()=>{
+    if(listening){
+      // restart automatically to keep listening through natural pauses
+      try{ recognition.start(); }catch(e){}
+    }
+  };
+}
+
+function renderTranscript(interim){
+  const box = document.getElementById('transcriptBox');
+  const shown = finalTranscript.trim();
+  if(!shown && !interim){
+    box.innerHTML = '<span class="placeholder">Transcript will appear here once you start listening.</span>';
+    return;
+  }
+  box.innerHTML = escapeHtml(shown) + (interim ? ' <span class="interim">' + escapeHtml(interim) + '</span>' : '');
+  box.scrollTop = box.scrollHeight;
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+function escapeAttr(str){
+  return escapeHtml(str).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+document.getElementById('recToggle').addEventListener('click', ()=>{
+  if(!recognition) return;
+  if(!listening){
+    listening = true;
+    try{ recognition.start(); }catch(e){}
+    document.getElementById('recToggle').textContent = 'Stop listening';
+    document.getElementById('recDot').classList.add('live');
+    document.getElementById('recStatus').textContent = 'Listening';
+  } else {
+    listening = false;
+    try{ recognition.stop(); }catch(e){}
+    document.getElementById('recToggle').textContent = 'Start listening';
+    document.getElementById('recDot').classList.remove('live');
+    document.getElementById('recStatus').textContent = 'Not listening';
+  }
+});
+
+document.getElementById('clearTranscript').addEventListener('click', ()=>{
+  finalTranscript = '';
+  renderTranscript('');
+});
+
+// ---------- AI summary ----------
+document.getElementById('genSummary').addEventListener('click', async ()=>{
+  const statusEl = document.getElementById('aiStatus');
+  const transcript = finalTranscript.trim();
+  if(!transcript){
+    statusEl.className = 'ai-status show error';
+    statusEl.textContent = 'There is no transcript yet. Start listening during the call, or type notes directly.';
+    return;
+  }
+  statusEl.className = 'ai-status show loading';
+  statusEl.textContent = 'Summarizing the conversation...';
+
+  const prompt = `You are helping a home care partnership team summarize a business development phone call to a home care agency about the CMS GUIDE Model. Read the raw transcript below and return ONLY a JSON object, no markdown fences, no preamble, with this exact key:
+  "notes": a concise 3 to 5 sentence summary of what was discussed and any concerns the agency raised.
+
+Transcript:
+"""${transcript}"""`;
+
+  try{
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        messages: [{role:"user", content: prompt}]
+      })
+    });
+    const data = await response.json();
+    const textBlock = (data.content || []).find(b => b.type === 'text');
+    if(!textBlock){ throw new Error('No response text'); }
+    let clean = textBlock.text.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+
+    document.getElementById('f_notes').value = parsed.notes || '';
+    statusEl.className = 'ai-status show ok';
+    statusEl.textContent = 'Summary added below. Review and edit before saving.';
+  }catch(e){
+    const compact = transcript.replace(/\s+/g, ' ').trim();
+    document.getElementById('f_notes').value = compact.length > 700 ? compact.slice(0,697) + '...' : compact;
+    statusEl.className = 'ai-status show ok';
+    statusEl.textContent = 'Summary added below. Review and edit before saving.';
+  }
+});
+
+// ---------- Save / validate ----------
+function collectForm(){
+  return {
+    agencyName: document.getElementById('f_agency_name').value.trim(),
+    agencyPhoneNumber: document.getElementById('f_agency_phone_number').value.trim(),
+    answeredBy: document.getElementById('f_answered_by').value.trim(),
+    answeredByEmail: document.getElementById('f_answered_by_email').value.trim(),
+    answererIsDecisionMaker: document.getElementById('f_answerer_is_decision_maker').checked,
+    decisionMakerName: document.getElementById('f_decision_maker_name').value.trim(),
+    decisionMakerPhone: document.getElementById('f_decision_maker_phone').value.trim(),
+    decisionMakerEmail: document.getElementById('f_decision_maker_email').value.trim(),
+    decisionMakerSpokenTo: document.getElementById('f_decision_maker_spoken_to').value,
+    appointmentScheduled: document.getElementById('f_appointment_scheduled').value === 'Yes',
+    notInterested: document.getElementById('f_not_interested').value === 'Yes',
+    manualNotes: removeMutualPatientWording(document.getElementById('f_manual_notes').value.trim()),
+    counties: document.getElementById('f_counties').value.trim(),
+    privateDuty: document.getElementById('f_privateduty').value,
+    notes: removeMutualPatientWording(document.getElementById('f_notes').value.trim()),
+    transcript: removeMutualPatientWording(finalTranscript.trim()),
+    loggedBy: callerInput.value.trim(),
+    loggedAt: new Date().toISOString()
+  };
+}
+
+function clearForm(){
+  ['f_agency_name','f_agency_phone_number','f_answered_by','f_answered_by_email','f_decision_maker_name','f_decision_maker_phone','f_decision_maker_email','f_manual_notes','f_counties','f_notes'].forEach(id=>{
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('f_privateduty').value = '';
+  document.getElementById('f_decision_maker_spoken_to').value = '';
+  document.getElementById('f_answerer_is_decision_maker').checked = false;
+  document.getElementById('f_appointment_scheduled').value = 'No';
+  document.getElementById('f_not_interested').value = 'No';
+  finalTranscript = '';
+  renderTranscript('');
+  document.getElementById('aiStatus').className = 'ai-status';
+  document.getElementById('validationMsg').classList.remove('show');
+  currentStep = 0;
+  renderStep();
+}
+
+function hasUnsavedCallDetails(){
+  const ids = ['f_agency_name','f_agency_phone_number','f_answered_by','f_answered_by_email','f_decision_maker_name','f_decision_maker_phone','f_decision_maker_email','f_manual_notes','f_counties','f_notes'];
+  return ids.some(id=>document.getElementById(id).value.trim()) ||
+    !!document.getElementById('f_decision_maker_spoken_to').value ||
+    document.getElementById('f_answerer_is_decision_maker').checked ||
+    document.getElementById('f_appointment_scheduled').value === 'Yes' ||
+    document.getElementById('f_not_interested').value === 'Yes' ||
+    !!document.getElementById('f_privateduty').value ||
+    !!finalTranscript.trim();
+}
+
+document.getElementById('clearForm').addEventListener('click', ()=>{
+  if(!hasUnsavedCallDetails() || window.confirm('Clear all unsaved call details?')) clearForm();
+});
+
+document.getElementById('saveCall').addEventListener('click', async ()=>{
+  const record = collectForm();
+  const valMsg = document.getElementById('validationMsg');
+  if(!record.agencyName || !record.agencyPhoneNumber){
+    valMsg.textContent = 'Agency Name and Agency Phone Number are required.';
+    valMsg.classList.add('show');
+    return;
+  }
+  if(record.appointmentScheduled && record.decisionMakerSpokenTo !== 'Yes'){
+    valMsg.textContent = 'Set Decision Maker Spoken To to Yes before marking an appointment as scheduled.';
+    valMsg.classList.add('show');
+    return;
+  }
+  if(record.appointmentScheduled && (!record.decisionMakerName || !record.decisionMakerEmail)){
+    valMsg.textContent = 'Decision Maker Name and Decision Maker Email are required for a scheduled appointment.';
+    valMsg.classList.add('show');
+    return;
+  }
+  if(record.decisionMakerSpokenTo === 'Yes' && !record.notInterested && (!record.decisionMakerName || !record.decisionMakerEmail)){
+    valMsg.textContent = 'Decision Maker Name and Decision Maker Email are required when the decision maker was reached.';
+    valMsg.classList.add('show');
+    return;
+  }
+  const decisionMakerEmailField = document.getElementById('f_decision_maker_email');
+  if(record.decisionMakerEmail && !decisionMakerEmailField.checkValidity()){
+    valMsg.textContent = 'Enter a valid Decision Maker Email.';
+    valMsg.classList.add('show');
+    return;
+  }
+  const answeredByEmailField = document.getElementById('f_answered_by_email');
+  if(record.answeredByEmail && !answeredByEmailField.checkValidity()){
+    valMsg.textContent = 'Enter a valid Gatekeeper Email.';
+    valMsg.classList.add('show');
+    return;
+  }
+  valMsg.classList.remove('show');
+
+  const id = Date.now() + '-' + Math.random().toString(36).slice(2,8);
+  const saveBtn = document.getElementById('saveCall');
+  const originalText = saveBtn.textContent;
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Submitting...';
+
+  let crmResult = {};
+  try{
+    const crmResponse = await fetch('/api/submit-call', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(record)
+    });
+    crmResult = await crmResponse.json();
+    if(!crmResponse.ok) throw new Error(crmResult.error || 'GoHighLevel rejected the submission');
+  }catch(e){
+    saveBtn.disabled = false;
+    saveBtn.textContent = originalText;
+    valMsg.textContent = 'Could not submit to GoHighLevel. ' + ((e && e.message) ? e.message : 'Please try again.');
+    valMsg.classList.add('show');
+    return;
+  }
+
+  record.outreachPathway = crmResult.pathway || 'Follow-Up Needed';
+  record.pipelineStageKey = crmResult.stageKey || 'follow_up_needed';
+  record.emailStatus = crmResult.emailStatus || 'Not sent';
+  record.emailWarning = crmResult.emailWarning || '';
+  record.emailMessageId = crmResult.emailMessageId || '';
+  record.crmContactId = crmResult.contactId || '';
+  record.crmOpportunityId = crmResult.opportunityId || '';
+
+  let saved = false;
+  let failReason = '';
+  try{
+    await store.set('calls:' + id, JSON.stringify(record));
+    saved = true;
+  }catch(e){
+    saved = false;
+    failReason = (e && e.message) ? e.message : String(e);
+  }
+
+  if(!saved){
+    saveBtn.disabled = false;
+    saveBtn.textContent = originalText;
+    valMsg.textContent = 'Could not submit. ' + (failReason ? '(' + failReason + ') ' : '') + 'Please try again.';
+    valMsg.classList.add('show');
+    return;
+  }
+
+  let dealUpdate = null;
+  try{
+    dealUpdate = await upsertDealFromCall(record);
+  }catch(e){
+    dealUpdate = null;
+  }
+
+  saveBtn.textContent = 'Submitted';
+  if(record.emailStatus === 'Failed'){
+    showToast(record.agencyName + ' was saved, but the outreach email could not be sent. Check the email permission/configuration.', 6200);
+    highlightDealKey = dealUpdate ? (dealUpdate.key || null) : null;
+  } else if(dealUpdate){
+    showToast(dealUpdate.agencyName + ' is now in "' + dealUpdate.stageLabel + '" on the Pipeline tab.');
+    highlightDealKey = dealUpdate.key || null;
+  } else {
+    showToast(record.agencyName + ' submitted to the pipeline.');
+    highlightDealKey = null;
+  }
+  setTimeout(()=>{
+    saveBtn.textContent = originalText;
+    saveBtn.disabled = false;
+    clearForm();
+    document.querySelector('.tab-btn[data-view="pipeline"]').click();
+  }, 600);
+});
+
+// ---------- Call log ----------
+let allCalls = [];
+
+async function loadLog(){
+  const listEl = document.getElementById('logList');
+  listEl.innerHTML = '<div class="log-empty">Loading call log...</div>';
+  try{
+    const keysRes = await store.list('calls:');
+    const keys = (keysRes && keysRes.keys) ? keysRes.keys : [];
+    const records = [];
+    for(const k of keys){
+      try{
+        const r = await store.get(k);
+        if(r && r.value){
+          const raw = JSON.parse(r.value);
+          const parsed = upgradeCallRecord(raw);
+          const needsTextCleanup = ['manualNotes','callNotes','notes','transcript'].some(field=>
+            removeMutualPatientWording(raw[field] || '') !== (raw[field] || '')
+          );
+          if(!raw.agencyName || needsTextCleanup){
+            await store.set(k, JSON.stringify(parsed));
+          }
+          parsed._key = k;
+          records.push(parsed);
+        }
+      }catch(e){ /* skip unreadable entry */ }
+    }
+    records.sort((a,b)=> new Date(b.loggedAt) - new Date(a.loggedAt));
+    allCalls = records;
+    renderStats();
+    renderLog();
+  }catch(e){
+    listEl.innerHTML = '<div class="log-empty">Could not load the call log. Try refreshing.</div>';
+  }
+}
+
+function renderStats(){
+  document.getElementById('statTotal').textContent = allCalls.length;
+  document.getElementById('logStatAgencies').textContent = new Set(allCalls.map(c=>c.agencyName.toLowerCase()).filter(Boolean)).size;
+  document.getElementById('statDecisionMakers').textContent = allCalls.filter(c=>c.decisionMakerName).length;
+  document.getElementById('statDecisionMakerEmails').textContent = allCalls.filter(c=>c.decisionMakerEmail).length;
+}
+
+function renderLog(){
+  const search = document.getElementById('logSearch').value.toLowerCase();
+  const filter = document.getElementById('logFilter').value;
+  const listEl = document.getElementById('logList');
+
+  let filtered = allCalls.filter(c=>{
+    const matchesSearch = !search || [c.agencyName,c.answeredBy,c.answeredByEmail,c.decisionMakerName,c.decisionMakerPhone,c.decisionMakerEmail,c.manualNotes,c.counties].join(' ').toLowerCase().includes(search);
+    const matchesFilter = !filter ||
+      (filter === 'decision-maker' && !!c.decisionMakerName) ||
+      (filter === 'decision-maker-email' && !!c.decisionMakerEmail) ||
+      (filter === 'no-decision-maker' && !c.decisionMakerName);
+    return matchesSearch && matchesFilter;
+  });
+
+  if(filtered.length === 0){
+    listEl.innerHTML = '<div class="log-empty">No calls logged yet. Entries you save on the New Call tab will show up here for the whole team.</div>';
+    return;
+  }
+
+  listEl.innerHTML = filtered.map(c=>{
+    const when = c.loggedAt ? new Date(c.loggedAt).toLocaleString() : '';
+    return `
+    <div class="log-item" data-key="${c._key}">
+      <div class="top">
+        <div>
+          <div class="agency">${escapeHtml(c.agencyName || 'Unnamed agency')}</div>
+          <div class="meta">Answered by ${escapeHtml(c.answeredBy || 'Not provided')} &middot; ${escapeHtml(c.counties || 'No counties listed')}</div>
+        </div>
+      </div>
+      <div class="details">
+        <div class="detail-row"><span class="k">Agency Phone</span><span class="v mono">${escapeHtml(c.agencyPhoneNumber || '—')}</span></div>
+        <div class="detail-row"><span class="k">Gatekeeper</span><span class="v">${escapeHtml(c.answeredBy || '—')}</span></div>
+        <div class="detail-row"><span class="k">Gatekeeper Email</span><span class="v">${escapeHtml(c.answeredByEmail || '—')}</span></div>
+        <div class="detail-row"><span class="k">Decision Maker</span><span class="v">${escapeHtml(c.decisionMakerName || '—')}</span></div>
+        <div class="detail-row"><span class="k">Decision Maker Phone</span><span class="v mono">${escapeHtml(c.decisionMakerPhone || '—')}</span></div>
+        <div class="detail-row"><span class="k">Decision Maker Email</span><span class="v">${escapeHtml(c.decisionMakerEmail || '—')}</span></div>
+        <div class="detail-row"><span class="k">DM Spoken To</span><span class="v">${escapeHtml(c.decisionMakerSpokenTo || 'Not selected')}</span></div>
+        <div class="detail-row"><span class="k">Outreach Path</span><span class="v">${escapeHtml(c.outreachPathway || 'Follow-Up Needed')}</span></div>
+        <div class="detail-row"><span class="k">Email Status</span><span class="v">${escapeHtml(c.emailStatus || 'Not sent')}</span></div>
+        <div class="detail-row"><span class="k">Private duty</span><span class="v">${escapeHtml(c.privateDuty || '—')}</span></div>
+        <div class="detail-row"><span class="k">Notes</span><span class="v">${escapeHtml(c.manualNotes || '—')}</span></div>
+        <div class="detail-row"><span class="k">AI summary</span><span class="v">${escapeHtml(c.notes || '—')}</span></div>
+        <div class="detail-row"><span class="k">Logged by</span><span class="v">${escapeHtml(c.loggedBy || '—')} on ${escapeHtml(when)}</span></div>
+        <div class="footer-row">
+          <button class="btn btn-danger-outline btn-sm delete-btn" data-key="${escapeAttr(c._key)}">Delete entry</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  listEl.querySelectorAll('.log-item').forEach(item=>{
+    item.addEventListener('click', (e)=>{
+      if(e.target.classList.contains('delete-btn')) return;
+      item.classList.toggle('open');
+    });
+  });
+  listEl.querySelectorAll('.delete-btn').forEach(btn=>{
+    btn.addEventListener('click', async (e)=>{
+      e.stopPropagation();
+      const key = btn.dataset.key;
+      if(!window.confirm('Delete this call log entry from the assistant?\n\nThe GoHighLevel contact and opportunity will not be deleted.')) return;
+      btn.textContent = 'Deleting...';
+      try{
+        await store.delete(key);
+        await loadLog();
+        showToast('Call log entry removed from the assistant. GoHighLevel was not changed.', 5200);
+      }catch(err){
+        btn.textContent = 'Could not delete';
+      }
+    });
+  });
+}
+
+document.getElementById('logSearch').addEventListener('input', renderLog);
+document.getElementById('pipelineSearch').addEventListener('input', renderPipeline);
+document.getElementById('refreshPipeline').addEventListener('click', loadDeals);
+document.getElementById('pipelineFilter').addEventListener('change', renderPipeline);
+document.getElementById('pipelineSort').addEventListener('change', renderPipeline);
+
+function togglePipelineOptions(){
+  const options = document.getElementById('pipelineOptions');
+  const isOpen = options.classList.toggle('show');
+  document.getElementById('pipelineFilterToggle').setAttribute('aria-expanded', String(isOpen));
+  document.getElementById('pipelineSortToggle').setAttribute('aria-expanded', String(isOpen));
+}
+document.getElementById('pipelineFilterToggle').addEventListener('click', togglePipelineOptions);
+document.getElementById('pipelineSortToggle').addEventListener('click', togglePipelineOptions);
+document.addEventListener('click', (event)=>{
+  if(event.target.closest('.card-menu-wrap')) return;
+  document.querySelectorAll('.card-menu.open').forEach(menu=>menu.classList.remove('open'));
+  document.querySelectorAll('.card-menu-toggle[aria-expanded="true"]').forEach(button=>button.setAttribute('aria-expanded','false'));
+});
+
+document.getElementById('toggleAddLead').addEventListener('click', ()=>{
+  const form = document.getElementById('addLeadForm');
+  form.style.display = form.style.display === 'none' ? 'block' : 'none';
+});
+document.getElementById('cancelNewLead').addEventListener('click', ()=>{
+  document.getElementById('newLeadAgency').value = '';
+  document.getElementById('newLeadCounties').value = '';
+  document.getElementById('addLeadForm').style.display = 'none';
+});
+document.getElementById('saveNewLead').addEventListener('click', async ()=>{
+  const agencyName = document.getElementById('newLeadAgency').value.trim();
+  const counties = document.getElementById('newLeadCounties').value.trim();
+  if(!agencyName){
+    showToast('Enter an agency name first.');
+    return;
+  }
+  const now = new Date().toISOString();
+  const id = Date.now() + '-' + Math.random().toString(36).slice(2,8);
+  const deal = {
+    agencyName,
+    agencyPhoneNumber: '',
+    answeredBy: '',
+    decisionMakerName: '',
+    decisionMakerPhone: '',
+    decisionMakerEmail: '',
+    counties: counties,
+    stage: 'new_lead',
+    createdAt: now,
+    updatedAt: now,
+    assignedSalesperson: callerInput.value.trim(),
+    leadSource: 'Manual entry',
+    lastContactDate: '',
+    nextFollowUpDate: '',
+    history: [{ts: now, stage:'new_lead', note:'Lead created' + (callerInput.value.trim() ? ' by ' + callerInput.value.trim() : '') + '.'}]
+  };
+  try{
+    await store.set('deals:' + id, JSON.stringify(deal));
+    document.getElementById('newLeadAgency').value = '';
+    document.getElementById('newLeadCounties').value = '';
+    document.getElementById('addLeadForm').style.display = 'none';
+    showToast(agencyName + ' added as a New Lead.');
+    await loadDeals();
+  }catch(e){
+    showToast('Could not add the lead. Try again.');
+  }
+});
+
+document.getElementById('logFilter').addEventListener('change', renderLog);
+document.getElementById('refreshLog').addEventListener('click', loadLog);
+
+// ---------- CSV export for GoHighLevel ----------
+function toCsvValue(val){
+  const str = (val === undefined || val === null) ? '' : String(val);
+  if(/[",\n]/.test(str)){
+    return '"' + str.replace(/"/g, '""') + '"';
+  }
+  return str;
+}
+
+function exportCsvForGoHighLevel(){
+  const headers = ['Business Name','First Name','Last Name','Phone','Email','Answered By','Answered By Email','Agency Phone Number','Decision Maker Name','Decision Maker Phone','Decision Maker Email','Decision Maker Spoken To','Outreach Pathway','Email Status','Tags','Notes'];
+  const rows = allCalls.map(c=>{
+    const nameParts = (c.decisionMakerName || c.answeredBy || '').trim().split(/\s+/).filter(Boolean);
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ');
+    const tags = 'GUIDE Model Outreach';
+    const notesParts = [
+      c.counties ? 'Counties: ' + c.counties : '',
+      c.privateDuty ? 'Private duty: ' + c.privateDuty : '',
+      c.manualNotes ? 'Notes: ' + c.manualNotes : '',
+      c.notes ? 'AI summary: ' + c.notes : '',
+      c.loggedBy ? 'Logged by: ' + c.loggedBy : ''
+    ].filter(Boolean).join(' | ');
+    return [
+      c.agencyName || '',
+      firstName,
+      lastName,
+      c.decisionMakerPhone || c.agencyPhoneNumber || '',
+      c.decisionMakerEmail || c.answeredByEmail || '',
+      c.answeredBy || '',
+      c.answeredByEmail || '',
+      c.agencyPhoneNumber || '',
+      c.decisionMakerName || '',
+      c.decisionMakerPhone || '',
+      c.decisionMakerEmail || '',
+      c.decisionMakerSpokenTo || '',
+      c.outreachPathway || '',
+      c.emailStatus || '',
+      tags,
+      notesParts
+    ];
+  });
+  const csvLines = [headers, ...rows].map(row => row.map(toCsvValue).join(',')).join('\r\n');
+  const blob = new Blob([csvLines], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'guide-model-calls-' + new Date().toISOString().slice(0,10) + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById('exportCsvBtn').addEventListener('click', exportCsvForGoHighLevel);
+
+// ---------- Partners ----------
+function partnerStatusFor(deal){
+  const now = Date.now();
+  const followUp = deal.nextFollowUpDate ? new Date(deal.nextFollowUpDate).getTime() : 0;
+  const last = deal.lastContactDate || deal.updatedAt;
+  const inactive = last && (now - new Date(last).getTime()) > 30 * 86400000;
+  if(deal.stage === 'active_partner') return {key:'active', label:'Active', cls:'ok'};
+  if(followUp && followUp < now) return {key:'followup', label:'Follow-up overdue', cls:'warn'};
+  if(inactive) return {key:'inactive', label:'No recent activity', cls:'warn'};
+  return {key:'pending', label:'In progress', cls:''};
+}
+
+async function loadPartners(){
+  const body = document.getElementById('partnersTableBody');
+  body.innerHTML = '<tr><td colspan="10" class="dash-empty">Loading partners...</td></tr>';
+  await loadDeals();
+  renderPartners();
+}
+
+function renderPartners(){
+  const search = document.getElementById('partnerSearch').value.toLowerCase();
+  const stageFilter = document.getElementById('partnerStage').value;
+  const statusFilter = document.getElementById('partnerStatus').value;
+  const filtered = allDeals.filter(d=>{
+    const status = partnerStatusFor(d);
+    const haystack = [d.agencyName,d.answeredBy,d.decisionMakerName,d.agencyPhoneNumber,d.decisionMakerPhone,d.decisionMakerEmail].join(' ').toLowerCase();
+    return (!search || haystack.includes(search)) && (!stageFilter || d.stage === stageFilter) && (!statusFilter || status.key === statusFilter);
+  });
+  const active = allDeals.filter(d=>partnerStatusFor(d).key === 'active').length;
+  const overdue = allDeals.filter(d=>partnerStatusFor(d).key === 'followup').length;
+  document.getElementById('partnerStats').innerHTML =
+    '<div class="stat"><div class="num">' + allDeals.length + '</div><div class="lbl">Agencies</div></div>' +
+    '<div class="stat"><div class="num">' + active + '</div><div class="lbl">Active partners</div></div>' +
+    '<div class="stat"><div class="num">' + overdue + '</div><div class="lbl">Follow-ups overdue</div></div>';
+  const body = document.getElementById('partnersTableBody');
+  if(!filtered.length){ body.innerHTML = '<tr><td colspan="10" class="dash-empty">No partners match these filters.</td></tr>'; return; }
+  body.innerHTML = filtered.map(d=>{
+    const status = partnerStatusFor(d);
+    const total = Number(d.totalReferrals || 0);
+    const submitted = Number(d.submittedReferrals || 0);
+    const approved = Number(d.approvedReferrals || 0);
+    const rate = submitted > 0 ? Math.round((approved / submitted) * 100) + '%' : '—';
+    const stage = (STAGES.find(s=>s.key === d.stage) || {}).label || d.stage || 'New Lead';
+    const date = value=> value ? new Date(value).toLocaleDateString() : '—';
+    return '<tr>' +
+      '<td><strong>' + escapeHtml(d.agencyName || 'Unnamed agency') + '</strong><br><span class="muted">' + escapeHtml(d.agencyPhoneNumber || '') + '</span></td>' +
+      '<td>' + escapeHtml(d.decisionMakerName || '—') + '</td>' +
+      '<td>' + escapeHtml(d.assignedSalesperson || 'Unassigned') + '</td>' +
+      '<td>' + escapeHtml(stage) + '</td>' +
+      '<td><span class="rate-pill">' + escapeHtml(status.label) + '</span></td>' +
+      '<td>' + total + '</td><td>' + rate + '</td>' +
+      '<td>' + date(d.lastContactDate || d.updatedAt) + '</td><td>' + date(d.nextFollowUpDate) + '</td>' +
+      '<td><button class="btn btn-danger-outline btn-sm partner-delete-btn" data-key="' + escapeAttr(d._key) + '">Delete</button></td></tr>';
+  }).join('');
+  body.querySelectorAll('.partner-delete-btn').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      await deleteDealFromAssistant(btn.dataset.key, btn);
+    });
+  });
+}
+
+const partnerStage = document.getElementById('partnerStage');
+STAGES.forEach(s=>{ const option=document.createElement('option'); option.value=s.key; option.textContent=s.label; partnerStage.appendChild(option); });
+document.getElementById('partnerSearch').addEventListener('input', renderPartners);
+document.getElementById('partnerStage').addEventListener('change', renderPartners);
+document.getElementById('partnerStatus').addEventListener('change', renderPartners);
+document.getElementById('refreshPartners').addEventListener('click', loadPartners);
+
+// ---------- Team Dashboard ----------
+let dashRange = 'today';
+
+function dashDateBounds(){
+  const now = new Date();
+  if(dashRange === 'today'){
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const end = new Date(start); end.setDate(end.getDate() + 1);
+    return { start, end };
+  }
+  if(dashRange === 'week'){
+    const day = now.getDay();
+    const diff = (day === 0 ? 6 : day - 1); // Monday as start of week
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diff);
+    const end = new Date(start); end.setDate(end.getDate() + 7);
+    return { start, end };
+  }
+  // custom
+  const fromVal = document.getElementById('dashFrom').value;
+  const toVal = document.getElementById('dashTo').value;
+  const start = fromVal ? new Date(fromVal + 'T00:00:00') : new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const end = toVal ? new Date(toVal + 'T00:00:00') : new Date(start);
+  end.setDate(end.getDate() + 1); // inclusive of the "to" day
+  return { start, end };
+}
+
+function inRange(ts, bounds){
+  if(!ts) return false;
+  const t = new Date(ts);
+  return t >= bounds.start && t < bounds.end;
+}
+
+async function loadDashboard(){
+  const body = document.getElementById('dashTableBody');
+  body.innerHTML = '<tr><td colspan="7" class="dash-empty">Loading...</td></tr>';
+
+  // Gather all calls
+  let callKeys = [];
+  try{ const r = await store.list('calls:'); callKeys = (r && r.keys) ? r.keys : []; }catch(e){ callKeys = []; }
+  const calls = [];
+  for(const k of callKeys){
+    try{ const r = await store.get(k); if(r && r.value) calls.push(JSON.parse(r.value)); }catch(e){}
+  }
+  // Gather all deals (for pipeline-stage activity from history)
+  let dealKeys = [];
+  try{ const r = await store.list('deals:'); dealKeys = (r && r.keys) ? r.keys : []; }catch(e){ dealKeys = []; }
+  const deals = [];
+  for(const k of dealKeys){
+    try{ const r = await store.get(k); if(r && r.value) deals.push(upgradeDealRecord(JSON.parse(r.value))); }catch(e){}
+  }
+
+  const bounds = dashDateBounds();
+  const quota = parseInt(document.getElementById('dashQuota').value) || 0;
+
+  // Build per-rep stats
+  const reps = {};
+  const rep = (name)=>{
+    const key = name || 'Unattributed';
+    if(!reps[key]) reps[key] = { name: key, calls:0, meetings:0, emails:0, partners:0 };
+    return reps[key];
+  };
+
+  // Calls logged that day
+  calls.forEach(c=>{
+    if(!inRange(c.loggedAt, bounds)) return;
+    const r = rep(c.loggedBy);
+    r.calls++;
+  });
+
+  // Meetings, emails, and partner activations from pipeline stage moves in range
+  deals.forEach(d=>{
+    (d.history || []).forEach(h=>{
+      if(!inRange(h.ts, bounds)) return;
+      const who = h.by || d.assignedSalesperson || '';
+      if(h.stage === 'decision_maker_appointment_scheduled'){ rep(who).meetings++; }
+      if(h.stage === 'gatekeeper_only' || h.stage === 'decision_maker_identified_email_sent' || h.stage === 'decision_maker_appointment_scheduled' || h.stage === 'decision_maker_appointment_not_scheduled' || h.stage === 'not_interested'){ rep(who).emails++; }
+      if(h.stage === 'active_partner'){ rep(who).partners++; }
+    });
+  });
+
+  const rows = Object.values(reps).sort((a,b)=> b.calls - a.calls);
+
+  // Totals
+  const totals = rows.reduce((acc,r)=>{
+    acc.calls += r.calls; acc.meetings += r.meetings; acc.emails += r.emails; acc.partners += r.partners;
+    return acc;
+  }, {calls:0, meetings:0, emails:0, partners:0});
+  const teamRate = totals.calls ? Math.round((totals.meetings / totals.calls) * 100) : 0;
+
+  // Top summary cards
+  document.getElementById('dashTotals').innerHTML = `
+    <div class="stat"><div class="num">${totals.calls}</div><div class="lbl">Calls made</div></div>
+    <div class="stat"><div class="num">${totals.meetings}</div><div class="lbl">Meetings booked</div></div>
+    <div class="stat"><div class="num">${teamRate}%</div><div class="lbl">Team booking rate</div></div>
+    <div class="stat"><div class="num">${rows.length}</div><div class="lbl">Reps active</div></div>
+  `;
+
+  if(rows.length === 0){
+    body.innerHTML = '<tr><td colspan="7" class="dash-empty">No activity in this date range yet. Submitted calls will show up here.</td></tr>';
+    updateDashNote(bounds);
+    return;
+  }
+
+  const rateColor = (rate)=>{
+    if(rate >= 25) return 'background:var(--success-bg);color:var(--success);';
+    if(rate >= 10) return 'background:#FBF0DD;color:#8A5A00;';
+    return 'background:#FCEAEA;color:var(--red-dark);';
+  };
+
+  const rowHtml = (r)=>{
+    const rate = r.calls ? Math.round((r.meetings / r.calls) * 100) : 0;
+    const pct = quota ? Math.min(100, Math.round((r.calls / quota) * 100)) : 0;
+    const met = quota && r.calls >= quota;
+    const quotaCell = quota ? `
+      <div class="quota-cell">
+        <span>${r.calls} / ${quota}</span>
+        <div class="quota-bar"><div class="quota-fill ${met?'met':''}" style="width:${pct}%;"></div></div>
+      </div>` : '<span style="color:var(--muted);">—</span>';
+    return `
+      <tr>
+        <td class="rep-name">${escapeHtml(r.name)}</td>
+        <td class="big">${r.calls}</td>
+        <td>${quotaCell}</td>
+        <td class="big">${r.meetings}</td>
+        <td><span class="rate-pill" style="${rateColor(rate)}">${rate}%</span></td>
+        <td>${r.emails}</td>
+        <td>${r.partners}</td>
+      </tr>
+    `;
+  };
+
+  const teamRow = `
+    <tr class="team-total">
+      <td class="rep-name">Team total</td>
+      <td class="big">${totals.calls}</td>
+      <td>${quota ? (rows.length * quota) + ' target' : '—'}</td>
+      <td class="big">${totals.meetings}</td>
+      <td><span class="rate-pill" style="${rateColor(teamRate)}">${teamRate}%</span></td>
+      <td>${totals.emails}</td>
+      <td>${totals.partners}</td>
+    </tr>
+  `;
+
+  body.innerHTML = rows.map(rowHtml).join('') + teamRow;
+  updateDashNote(bounds);
+}
+
+function updateDashNote(bounds){
+  const endDisplay = new Date(bounds.end); endDisplay.setDate(endDisplay.getDate() - 1);
+  const fmt = (d)=> d.toLocaleDateString();
+  const label = (fmt(bounds.start) === fmt(endDisplay)) ? fmt(bounds.start) : (fmt(bounds.start) + ' to ' + fmt(endDisplay));
+  document.getElementById('dashNote').textContent = 'Showing ' + label + '. Calls are counted when submitted. Meetings, emails, and active partners are counted when a rep moves a lead into the corresponding pipeline stage.';
+}
+
+document.querySelectorAll('.dash-range').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.dash-range').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    dashRange = btn.dataset.range;
+    document.getElementById('dashCustom').style.display = (dashRange === 'custom') ? 'flex' : 'none';
+    loadDashboard();
+  });
+});
+document.getElementById('dashFrom').addEventListener('change', loadDashboard);
+document.getElementById('dashTo').addEventListener('change', loadDashboard);
+document.getElementById('dashQuota').addEventListener('input', loadDashboard);
+document.getElementById('refreshDash').addEventListener('click', loadDashboard);
+
+
+
+// Keep the visible Counties Served field synced to the existing hidden f_counties field.
+const visibleCountiesField = document.getElementById('f_counties_visible');
+if (visibleCountiesField) {
+  visibleCountiesField.value = document.getElementById('f_counties').value || '';
+  visibleCountiesField.addEventListener('input', (e) => {
+    document.getElementById('f_counties').value = e.target.value;
+    const inline = document.getElementById('stepCountiesInput');
+    if (inline && inline.value !== e.target.value) inline.value = e.target.value;
+  });
+}
+
+</script>
+<div class="toast" id="toast"></div>
+
+</body>
+</html>
