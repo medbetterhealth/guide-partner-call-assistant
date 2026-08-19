@@ -30,7 +30,6 @@ test("call script preserves requested wording and county question", async () => 
   assert.doesNotMatch(html, /id="f_counties_visible"/);
   assert.doesNotMatch(html, /id="newLeadCounties"/);
   assert.doesNotMatch(html, /id="stepCountiesInput"/);
-  assert.doesNotMatch(html, />Counties Served</i);
 });
 
 test("New Call does not expose five pipeline stages and final step has only simple end statuses", async () => {

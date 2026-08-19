@@ -442,6 +442,29 @@
   .rate-pill{display:inline-block;padding:3px 10px;border-radius:20px;font-weight:700;font-size:12.5px;}
   .dash-empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:14px;}
 
+  /* Edit Modal */
+  .modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:1000;align-items:center;justify-content:center;}
+  .modal-overlay.show{display:flex;}
+  .modal-content{background:#fff;border-radius:12px;padding:28px 26px;max-width:480px;width:90vw;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(9,35,61,0.2);}
+  .modal-header{margin-bottom:20px;}
+  .modal-header h3{margin:0;font-size:18px;font-weight:800;color:var(--navy);font-family:'Manrope';}
+  .modal-field{margin-bottom:14px;}
+  .modal-field label{display:block;font-size:12px;font-weight:700;color:var(--navy);margin-bottom:5px;letter-spacing:0.2px;}
+  .modal-field input, .modal-field select, .modal-field textarea{
+    width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;
+    font-size:13.5px;font-family:'Inter';color:var(--ink);background:#fff;box-sizing:border-box;
+  }
+  .modal-field input:focus, .modal-field select:focus, .modal-field textarea:focus{outline:none;border-color:var(--navy);}
+  .modal-field textarea{resize:vertical;min-height:70px;}
+  .modal-row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media(max-width:520px){.modal-row2{grid-template-columns:1fr;}}
+  .modal-error{font-size:12px;color:var(--red-dark);margin-top:6px;display:none;}
+  .modal-error.show{display:block;}
+  .modal-footer{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap;}
+  .modal-footer .btn{flex:1;min-width:110px;}
+  .card-edit-btn{position:absolute;right:30px;top:7px;width:24px;height:24px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--muted);font-size:13px;line-height:1;cursor:pointer;padding:0;transition:all .15s;font-family:'Inter';font-weight:700;}
+  .card-edit-btn:hover,.card-edit-btn:focus-visible{background:#EDF1F5;color:var(--navy);outline:none;}
+
 </style>
 </head>
 <body>
@@ -740,6 +763,21 @@
     <p class="footnote" id="dashNote"></p>
   </div>
 
+</div>
+
+<!-- Edit Card Modal -->
+<div class="modal-overlay" id="editCardModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Edit Card Details</h3>
+    </div>
+    <div id="editFormContent"></div>
+    <div id="editFormError" class="modal-error"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="editCancelBtn">Cancel</button>
+      <button class="btn btn-primary" id="editSaveBtn">Save Changes</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1214,6 +1252,7 @@ function renderPipeline(){
     return `
       <div class="deal-card" data-key="${d._key}" draggable="true">
         <button type="button" class="quick-delete deal-delete-btn" data-key="${escapeAttr(d._key)}" aria-label="Delete ${escapeAttr(d.agencyName || 'this lead')}">×</button>
+        <button type="button" class="card-edit-btn deal-edit-btn" data-key="${escapeAttr(d._key)}" aria-label="Edit ${escapeAttr(d.agencyName || 'this lead')}">✏</button>
         <div class="agency"><span class="drag-grip" aria-hidden="true">⠿</span> ${escapeHtml(d.agencyName || 'Unnamed agency')}</div>
         <div class="meta">Updated ${escapeHtml(updated)}</div>
         <div class="quick-details">
@@ -1354,11 +1393,18 @@ function renderPipeline(){
     });
   });
 
+  board.querySelectorAll('.deal-edit-btn').forEach(btn=>{
+    btn.addEventListener('click', async (e)=>{
+      e.stopPropagation();
+      await openEditModal(btn.dataset.key);
+    });
+  });
+
   board.querySelectorAll('.deal-card').forEach(card=>{
     let dragStarted = false;
 
     card.addEventListener('click', (e)=>{
-      if(e.target.closest('.card-menu-wrap, .record-actions, .quick-delete')) return;
+      if(e.target.closest('.card-menu-wrap, .record-actions, .quick-delete, .card-edit-btn')) return;
       if(dragStarted){ dragStarted = false; return; }
       card.classList.toggle('open');
     });
@@ -1446,6 +1492,193 @@ async function moveDeal(key, newStageKey){
     await loadDeals();
   }catch(e){
     showToast((e && e.message) ? e.message : 'Could not update the pipeline. Try again.');
+  }
+}
+
+function validEmail(value){
+  if(!value) return true;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value).trim());
+}
+
+function validPhone(value){
+  if(!value) return true;
+  return /^[\d\s\-\(\)\.+]*$/.test(String(value).trim());
+}
+
+let editingDealKey = null;
+
+async function openEditModal(key){
+  const deal = allDeals.find(d=>d._key === key);
+  if(!deal) return;
+  editingDealKey = key;
+  const formHtml = `
+    <div class="modal-field">
+      <label>Agency Name</label>
+      <input type="text" id="editAgencyName" value="${escapeAttr(deal.agencyName || '')}" placeholder="e.g. Comfort Keepers of Broward">
+    </div>
+    <div class="modal-row2">
+      <div class="modal-field">
+        <label>Agency Phone</label>
+        <input type="text" id="editAgencyPhone" value="${escapeAttr(deal.agencyPhoneNumber || '')}" placeholder="(555) 123-4567">
+      </div>
+      <div class="modal-field">
+        <label>Answered By</label>
+        <input type="text" id="editAnsweredBy" value="${escapeAttr(deal.answeredBy || '')}" placeholder="e.g. John Smith">
+      </div>
+    </div>
+    <div class="modal-field">
+      <label>Answered By Email</label>
+      <input type="email" id="editAnsweredByEmail" value="${escapeAttr(deal.answeredByEmail || '')}" placeholder="john@example.com">
+    </div>
+    <div class="modal-row2">
+      <div class="modal-field">
+        <label>Decision Maker Name</label>
+        <input type="text" id="editDecisionMakerName" value="${escapeAttr(deal.decisionMakerName || '')}" placeholder="e.g. Jane Doe">
+      </div>
+      <div class="modal-field">
+        <label>Decision Maker Phone</label>
+        <input type="text" id="editDecisionMakerPhone" value="${escapeAttr(deal.decisionMakerPhone || '')}" placeholder="(555) 987-6543">
+      </div>
+    </div>
+    <div class="modal-field">
+      <label>Decision Maker Email</label>
+      <input type="email" id="editDecisionMakerEmail" value="${escapeAttr(deal.decisionMakerEmail || '')}" placeholder="jane@example.com">
+    </div>
+    <div class="modal-field">
+      <label>Decision Maker Spoken To</label>
+      <select id="editDecisionMakerSpokenTo">
+        <option value="">Not specified</option>
+        <option value="Yes" ${deal.decisionMakerSpokenTo === 'Yes' ? 'selected' : ''}>Yes</option>
+        <option value="No" ${deal.decisionMakerSpokenTo === 'No' ? 'selected' : ''}>No</option>
+      </select>
+    </div>
+    <div class="modal-field">
+      <label>Counties Served</label>
+      <input type="text" id="editCounties" value="${escapeAttr(deal.counties || '')}" placeholder="e.g. Broward, Miami-Dade">
+    </div>
+    <div class="modal-field">
+      <label>Outreach Pathway</label>
+      <input type="text" id="editOutreachPathway" value="${escapeAttr(deal.outreachPathway || '')}" placeholder="e.g. Gatekeeper Only - No Decision Maker Information">
+    </div>
+    <div class="modal-field">
+      <label>Email Status</label>
+      <input type="text" id="editEmailStatus" value="${escapeAttr(deal.emailStatus || '')}" placeholder="e.g. Pending automation, Sent, Opened">
+    </div>
+    <div class="modal-field">
+      <label>Notes</label>
+      <textarea id="editManualNotes" placeholder="Additional notes about this agency...">${escapeHtml(deal.manualNotes || '')}</textarea>
+    </div>
+  `;
+  document.getElementById('editFormContent').innerHTML = formHtml;
+  document.getElementById('editFormError').innerHTML = '';
+  document.getElementById('editFormError').classList.remove('show');
+  document.getElementById('editCardModal').classList.add('show');
+}
+
+function closeEditModal(){
+  editingDealKey = null;
+  document.getElementById('editCardModal').classList.remove('show');
+  document.getElementById('editFormContent').innerHTML = '';
+  document.getElementById('editFormError').innerHTML = '';
+}
+
+async function saveEditChanges(){
+  if(!editingDealKey) return;
+  const errorEl = document.getElementById('editFormError');
+  errorEl.classList.remove('show');
+  errorEl.innerHTML = '';
+
+  const deal = allDeals.find(d=>d._key === editingDealKey);
+  if(!deal) return;
+
+  const agencyName = String(document.getElementById('editAgencyName').value || '').trim();
+  const agencyPhone = String(document.getElementById('editAgencyPhone').value || '').trim();
+  const answeredBy = String(document.getElementById('editAnsweredBy').value || '').trim();
+  const answeredByEmail = String(document.getElementById('editAnsweredByEmail').value || '').trim();
+  const decisionMakerName = String(document.getElementById('editDecisionMakerName').value || '').trim();
+  const decisionMakerPhone = String(document.getElementById('editDecisionMakerPhone').value || '').trim();
+  const decisionMakerEmail = String(document.getElementById('editDecisionMakerEmail').value || '').trim();
+  const decisionMakerSpokenTo = String(document.getElementById('editDecisionMakerSpokenTo').value || '').trim();
+  const counties = String(document.getElementById('editCounties').value || '').trim();
+  const outreachPathway = String(document.getElementById('editOutreachPathway').value || '').trim();
+  const emailStatus = String(document.getElementById('editEmailStatus').value || '').trim();
+  const manualNotes = String(document.getElementById('editManualNotes').value || '').trim();
+
+  if(!validEmail(answeredByEmail)){
+    errorEl.innerHTML = 'Answered By Email is invalid.';
+    errorEl.classList.add('show');
+    return;
+  }
+  if(!validEmail(decisionMakerEmail)){
+    errorEl.innerHTML = 'Decision Maker Email is invalid.';
+    errorEl.classList.add('show');
+    return;
+  }
+  if(!validPhone(agencyPhone)){
+    errorEl.innerHTML = 'Agency Phone Number format is invalid.';
+    errorEl.classList.add('show');
+    return;
+  }
+  if(!validPhone(decisionMakerPhone)){
+    errorEl.innerHTML = 'Decision Maker Phone format is invalid.';
+    errorEl.classList.add('show');
+    return;
+  }
+
+  const saveBtn = document.getElementById('editSaveBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Saving...';
+
+  try{
+    const response = await fetch('/api/update-card', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        crmContactId: deal.crmContactId,
+        agencyName,
+        agencyPhoneNumber: agencyPhone,
+        answeredBy,
+        answeredByEmail,
+        decisionMakerName,
+        decisionMakerPhone,
+        decisionMakerEmail,
+        decisionMakerSpokenTo,
+        counties,
+        outreachPathway,
+        emailStatus,
+        manualNotes
+      })
+    });
+    const result = await response.json().catch(()=>({}));
+    if(!response.ok) throw new Error(result.error || 'Card update failed');
+
+    const now = new Date().toISOString();
+    deal.agencyName = agencyName;
+    deal.agencyPhoneNumber = agencyPhone;
+    deal.answeredBy = answeredBy;
+    deal.answeredByEmail = answeredByEmail;
+    deal.decisionMakerName = decisionMakerName;
+    deal.decisionMakerPhone = decisionMakerPhone;
+    deal.decisionMakerEmail = decisionMakerEmail;
+    deal.decisionMakerSpokenTo = decisionMakerSpokenTo;
+    deal.counties = counties;
+    deal.outreachPathway = outreachPathway;
+    deal.emailStatus = emailStatus;
+    deal.manualNotes = manualNotes;
+    deal.updatedAt = now;
+    deal.history = deal.history || [];
+    deal.history.push({ts: now, note: 'Card details edited.'});
+    await store.set(deal._key, JSON.stringify(deal));
+
+    closeEditModal();
+    showToast('Card details saved to the dashboard and GoHighLevel.');
+    await loadDeals();
+  }catch(e){
+    errorEl.innerHTML = (e && e.message) ? e.message : 'Could not save changes. Try again.';
+    errorEl.classList.add('show');
+  }finally{
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Save Changes';
   }
 }
 
@@ -1709,6 +1942,23 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
     if(btn.dataset.view === 'partners') loadPartners();
     if(btn.dataset.view === 'dashboard') loadDashboard();
   });
+});
+
+// ---------- Edit Modal ----------
+document.getElementById('editCancelBtn').addEventListener('click', (e)=>{
+  e.preventDefault();
+  closeEditModal();
+});
+
+document.getElementById('editSaveBtn').addEventListener('click', async (e)=>{
+  e.preventDefault();
+  await saveEditChanges();
+});
+
+document.getElementById('editCardModal').addEventListener('click', (e)=>{
+  if(e.target === document.getElementById('editCardModal')){
+    closeEditModal();
+  }
 });
 
 // ---------- Scheduling ----------
