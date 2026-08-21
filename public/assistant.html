@@ -386,11 +386,16 @@
   .deal-card .card-menu.open{display:block;}
   .deal-card .card-menu .card-move{margin:0;}
   .deal-card .card-menu .card-move-label{font-size:10.5px;margin-bottom:6px;}
+  .card-menu-action{
+    width:100%;border:1px solid var(--border);border-radius:7px;background:#F7F9FB;color:var(--navy);
+    padding:7px 9px;margin-bottom:9px;text-align:left;font:700 11.5px 'Inter';cursor:pointer;
+  }
+  .card-menu-action:hover,.card-menu-action:focus-visible{background:#EDF2F7;outline:none;border-color:#C9D3DC;}
   .deal-card .expand{
     margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:12px;display:none;
   }
   .deal-card.open .expand{display:block;}
-  .record-actions{display:flex;justify-content:flex-end;margin-top:10px;padding-top:9px;border-top:1px solid var(--border);}
+  .record-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:10px;padding-top:9px;border-top:1px solid var(--border);}
   .history-line{color:var(--muted);margin-bottom:4px;line-height:1.5;}
   .kanban-empty{font-size:12px;color:var(--muted);text-align:center;padding:16px 4px;border:1px dashed var(--border);border-radius:8px;}
   .pipeline-legend{
@@ -400,6 +405,32 @@
   .pipeline-legend strong{color:var(--navy);}
   .pipeline-legend-group{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
   .pipeline-legend-time{margin-left:auto;color:#718093;white-space:nowrap;}
+  .pipeline-edit-modal{
+    position:fixed;inset:0;z-index:1000;background:rgba(7,27,49,.58);padding:28px 18px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .pipeline-edit-modal[hidden]{display:none;}
+  .pipeline-edit-dialog{
+    width:min(760px,100%);max-height:calc(100vh - 56px);overflow-y:auto;background:#fff;
+    border-radius:15px;box-shadow:0 24px 70px rgba(0,0,0,.28);border:1px solid #D7DEE5;
+  }
+  .pipeline-edit-header{
+    position:sticky;top:0;z-index:2;display:flex;align-items:flex-start;justify-content:space-between;gap:18px;
+    padding:18px 20px 14px;background:#fff;border-bottom:1px solid var(--border);border-radius:15px 15px 0 0;
+  }
+  .pipeline-edit-header h2{margin:0 0 3px;font-size:18px;}
+  .pipeline-edit-header p{margin:0;color:var(--muted);font-size:11.5px;line-height:1.45;}
+  .pipeline-edit-close{border:0;background:#EEF2F5;color:var(--navy);border-radius:8px;width:32px;height:32px;font-size:21px;line-height:1;cursor:pointer;}
+  .pipeline-edit-close:hover,.pipeline-edit-close:focus-visible{background:#E2E8ED;outline:none;}
+  .pipeline-edit-body{padding:18px 20px 20px;}
+  .pipeline-edit-note{background:#F3F6F9;color:#536474;border-radius:8px;padding:9px 11px;margin:-2px 0 15px;font-size:11.5px;line-height:1.45;}
+  .pipeline-edit-actions{
+    position:sticky;bottom:0;display:flex;justify-content:flex-end;gap:9px;margin:18px -20px -20px;
+    padding:13px 20px;background:#fff;border-top:1px solid var(--border);border-radius:0 0 15px 15px;
+  }
+  .pipeline-edit-validation{font-size:12px;color:var(--red-dark);margin-right:auto;align-self:center;display:none;}
+  .pipeline-edit-validation.show{display:block;}
+  body.pipeline-modal-open{overflow:hidden;}
   @media(max-width:1180px){
     #view-pipeline.active{left:auto;width:100%;transform:none;}
   }
@@ -412,6 +443,10 @@
   @media(max-width:520px){
     .kanban-col{flex-basis:305px;width:305px;min-width:305px;}
     .deal-card .quick-details{grid-template-columns:92px minmax(0,1fr);gap-column:9px;}
+    .pipeline-edit-modal{padding:0;align-items:stretch;}
+    .pipeline-edit-dialog{max-height:100vh;border-radius:0;}
+    .pipeline-edit-header{border-radius:0;}
+    .pipeline-edit-actions{border-radius:0;}
   }
 
   .dash-controls{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-bottom:20px;}
@@ -669,6 +704,125 @@
       <span class="pipeline-legend-time">All times shown in EST</span>
     </div>
     <p class="footnote">Delete saved details removes the agency and its saved call entries from this assistant only. It does not delete the GoHighLevel contact or opportunity.</p>
+
+    <div class="pipeline-edit-modal" id="pipelineEditModal" hidden>
+      <div class="pipeline-edit-dialog" role="dialog" aria-modal="true" aria-labelledby="pipelineEditTitle">
+        <div class="pipeline-edit-header">
+          <div>
+            <h2 id="pipelineEditTitle">Edit pipeline details</h2>
+            <p>Update follow-up information on the same saved GoHighLevel contact and opportunity.</p>
+          </div>
+          <button type="button" class="pipeline-edit-close" id="pipelineEditClose" aria-label="Close edit details">×</button>
+        </div>
+        <form class="pipeline-edit-body" id="pipelineEditForm">
+          <div class="pipeline-edit-note">Saving details does not move the lead or run a stage-change email. Use the card's stage control separately when the lead should advance.</div>
+          <div class="row2">
+            <div class="field">
+              <label for="editLeadAgency">Agency Name (Required)</label>
+              <input type="text" id="editLeadAgency" required>
+            </div>
+            <div class="field">
+              <label for="editLeadAgencyPhone">Agency Phone Number (Required)</label>
+              <input type="tel" id="editLeadAgencyPhone" required>
+            </div>
+          </div>
+          <div class="row2">
+            <div class="field">
+              <label for="editLeadAnsweredBy">Answered By</label>
+              <input type="text" id="editLeadAnsweredBy">
+            </div>
+            <div class="field">
+              <label for="editLeadAnsweredByEmail">Answered By Email</label>
+              <input type="email" id="editLeadAnsweredByEmail">
+            </div>
+          </div>
+          <label class="inline-check">
+            <input type="checkbox" id="editLeadAnswererIsDecisionMaker">
+            <span>The person who answered is the decision maker</span>
+          </label>
+          <div class="row2">
+            <div class="field">
+              <label for="editLeadDecisionMakerName">Decision Maker Name</label>
+              <input type="text" id="editLeadDecisionMakerName">
+            </div>
+            <div class="field">
+              <label for="editLeadDecisionMakerPhone">Decision Maker Phone</label>
+              <input type="tel" id="editLeadDecisionMakerPhone">
+            </div>
+          </div>
+          <div class="row2">
+            <div class="field">
+              <label for="editLeadDecisionMakerEmail">Decision Maker Email</label>
+              <input type="email" id="editLeadDecisionMakerEmail">
+            </div>
+            <div class="field">
+              <label for="editLeadDecisionMakerSpokenTo">Decision Maker Spoken To</label>
+              <select id="editLeadDecisionMakerSpokenTo">
+                <option value="">Not Selected</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+            </div>
+          </div>
+          <div class="row2">
+            <div class="field">
+              <label for="editLeadOutreachOutcome">Follow-Up / Email Outcome</label>
+              <select id="editLeadOutreachOutcome">
+                <option value="">Not Selected</option>
+                <option value="gatekeeper_only">Gatekeeper Only — No Decision Maker Information</option>
+                <option value="decision_maker_identified">Decision Maker Identified — Email Provided</option>
+                <option value="decision_maker_reached_no_appointment">Decision Maker Reached — Appointment Not Scheduled</option>
+                <option value="decision_maker_reached_appointment_scheduled">Decision Maker Reached — Appointment Scheduled</option>
+                <option value="not_interested">Not Interested</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="editLeadEmailStatus">Email Status</label>
+              <input type="text" id="editLeadEmailStatus" list="pipelineEmailStatusOptions">
+              <datalist id="pipelineEmailStatusOptions">
+                <option value="Not sent"></option>
+                <option value="Pending automation"></option>
+                <option value="Sent"></option>
+                <option value="Delivered"></option>
+                <option value="Opened"></option>
+                <option value="Clicked"></option>
+                <option value="Failed"></option>
+              </datalist>
+            </div>
+          </div>
+          <div class="row2">
+            <div class="field">
+              <label for="editLeadStage">Current Pipeline Stage</label>
+              <input type="text" id="editLeadStage" readonly>
+              <span class="field-help">Move stages from the card menu so the existing stage automation remains unchanged.</span>
+            </div>
+            <div class="field">
+              <label for="editLeadAssignedSalesperson">Assigned Salesperson</label>
+              <input type="text" id="editLeadAssignedSalesperson">
+            </div>
+          </div>
+          <div class="row2">
+            <div class="field">
+              <label for="editLeadLastContactDate">Last Contact Date</label>
+              <input type="date" id="editLeadLastContactDate">
+            </div>
+            <div class="field">
+              <label for="editLeadNextFollowUpDate">Next Follow-Up Date</label>
+              <input type="date" id="editLeadNextFollowUpDate">
+            </div>
+          </div>
+          <div class="field">
+            <label for="editLeadNotes">Notes</label>
+            <textarea id="editLeadNotes" rows="5" placeholder="Add follow-up call notes"></textarea>
+          </div>
+          <div class="pipeline-edit-actions">
+            <div class="pipeline-edit-validation" id="pipelineEditValidation"></div>
+            <button type="button" class="btn btn-outline" id="pipelineEditCancel">Cancel</button>
+            <button type="submit" class="btn btn-red" id="pipelineEditSave">Save changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 
   <!-- PARTNERS VIEW -->
@@ -1233,6 +1387,7 @@ function renderPipeline(){
           <div class="card-menu-wrap">
             <button type="button" class="card-menu-toggle" aria-label="Lead actions" aria-expanded="false">⋮</button>
             <div class="card-menu">
+              <button type="button" class="card-menu-action deal-edit-btn" data-key="${escapeAttr(d._key)}">Edit all details</button>
               <div class="card-move">
                 <label class="card-move-label">Move to stage</label>
                 <select class="card-move-select" data-key="${d._key}">${moveOptions}</select>
@@ -1258,6 +1413,7 @@ function renderPipeline(){
           <div style="margin-top:8px;margin-bottom:4px;font-weight:700;font-size:11.5px;color:var(--navy);">History</div>
           ${historyHtml || '<div class="history-line">No history yet.</div>'}
           <div class="record-actions">
+            <button class="btn btn-primary btn-sm deal-edit-btn" data-key="${escapeAttr(d._key)}">Edit all details</button>
             <button class="btn btn-danger-outline btn-sm deal-delete-btn" data-key="${escapeAttr(d._key)}">Delete saved details</button>
           </div>
         </div>
@@ -1354,11 +1510,18 @@ function renderPipeline(){
     });
   });
 
+  board.querySelectorAll('.deal-edit-btn').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      openDealEditor(btn.dataset.key);
+    });
+  });
+
   board.querySelectorAll('.deal-card').forEach(card=>{
     let dragStarted = false;
 
     card.addEventListener('click', (e)=>{
-      if(e.target.closest('.card-menu-wrap, .record-actions, .quick-delete')) return;
+      if(e.target.closest('.card-menu-wrap, .record-actions, .quick-delete, .deal-edit-btn')) return;
       if(dragStarted){ dragStarted = false; return; }
       card.classList.toggle('open');
     });
@@ -1416,6 +1579,202 @@ function renderPipeline(){
     highlightDealKey = null;
   }
 }
+
+let editingDealKey = null;
+let editingDealOriginal = null;
+
+function editDateValue(value){
+  if(!value) return '';
+  const text = String(value);
+  if(/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
+  const date = new Date(text);
+  return Number.isNaN(date.getTime()) ? '' : date.toISOString().slice(0,10);
+}
+
+function syncEditDecisionMaker(){
+  if(!document.getElementById('editLeadAnswererIsDecisionMaker').checked) return;
+  document.getElementById('editLeadDecisionMakerName').value = document.getElementById('editLeadAnsweredBy').value;
+  document.getElementById('editLeadDecisionMakerPhone').value = document.getElementById('editLeadAgencyPhone').value;
+  document.getElementById('editLeadDecisionMakerEmail').value = document.getElementById('editLeadAnsweredByEmail').value;
+}
+
+function openDealEditor(key){
+  const deal = allDeals.find(item=>item._key === key);
+  if(!deal) return;
+  editingDealKey = key;
+  editingDealOriginal = {...deal};
+  const stage = STAGES.find(item=>item.key === deal.stage);
+  document.getElementById('editLeadAgency').value = deal.agencyName || '';
+  document.getElementById('editLeadAgencyPhone').value = deal.agencyPhoneNumber || '';
+  document.getElementById('editLeadAnsweredBy').value = deal.answeredBy || '';
+  document.getElementById('editLeadAnsweredByEmail').value = deal.answeredByEmail || '';
+  document.getElementById('editLeadAnswererIsDecisionMaker').checked = Boolean(deal.answererIsDecisionMaker);
+  document.getElementById('editLeadDecisionMakerName').value = deal.decisionMakerName || '';
+  document.getElementById('editLeadDecisionMakerPhone').value = deal.decisionMakerPhone || '';
+  document.getElementById('editLeadDecisionMakerEmail').value = deal.decisionMakerEmail || '';
+  document.getElementById('editLeadDecisionMakerSpokenTo').value = deal.decisionMakerSpokenTo || '';
+  document.getElementById('editLeadOutreachOutcome').value = deal.outreachOutcome || '';
+  document.getElementById('editLeadEmailStatus').value = deal.emailStatus || 'Not sent';
+  document.getElementById('editLeadStage').value = stage ? stage.step + ' ' + stage.label : (deal.stage || 'New Lead');
+  document.getElementById('editLeadAssignedSalesperson').value = deal.assignedSalesperson || '';
+  document.getElementById('editLeadLastContactDate').value = editDateValue(deal.lastContactDate) || new Date().toISOString().slice(0,10);
+  document.getElementById('editLeadNextFollowUpDate').value = editDateValue(deal.nextFollowUpDate);
+  document.getElementById('editLeadNotes').value = deal.manualNotes || '';
+  document.getElementById('pipelineEditValidation').classList.remove('show');
+  document.getElementById('pipelineEditModal').hidden = false;
+  document.body.classList.add('pipeline-modal-open');
+  setTimeout(()=>document.getElementById('editLeadAgency').focus(), 0);
+}
+
+function closeDealEditor(){
+  editingDealKey = null;
+  editingDealOriginal = null;
+  document.getElementById('pipelineEditModal').hidden = true;
+  document.body.classList.remove('pipeline-modal-open');
+  document.getElementById('pipelineEditValidation').classList.remove('show');
+}
+
+async function syncLatestCallRecordFromDeal(deal, original){
+  try{
+    const keysResult = await store.list('calls:');
+    const keys = (keysResult && keysResult.keys) ? keysResult.keys : [];
+    const matches = [];
+    for(const key of keys){
+      try{
+        const response = await store.get(key);
+        if(!response || !response.value) continue;
+        const raw = JSON.parse(response.value);
+        const call = upgradeCallRecord(raw);
+        const sameContact = deal.crmContactId && call.crmContactId === deal.crmContactId;
+        const sameOpportunity = deal.crmOpportunityId && call.crmOpportunityId === deal.crmOpportunityId;
+        const sameAgency = normalizeRecordName(call.agencyName) === normalizeRecordName(original.agencyName);
+        const callPhone = normalizeRecordPhone(call.agencyPhoneNumber);
+        const originalPhone = normalizeRecordPhone(original.agencyPhoneNumber);
+        const sameLegacyRecord = sameAgency && (!callPhone || !originalPhone || callPhone === originalPhone);
+        if(sameContact || sameOpportunity || sameLegacyRecord){
+          matches.push({key, raw, call});
+        }
+      }catch(e){ /* skip unreadable call records */ }
+    }
+    matches.sort((a,b)=>new Date(b.call.loggedAt || 0) - new Date(a.call.loggedAt || 0));
+    const latest = matches[0];
+    if(!latest) return;
+    const updated = {
+      ...latest.raw,
+      agencyName: deal.agencyName,
+      agencyPhoneNumber: deal.agencyPhoneNumber,
+      answeredBy: deal.answeredBy,
+      answeredByEmail: deal.answeredByEmail,
+      answererIsDecisionMaker: deal.answererIsDecisionMaker,
+      decisionMakerName: deal.decisionMakerName,
+      decisionMakerPhone: deal.decisionMakerPhone,
+      decisionMakerEmail: deal.decisionMakerEmail,
+      decisionMakerSpokenTo: deal.decisionMakerSpokenTo,
+      ['outreach' + 'Outcome']: deal.outreachOutcome,
+      outreachPathway: deal.outreachPathway,
+      emailStatus: deal.emailStatus,
+      manualNotes: deal.manualNotes,
+      counties: deal.counties,
+      crmContactId: deal.crmContactId,
+      crmOpportunityId: deal.crmOpportunityId
+    };
+    await store.set(latest.key, JSON.stringify(updated));
+  }catch(e){ /* the pipeline update remains saved even if an older call log is unavailable */ }
+}
+
+document.getElementById('pipelineEditClose').addEventListener('click', closeDealEditor);
+document.getElementById('pipelineEditCancel').addEventListener('click', closeDealEditor);
+document.getElementById('pipelineEditModal').addEventListener('click', (event)=>{
+  if(event.target === document.getElementById('pipelineEditModal')) closeDealEditor();
+});
+document.addEventListener('keydown', (event)=>{
+  if(event.key === 'Escape' && !document.getElementById('pipelineEditModal').hidden) closeDealEditor();
+});
+document.getElementById('editLeadAnswererIsDecisionMaker').addEventListener('change', syncEditDecisionMaker);
+document.getElementById('editLeadAnsweredBy').addEventListener('input', syncEditDecisionMaker);
+document.getElementById('editLeadAnsweredByEmail').addEventListener('input', syncEditDecisionMaker);
+document.getElementById('editLeadAgencyPhone').addEventListener('input', (event)=>{
+  event.target.value = formatPhoneNumber(event.target.value);
+  syncEditDecisionMaker();
+});
+document.getElementById('editLeadDecisionMakerPhone').addEventListener('input', (event)=>{
+  event.target.value = formatPhoneNumber(event.target.value);
+});
+
+document.getElementById('pipelineEditForm').addEventListener('submit', async (event)=>{
+  event.preventDefault();
+  const deal = allDeals.find(item=>item._key === editingDealKey);
+  if(!deal || !editingDealOriginal) return;
+  const validation = document.getElementById('pipelineEditValidation');
+  const form = event.currentTarget;
+  if(!form.reportValidity()) return;
+  const updates = {
+    agencyName: document.getElementById('editLeadAgency').value.trim(),
+    agencyPhoneNumber: document.getElementById('editLeadAgencyPhone').value.trim(),
+    answeredBy: document.getElementById('editLeadAnsweredBy').value.trim(),
+    answeredByEmail: document.getElementById('editLeadAnsweredByEmail').value.trim(),
+    answererIsDecisionMaker: document.getElementById('editLeadAnswererIsDecisionMaker').checked,
+    decisionMakerName: document.getElementById('editLeadDecisionMakerName').value.trim(),
+    decisionMakerPhone: document.getElementById('editLeadDecisionMakerPhone').value.trim(),
+    decisionMakerEmail: document.getElementById('editLeadDecisionMakerEmail').value.trim(),
+    decisionMakerSpokenTo: document.getElementById('editLeadDecisionMakerSpokenTo').value,
+    ['outreach' + 'Outcome']: document.getElementById('editLeadOutreachOutcome').value,
+    emailStatus: document.getElementById('editLeadEmailStatus').value.trim(),
+    assignedSalesperson: document.getElementById('editLeadAssignedSalesperson').value.trim(),
+    lastContactDate: document.getElementById('editLeadLastContactDate').value,
+    nextFollowUpDate: document.getElementById('editLeadNextFollowUpDate').value,
+    manualNotes: removeMutualPatientWording(document.getElementById('editLeadNotes').value.trim())
+  };
+  if(!updates.agencyName || !updates.agencyPhoneNumber){
+    validation.textContent = 'Agency Name and Agency Phone Number are required.';
+    validation.classList.add('show');
+    return;
+  }
+  validation.classList.remove('show');
+  const saveButton = document.getElementById('pipelineEditSave');
+  const originalButtonText = saveButton.textContent;
+  saveButton.disabled = true;
+  saveButton.textContent = 'Saving...';
+  try{
+    const response = await fetch('/api/update-lead', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({...deal, ...updates})
+    });
+    const result = await response.json().catch(()=>({}));
+    if(!response.ok) throw new Error(result.error || 'GoHighLevel rejected the update');
+    const original = editingDealOriginal;
+    const now = new Date().toISOString();
+    Object.assign(deal, updates, {
+      outreachPathway: result.outreachPathway || deal.outreachPathway,
+      lastContactDate: result.lastContactDate || updates.lastContactDate,
+      crmContactId: result.contactId || deal.crmContactId,
+      crmOpportunityId: result.opportunityId || deal.crmOpportunityId,
+      updatedAt: now
+    });
+    const callerName = (document.getElementById('callerName').value || deal.assignedSalesperson || '').trim();
+    deal.history = deal.history || [];
+    deal.history.push({
+      ts: now,
+      stage: deal.stage,
+      by: callerName,
+      note: 'Follow-up details updated' + (callerName ? ' by ' + callerName : '') + '. Stage unchanged.'
+    });
+    await store.set(deal._key, JSON.stringify(deal));
+    await syncLatestCallRecordFromDeal(deal, original);
+    closeDealEditor();
+    await loadDeals();
+    await loadLog();
+    renderPartners();
+    showToast('Follow-up details saved to this lead and GoHighLevel. The pipeline stage was not changed.', 5200);
+  }catch(error){
+    validation.textContent = (error && error.message) ? error.message : 'Could not save the changes. Try again.';
+    validation.classList.add('show');
+  }finally{
+    saveButton.disabled = false;
+    saveButton.textContent = originalButtonText;
+  }
+});
 
 async function moveDeal(key, newStageKey){
   const deal = allDeals.find(d=>d._key === key);

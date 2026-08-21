@@ -171,3 +171,40 @@ test("calendar endpoint uses configured URL or live Dr. Erik HighLevel calendar"
   const html = await read("public/assistant.html");
   assert.match(html, /The active Dr\. Erik calendar could not be found in GoHighLevel/);
 });
+
+test("pipeline cards can edit follow-up details without changing the real stage", async () => {
+  const [html, updateRoute] = await Promise.all([
+    readFile(new URL("public/assistant.html", root), "utf8"),
+    readFile(new URL("app/api/update-lead/route.ts", root), "utf8"),
+  ]);
+
+  for (const id of [
+    "editLeadAgency",
+    "editLeadAgencyPhone",
+    "editLeadAnsweredBy",
+    "editLeadAnsweredByEmail",
+    "editLeadAnswererIsDecisionMaker",
+    "editLeadDecisionMakerName",
+    "editLeadDecisionMakerPhone",
+    "editLeadDecisionMakerEmail",
+    "editLeadDecisionMakerSpokenTo",
+    "editLeadOutreachOutcome",
+    "editLeadEmailStatus",
+    "editLeadAssignedSalesperson",
+    "editLeadLastContactDate",
+    "editLeadNextFollowUpDate",
+    "editLeadNotes",
+  ]) assert.match(html, new RegExp(`id="${id}"`));
+
+  assert.match(html, /class="card-menu-action deal-edit-btn"/);
+  assert.match(html, /fetch\('\/api\/update-lead'/);
+  assert.match(html, /Follow-up details updated/);
+  assert.match(html, /Stage unchanged\./);
+  assert.match(html, /syncLatestCallRecordFromDeal\(deal, original\)/);
+  assert.match(updateRoute, /PUT/);
+  assert.match(updateRoute, /\/contacts\/\$\{encodeURIComponent\(contactId\)\}/);
+  assert.match(updateRoute, /\/opportunities\/\$\{encodeURIComponent\(opportunityId\)\}/);
+  assert.match(updateRoute, /pipelineStageId: current\.pipelineStageId/);
+  assert.match(updateRoute, /stagePreserved: true/);
+  assert.doesNotMatch(updateRoute, /pipelineStageId: lead\./);
+});
