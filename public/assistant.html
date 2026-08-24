@@ -1789,13 +1789,19 @@ async function syncLatestCallRecordFromDeal(deal, original){
   }catch(e){ /* the pipeline update remains saved even if an older call log is unavailable */ }
 }
 
+// Keep the fixed editor relative to the browser viewport, not the transformed wide pipeline board.
+const pipelineEditModal = document.getElementById('pipelineEditModal');
+if(pipelineEditModal && pipelineEditModal.parentElement !== document.body){
+  document.body.appendChild(pipelineEditModal);
+}
+
 document.getElementById('pipelineEditClose').addEventListener('click', closeDealEditor);
 document.getElementById('pipelineEditCancel').addEventListener('click', closeDealEditor);
-document.getElementById('pipelineEditModal').addEventListener('click', (event)=>{
-  if(event.target === document.getElementById('pipelineEditModal')) closeDealEditor();
+pipelineEditModal.addEventListener('click', (event)=>{
+  if(event.target === pipelineEditModal) closeDealEditor();
 });
 document.addEventListener('keydown', (event)=>{
-  if(event.key === 'Escape' && !document.getElementById('pipelineEditModal').hidden) closeDealEditor();
+  if(event.key === 'Escape' && !pipelineEditModal.hidden) closeDealEditor();
 });
 document.getElementById('editLeadAnswererIsDecisionMaker').addEventListener('change', syncEditDecisionMaker);
 document.getElementById('editLeadAnsweredBy').addEventListener('input', syncEditDecisionMaker);
