@@ -197,6 +197,9 @@ test("pipeline cards can edit follow-up details without changing the real stage"
   ]) assert.match(html, new RegExp(`id="${id}"`));
 
   assert.match(html, /class="card-menu-action deal-edit-btn"/);
+  assert.match(html, /class="pipeline-edit-scroll"/);
+  assert.match(html, /\.pipeline-edit-scroll\{[\s\S]*?overflow-y:auto/);
+  assert.match(html, /\.pipeline-edit-actions\{[\s\S]*?flex:0 0 auto/);
   assert.match(html, /fetch\('\/api\/update-lead'/);
   assert.match(html, /Follow-up details updated/);
   assert.match(html, /Stage unchanged\./);
