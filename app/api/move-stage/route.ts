@@ -20,7 +20,7 @@ function stageAliases(value: string) {
     return ["Decision Maker Identified – Email Provided", "Decision Maker Identified – Email Sent", "Email Sent"];
   }
   if (normalized === "decision maker reached - appointment scheduled") {
-    return ["Decision Maker Reached – Appointment Scheduled", "Meeting Scheduled"];
+    return ["Decision Maker Reached – Appointment Scheduled"];
   }
   if (normalized === "decision maker reached - appointment not scheduled") {
     return ["Decision Maker Reached – Appointment Not Scheduled", "Decision Maker Contacted", "Decision Maker Contacted – Email Sent"];
@@ -32,7 +32,7 @@ function stageAliases(value: string) {
     return ["Decision Maker Identified – Email Provided", "Decision Maker Identified", "Decision Maker Identified – Email Sent"];
   }
   if (normalized === "meeting scheduled") {
-    return ["Decision Maker Reached – Appointment Scheduled", "Meeting Scheduled"];
+    return ["Meeting Scheduled"];
   }
   if (normalized === "follow-up needed" || normalized === "follow up needed" || normalized === "outreach made") {
     return ["Gatekeeper Only – No Decision Maker Information", "Follow-Up Needed", "Outreach Made"];

@@ -1077,13 +1077,14 @@ const STAGES = [
   {key:'decision_maker_appointment_not_scheduled', step:'2.c', code:'C', tone:'pending', label:'Decision Maker Reached – Appointment Not Scheduled', description:'The decision maker was reached, but a meeting was not scheduled during the call.'},
   {key:'decision_maker_appointment_scheduled', step:'2.d', code:'D', tone:'scheduled', label:'Decision Maker Reached – Appointment Scheduled', description:'The decision maker was reached and a meeting with Dr. Erik was successfully scheduled.'},
   {key:'not_interested', step:'2.e', code:'E', tone:'declined', label:'Not Interested', description:'The gatekeeper or decision maker clearly declined the partnership opportunity.'},
-  {key:'meeting_held', step:'3.', label:'Meeting Held'},
-  {key:'onboarding_documents_signed', step:'4.', label:'Onboarding Documents Signed'},
-  {key:'submitted_to_medicare', step:'5.', label:'Submitted to Medicare'},
-  {key:'partner_training', step:'6.', label:'Partner Training'},
-  {key:'medicare_approved', step:'7.', label:'Medicare Approved'},
-  {key:'partner_onboarding_call', step:'8.', label:'Partner Onboarding Call'},
-  {key:'active_partner', step:'9.', label:'Active Partner', terminal:'win'}
+  {key:'meeting_scheduled', step:'3.', label:'Meeting Scheduled'},
+  {key:'meeting_held', step:'4.', label:'Meeting Held'},
+  {key:'onboarding_documents_signed', step:'5.', label:'Onboarding Documents Signed'},
+  {key:'submitted_to_medicare', step:'6.', label:'Submitted to Medicare'},
+  {key:'partner_training', step:'7.', label:'Partner Training'},
+  {key:'medicare_approved', step:'8.', label:'Medicare Approved'},
+  {key:'partner_onboarding_call', step:'9.', label:'Partner Onboarding Call'},
+  {key:'active_partner', step:'10.', label:'Active Partner', terminal:'win'}
 ];
 
 const STAGE_ALIASES = {
@@ -1099,7 +1100,7 @@ const STAGE_ALIASES = {
   decision_maker_contacted_email_sent:'decision_maker_appointment_not_scheduled',
   decision_maker_appointment_scheduled:'decision_maker_appointment_scheduled',
   decision_maker_appointment_not_scheduled:'decision_maker_appointment_not_scheduled',
-  meeting_scheduled:'decision_maker_appointment_scheduled',
+  meeting_scheduled:'meeting_scheduled',
   meeting_held:'meeting_held',
   pathway_pending:'onboarding_documents_signed',
   pathway_completed:'onboarding_documents_signed',
@@ -1288,10 +1289,21 @@ async function upsertDealFromCall(callRecord){
 let allDeals = [];
 let highlightDealKey = null;
 
-async function loadDeals(){
+async function synchronizePipelineFromHighLevel(){
+  try{
+    const response = await fetch('/api/sync-pipeline', {method:'POST'});
+    if(!response.ok) return {updated:0};
+    return await response.json();
+  }catch(e){
+    return {updated:0};
+  }
+}
+
+async function loadDeals(options = {}){
   const board = document.getElementById('kanbanBoard');
   board.innerHTML = '<div class="kanban-empty">Loading pipeline...</div>';
   try{
+    if(options.sync !== false) await synchronizePipelineFromHighLevel();
     const keysRes = await store.list('deals:');
     const keys = (keysRes && keysRes.keys) ? keysRes.keys : [];
     const deals = [];
@@ -1325,7 +1337,7 @@ function renderPipelineStats(){
   const inStage = (key)=> allDeals.filter(d=>d.stage === key).length;
   document.getElementById('statOutreach').textContent = inStage('gatekeeper_only') + inStage('decision_maker_identified_email_sent') + inStage('decision_maker_appointment_scheduled') + inStage('decision_maker_appointment_not_scheduled') + inStage('not_interested');
   document.getElementById('statEmails').textContent = inStage('gatekeeper_only') + inStage('decision_maker_identified_email_sent') + inStage('decision_maker_appointment_scheduled') + inStage('decision_maker_appointment_not_scheduled') + inStage('not_interested');
-  document.getElementById('statMeetings').textContent = inStage('decision_maker_appointment_scheduled');
+  document.getElementById('statMeetings').textContent = inStage('meeting_scheduled');
   document.getElementById('statActive').textContent = inStage('active_partner');
 }
 
@@ -1446,7 +1458,7 @@ function renderPipeline(){
     const notesPreview = (d.manualNotes || '').trim();
     const historyCount = (d.history || []).length;
     const emailActivityCount = emailClass === 'no-email' || emailClass === 'neutral' ? 0 : 1;
-    const meetingStageIndex = STAGES.findIndex(stage=>stage.key === 'decision_maker_appointment_scheduled');
+    const meetingStageIndex = STAGES.findIndex(stage=>stage.key === 'meeting_scheduled');
     const currentStageIndex = STAGES.findIndex(stage=>stage.key === d.stage);
     const meetingActivityCount = currentStageIndex >= meetingStageIndex && meetingStageIndex >= 0 ? 1 : 0;
     const cardValue = (value, extraClass, label)=> copyableText(value, 'Not provided', label, `v${extraClass ? ' ' + extraClass : ''}`);
@@ -2182,6 +2194,13 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
     if(btn.dataset.view === 'dashboard') loadDashboard();
   });
 });
+
+setInterval(async ()=>{
+  const pipelineView = document.getElementById('view-pipeline');
+  if(!pipelineView || !pipelineView.classList.contains('active') || !pipelineEditModal.hidden) return;
+  const result = await synchronizePipelineFromHighLevel();
+  if(result && result.updated > 0) await loadDeals({sync:false});
+}, 30000);
 
 // ---------- Scheduling ----------
 let SCHEDULE_URL = '';
@@ -2928,7 +2947,7 @@ async function loadDashboard(){
     (d.history || []).forEach(h=>{
       if(!inRange(h.ts, bounds)) return;
       const who = h.by || d.assignedSalesperson || '';
-      if(h.stage === 'decision_maker_appointment_scheduled'){ rep(who).meetings++; }
+      if(h.stage === 'meeting_scheduled'){ rep(who).meetings++; }
       if(h.stage === 'gatekeeper_only' || h.stage === 'decision_maker_identified_email_sent' || h.stage === 'decision_maker_appointment_scheduled' || h.stage === 'decision_maker_appointment_not_scheduled' || h.stage === 'not_interested'){ rep(who).emails++; }
       if(h.stage === 'active_partner'){ rep(who).partners++; }
     });

@@ -88,11 +88,10 @@ test("UI validates scheduled and reached decision-maker routes without a five-st
   assert.match(html, /Decision Maker Name and Decision Maker Email are required when the decision maker was reached/);
 });
 
-test("dashboard metrics use new appointment-scheduled stage", async () => {
+test("dashboard metrics use the separate calendar-booked meeting stage", async () => {
   const html = await read("public/assistant.html");
-  assert.match(html, /statMeetings'\)\.textContent = inStage\('decision_maker_appointment_scheduled'\)/);
-  assert.doesNotMatch(html, /statMeetings'\)\.textContent = inStage\('meeting_scheduled'\)/);
-  assert.match(html, /h\.stage === 'decision_maker_appointment_scheduled'\)\{ rep\(who\)\.meetings\+\+/);
+  assert.match(html, /statMeetings'\)\.textContent = inStage\('meeting_scheduled'\)/);
+  assert.match(html, /h\.stage === 'meeting_scheduled'\)\{ rep\(who\)\.meetings\+\+/);
 });
 
 test("outreach classifier supports all five selected outcomes", async () => {
@@ -147,7 +146,7 @@ test("manual stage move refuses missing recipients and marks automation pending"
   assert.match(route, /emailStatus: nextEmailStatus/);
 });
 
-test("pipeline migration uses the exact five-stage order and protects active opportunities", async () => {
+test("pipeline migration adds Meeting Scheduled after the five outreach outcomes", async () => {
   const route = await read("app/api/admin-pipeline/route.ts");
   const block = route.slice(route.indexOf("const DESIRED_STAGES = ["), route.indexOf("] as const;", route.indexOf("const DESIRED_STAGES = [")));
   const names = [...block.matchAll(/name: "([^"]+)"/g)].map(m=>m[1]);
@@ -159,8 +158,23 @@ test("pipeline migration uses the exact five-stage order and protects active opp
     "Decision Maker Reached – Appointment Scheduled",
     "Not Interested",
   ]);
+  assert.equal(names[6], "Meeting Scheduled");
+  assert.equal(names[7], "Meeting Held");
   assert.match(route, /Cannot safely remove legacy stages with active opportunities/);
   assert.match(route, /Another HighLevel pipeline changed unexpectedly/);
+});
+
+test("pipeline sync mirrors the real HighLevel stage without duplicating a deal", async () => {
+  const [html, route] = await Promise.all([
+    read("public/assistant.html"),
+    read("app/api/sync-pipeline/route.ts"),
+  ]);
+  assert.match(html, /fetch\('\/api\/sync-pipeline', \{method:'POST'\}\)/);
+  assert.match(html, /if\(options\.sync !== false\) await synchronizePipelineFromHighLevel\(\)/);
+  assert.match(route, /\["meeting scheduled", "meeting_scheduled"\]/);
+  assert.match(route, /crmOpportunityId/);
+  assert.match(route, /UPDATE guide_store SET value/);
+  assert.doesNotMatch(route, /INSERT INTO guide_store/);
 });
 
 test("calendar endpoint uses configured URL or live Dr. Erik HighLevel calendar", async () => {
