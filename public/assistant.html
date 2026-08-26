@@ -727,7 +727,7 @@
         </div>
         <form class="pipeline-edit-body" id="pipelineEditForm">
           <div class="pipeline-edit-scroll">
-            <div class="pipeline-edit-note">Saving details does not move the lead or run a stage-change email. Use the card's stage control separately when the lead should advance.</div>
+            <div class="pipeline-edit-note">Saving details does not move the lead or run a stage-change email. Use Resend email to run the current stage's email automation again.</div>
           <div class="row2">
             <div class="field">
               <label for="editLeadAgency">Agency Name (Required)</label>
@@ -806,7 +806,7 @@
             <div class="field">
               <label for="editLeadStage">Current Pipeline Stage</label>
               <input type="text" id="editLeadStage" readonly>
-              <span class="field-help">Move stages from the card menu so the existing stage automation remains unchanged.</span>
+              <span class="field-help">Move the card between pipeline columns when the lead should advance to another stage.</span>
             </div>
             <div class="field">
               <label for="editLeadAssignedSalesperson">Assigned Salesperson</label>
@@ -830,6 +830,7 @@
           </div>
           <div class="pipeline-edit-actions">
             <div class="pipeline-edit-validation" id="pipelineEditValidation"></div>
+            <button type="button" class="btn btn-primary" id="pipelineEditResend">Resend email</button>
             <button type="button" class="btn btn-outline" id="pipelineEditCancel">Cancel</button>
             <button type="submit" class="btn btn-red" id="pipelineEditSave">Save changes</button>
           </div>
@@ -1569,6 +1570,10 @@ function openDealEditor(key){
   document.getElementById('editLeadNextFollowUpDate').value = editDateValue(deal.nextFollowUpDate);
   document.getElementById('editLeadNotes').value = deal.manualNotes || '';
   document.getElementById('pipelineEditValidation').classList.remove('show');
+  const resendButton = document.getElementById('pipelineEditResend');
+  const emailStages = new Set(['gatekeeper_only','decision_maker_identified_email_sent','decision_maker_appointment_scheduled','decision_maker_appointment_not_scheduled','not_interested']);
+  resendButton.disabled = !emailStages.has(deal.stage);
+  resendButton.title = resendButton.disabled ? 'This stage does not have an email automation.' : 'Run this stage email automation again';
   document.getElementById('pipelineEditModal').hidden = false;
   document.body.classList.add('pipeline-modal-open');
   setTimeout(()=>document.getElementById('editLeadAgency').focus(), 0);
@@ -1653,6 +1658,50 @@ document.getElementById('editLeadAgencyPhone').addEventListener('input', (event)
 });
 document.getElementById('editLeadDecisionMakerPhone').addEventListener('input', (event)=>{
   event.target.value = formatPhoneNumber(event.target.value);
+});
+
+document.getElementById('pipelineEditResend').addEventListener('click', async ()=>{
+  const deal = allDeals.find(item=>item._key === editingDealKey);
+  if(!deal) return;
+  const resendButton = document.getElementById('pipelineEditResend');
+  const validation = document.getElementById('pipelineEditValidation');
+  const recipient = deal.stage === 'gatekeeper_only'
+    ? String(deal.answeredByEmail || '').trim()
+    : String(deal.decisionMakerEmail || deal.answeredByEmail || '').trim();
+  if(!recipient){
+    validation.textContent = 'Save a valid recipient email before resending.';
+    validation.classList.add('show');
+    return;
+  }
+  if(!window.confirm(`Resend this stage email to ${recipient}?`)) return;
+  validation.classList.remove('show');
+  const originalText = resendButton.textContent;
+  resendButton.disabled = true;
+  resendButton.textContent = 'Resending...';
+  try{
+    const response = await fetch('/api/resend-email', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(deal)
+    });
+    const result = await response.json().catch(()=>({}));
+    if(!response.ok) throw new Error(result.error || 'HighLevel rejected the resend request');
+    const now = new Date().toISOString();
+    deal.emailStatus = result.emailStatus || 'Pending automation';
+    deal.updatedAt = now;
+    deal.history = deal.history || [];
+    deal.history.push({ts:now, stage:deal.stage, note:`Stage email resent to ${result.recipientEmail || recipient}.`});
+    await store.set(deal._key, JSON.stringify(deal));
+    await syncLatestCallRecordFromDeal(deal, editingDealOriginal || deal);
+    document.getElementById('editLeadEmailStatus').value = deal.emailStatus;
+    showToast(`Email automation started again for ${result.recipientEmail || recipient}.`, 5200);
+  }catch(error){
+    validation.textContent = (error && error.message) ? error.message : 'The email could not be resent. Try again.';
+    validation.classList.add('show');
+  }finally{
+    resendButton.disabled = false;
+    resendButton.textContent = originalText;
+  }
 });
 
 document.getElementById('pipelineEditForm').addEventListener('submit', async (event)=>{
