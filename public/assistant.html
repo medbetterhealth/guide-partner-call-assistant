@@ -338,9 +338,11 @@
   .card-move-select{width:100%;padding:5px 7px;font-size:12px;border:1.5px solid var(--border);border-radius:6px;font-family:'Inter';background:#fff;color:var(--ink);cursor:pointer;}
   .card-move-select:focus{outline:none;border-color:var(--navy);}
   .deal-card{
-    background:#fff;border:1px solid #DDE3E8;border-radius:10px;padding:14px 38px 12px 14px;
+    background:#fff;border:1px solid #DDE3E8;border-radius:10px;padding:14px;
     cursor:grab;position:relative;box-shadow:0 1px 3px rgba(9,35,61,.05);
   }
+  .deal-card:focus-visible{outline:3px solid rgba(23,111,209,.28);outline-offset:2px;}
+  .deal-card.open{cursor:default;box-shadow:0 4px 14px rgba(9,35,61,.10);}
   .deal-card:active{cursor:grabbing;}
   .deal-card.dragging{opacity:0.5;}
   .deal-card.just-added{animation:cardPop 2.6s ease;}
@@ -351,6 +353,7 @@
   }
   .deal-card .drag-grip{color:var(--muted);font-size:11px;letter-spacing:-1px;margin-right:2px;}
   .deal-card .agency{font-family:'Manrope';font-weight:800;font-size:14px;line-height:1.35;color:var(--ink);padding-right:3px;}
+  .deal-card .agency-name{word-break:normal;overflow-wrap:anywhere;}
   .deal-card .meta{font-size:11px;color:var(--muted);margin-top:3px;}
   .deal-card .quick-details{
     display:grid;grid-template-columns:minmax(96px,108px) minmax(0,1fr);
@@ -1443,57 +1446,12 @@ function renderPipeline(){
     const moveOptions = STAGES.map(s=>`<option value="${s.key}" ${s.key===d.stage?'selected':''}>${escapeHtml(s.label)}</option>`).join('');
     const stageLabel = (STAGES.find(s=>s.key===d.stage) || {}).label || d.stage || 'New Lead';
     const emailStatus = d.emailStatus || 'Not sent';
-    const emailStatusLower = emailStatus.toLowerCase();
-    const emailClass = emailStatusLower.includes('clicked') ? 'clicked'
-      : emailStatusLower.includes('opened') ? 'opened'
-      : emailStatusLower.includes('delivered') ? 'delivered'
-      : emailStatusLower.includes('failed') ? 'failed'
-      : emailStatusLower.includes('pending') ? 'pending'
-      : emailStatusLower.includes('not sent') || emailStatusLower.includes('no email') ? 'no-email'
-      : emailStatusLower.includes('sent') ? 'sent' : 'neutral';
-    const emailDisplay = emailClass === 'no-email' ? 'No Email' : emailStatus;
-    const spokenTo = String(d.decisionMakerSpokenTo || '').trim();
-    const spokenClass = spokenTo.toLowerCase() === 'yes' ? 'yes' : (spokenTo.toLowerCase() === 'no' ? 'no' : 'neutral');
-    const spokenDisplay = spokenTo || 'Not Selected';
-    const notesPreview = (d.manualNotes || '').trim();
-    const historyCount = (d.history || []).length;
-    const emailActivityCount = emailClass === 'no-email' || emailClass === 'neutral' ? 0 : 1;
-    const meetingStageIndex = STAGES.findIndex(stage=>stage.key === 'meeting_scheduled');
-    const currentStageIndex = STAGES.findIndex(stage=>stage.key === d.stage);
-    const meetingActivityCount = currentStageIndex >= meetingStageIndex && meetingStageIndex >= 0 ? 1 : 0;
-    const cardValue = (value, extraClass, label)=> copyableText(value, 'Not provided', label, `v${extraClass ? ' ' + extraClass : ''}`);
     return `
-      <div class="deal-card" data-key="${d._key}" draggable="true">
-        <button type="button" class="quick-delete deal-delete-btn" data-key="${escapeAttr(d._key)}" aria-label="Delete ${escapeAttr(d.agencyName || 'this lead')}">×</button>
-        <div class="agency"><span class="drag-grip" aria-hidden="true">⠿</span> ${copyableText(d.agencyName, 'Unnamed agency', 'agency name')}</div>
-        <div class="meta">Updated ${copyableText(updated, 'Not provided', 'updated date')}</div>
-        <div class="quick-details">
-          <span class="k">☎ Agency phone</span>${cardValue(d.agencyPhoneNumber, 'mono', 'agency phone')}
-          <span class="k">Answered by</span>${cardValue(d.answeredBy, '', 'answered by')}
-          <span class="k">Decision maker</span>${cardValue(d.decisionMakerName, '', 'decision maker name')}
-          <span class="k">DM phone</span>${cardValue(d.decisionMakerPhone, 'mono', 'decision maker phone')}
-          <span class="k">DM email</span>${cardValue(d.decisionMakerEmail, 'email-value', 'decision maker email')}
-          <span class="k">DM spoken to</span><span class="v">${copyableText(spokenDisplay, 'Not Selected', 'decision maker spoken status', `pipeline-status ${spokenClass}`)}</span>
-          <span class="k">Email status</span><span class="v">${copyableText(emailDisplay, 'No Email', 'email status', `pipeline-status ${emailClass}`)}</span>
-        </div>
-        <div class="card-activity" aria-label="Lead activity">
-          <span title="Notes">&#128172; ${notesPreview ? 1 : 0}</span>
-          <span title="Email activity">&#9993; ${emailActivityCount}</span>
-          <span title="Meetings">&#128197; ${meetingActivityCount}</span>
-          <span title="Updates">&#8635; ${historyCount}</span>
-          <div class="card-menu-wrap">
-            <button type="button" class="card-menu-toggle" aria-label="Lead actions" aria-expanded="false">⋮</button>
-            <div class="card-menu">
-            <button type="button" class="card-menu-action deal-edit-btn" data-key="${escapeAttr(d._key)}">Edit all details</button>
-              <button type="button" class="card-menu-action deal-copy-all-btn" data-key="${escapeAttr(d._key)}">Copy all details</button>
-              <div class="card-move">
-                <label class="card-move-label">Move to stage</label>
-                <select class="card-move-select" data-key="${d._key}">${moveOptions}</select>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div class="deal-card" data-key="${d._key}" draggable="true" tabindex="0" role="button" aria-expanded="false" aria-label="${escapeAttr(d.agencyName || 'Unnamed agency')}. Double-click to view all details">
+        <div class="agency"><span class="drag-grip" aria-hidden="true">⠿</span> <span class="agency-name">${escapeHtml(d.agencyName || 'Unnamed agency')}</span></div>
         <div class="expand">
+          <div class="detail-row"><span class="k">Agency Name</span>${copyableText(d.agencyName, 'Unnamed agency', 'agency name', 'v')}</div>
+          <div class="detail-row"><span class="k">Updated</span>${copyableText(updated, 'Not provided', 'updated date', 'v')}</div>
           <div class="detail-row"><span class="k">Agency Phone</span>${copyableText(d.agencyPhoneNumber, 'Not yet provided', 'agency phone', 'v mono')}</div>
           <div class="detail-row"><span class="k">Gatekeeper</span>${copyableText(d.answeredBy, 'Not yet provided', 'gatekeeper name', 'v')}</div>
           <div class="detail-row"><span class="k">Gatekeeper Email</span>${copyableText(d.answeredByEmail, 'Not yet provided', 'gatekeeper email', 'v')}</div>
@@ -1504,6 +1462,9 @@ function renderPipeline(){
           <div class="detail-row"><span class="k">Current Stage</span>${copyableText(stageLabel, 'New Lead', 'current stage', 'v')}</div>
           <div class="detail-row"><span class="k">Outreach Path</span>${copyableText(d.outreachPathway || 'Follow-Up Needed', 'Follow-Up Needed', 'outreach path', 'v')}</div>
           <div class="detail-row"><span class="k">Email Status</span>${copyableText(emailStatus, 'Not sent', 'email status', 'v')}</div>
+          <div class="detail-row"><span class="k">Assigned Salesperson</span>${copyableText(d.assignedSalesperson, 'Not yet provided', 'assigned salesperson', 'v')}</div>
+          <div class="detail-row"><span class="k">Last Contact Date</span>${copyableText(d.lastContactDate, 'Not yet provided', 'last contact date', 'v')}</div>
+          <div class="detail-row"><span class="k">Next Follow-Up Date</span>${copyableText(d.nextFollowUpDate, 'Not yet provided', 'next follow-up date', 'v')}</div>
           <div class="detail-row"><span class="k">Last Opened</span>${copyableText(d.emailOpenedAt ? new Date(d.emailOpenedAt).toLocaleString() : '', 'Not recorded', 'last opened date', 'v')}</div>
           <div class="detail-row"><span class="k">Last Clicked</span>${copyableText(d.emailClickedAt ? new Date(d.emailClickedAt).toLocaleString() : '', 'Not recorded', 'last clicked date', 'v')}</div>
           <div class="detail-row"><span class="k">Notes</span>${copyableText(d.manualNotes, 'Not yet provided', 'notes', 'v')}</div>
@@ -1511,6 +1472,10 @@ function renderPipeline(){
           <div style="margin-top:8px;margin-bottom:4px;font-weight:700;font-size:11.5px;color:var(--navy);">History</div>
           ${historyHtml || '<div class="history-line">No history yet.</div>'}
           <div class="record-actions">
+            <div class="card-move" style="width:100%;margin-top:0;text-align:left;">
+              <label class="card-move-label">Move to stage</label>
+              <select class="card-move-select" data-key="${d._key}">${moveOptions}</select>
+            </div>
             <button class="btn btn-outline btn-sm deal-copy-all-btn" data-key="${escapeAttr(d._key)}">Copy all details</button>
             <button class="btn btn-primary btn-sm deal-edit-btn" data-key="${escapeAttr(d._key)}">Edit all details</button>
             <button class="btn btn-danger-outline btn-sm deal-delete-btn" data-key="${escapeAttr(d._key)}">Delete saved details</button>
@@ -1639,10 +1604,19 @@ function renderPipeline(){
   board.querySelectorAll('.deal-card').forEach(card=>{
     let dragStarted = false;
 
-    card.addEventListener('click', (e)=>{
-      if(e.target.closest('.card-menu-wrap, .record-actions, .quick-delete, .deal-edit-btn, .deal-copy-all-btn, .copyable-value')) return;
+    const toggleCardDetails = ()=>{
       if(dragStarted){ dragStarted = false; return; }
       card.classList.toggle('open');
+      card.setAttribute('aria-expanded', String(card.classList.contains('open')));
+    };
+    card.addEventListener('dblclick', (e)=>{
+      if(e.target.closest('.record-actions, .deal-edit-btn, .deal-copy-all-btn, .copyable-value, select, button')) return;
+      toggleCardDetails();
+    });
+    card.addEventListener('keydown', (e)=>{
+      if(e.target !== card || (e.key !== 'Enter' && e.key !== ' ')) return;
+      e.preventDefault();
+      toggleCardDetails();
     });
     card.addEventListener('dragstart', (e)=>{
       dragStarted = true;
