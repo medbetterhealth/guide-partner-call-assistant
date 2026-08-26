@@ -55,7 +55,7 @@
   }
   .brand-text h1{margin:0;font-size:19px;font-weight:800;letter-spacing:0.2px;}
   .brand-text p{margin:2px 0 0;font-size:12.5px;color:#B9C6D6;}
-  .tabs{display:flex;gap:6px;background:rgba(255,255,255,0.08);padding:4px;border-radius:10px;}
+  .tabs{display:flex;flex-wrap:wrap;gap:6px;background:rgba(255,255,255,0.08);padding:4px;border-radius:10px;}
   .tab-btn{
     border:none;background:transparent;color:#CFDAE6;
     padding:9px 16px;border-radius:8px;font-size:13.5px;font-weight:600;
@@ -177,6 +177,7 @@
   .stat .num{font-family:'Manrope';font-weight:800;font-size:26px;color:var(--navy);}
   .stat .lbl{font-size:11.5px;color:var(--muted);font-weight:600;letter-spacing:0.3px;text-transform:uppercase;margin-top:2px;}
   #view-pipeline.active{position:relative;left:50%;width:calc(100vw - 40px);transform:translateX(-50%);}
+  #view-email.active{position:relative;left:50%;width:calc(100vw - 40px);transform:translateX(-50%);}
   #pipelineStats .stat{display:flex;align-items:center;gap:14px;padding:13px 16px;min-height:70px;}
   .pipeline-kpi-icon{
     width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;
@@ -354,6 +355,16 @@
   .deal-card .drag-grip{color:var(--muted);font-size:11px;letter-spacing:-1px;margin-right:2px;}
   .deal-card .agency{font-family:'Manrope';font-weight:800;font-size:14px;line-height:1.35;color:var(--ink);padding-right:3px;}
   .deal-card .agency-name{word-break:normal;overflow-wrap:anywhere;}
+  .email-status-card{cursor:pointer;padding:13px 14px;}
+  .email-status-card:active{cursor:pointer;}
+  .email-status-card .agency{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .email-status-card .email-recipient{margin-top:5px;color:var(--muted);font-size:10.5px;overflow-wrap:anywhere;}
+  .email-status-col.sent{background:#F3F8FE;border-color:#CFE1F4;}
+  .email-status-col.delivered{background:#F7F3FD;border-color:#DED1F2;}
+  .email-status-col.opened{background:#FFF8EE;border-color:#F2D7AC;}
+  .email-status-col.clicked{background:#F1FAF5;border-color:#C6E7D3;}
+  .email-status-col.no-email{background:#F4F6F8;border-color:#DDE3E8;}
+  .email-status-col.failed{background:#FFF3F3;border-color:#ECC7CA;}
   .deal-card .meta{font-size:11px;color:var(--muted);margin-top:3px;}
   .deal-card .quick-details{
     display:grid;grid-template-columns:minmax(96px,108px) minmax(0,1fr);
@@ -442,6 +453,7 @@
   body.pipeline-modal-open{overflow:hidden;}
   @media(max-width:1180px){
     #view-pipeline.active{left:auto;width:100%;transform:none;}
+    #view-email.active{left:auto;width:100%;transform:none;}
   }
   @media(max-width:760px){
     .pipeline-toolbar{flex-wrap:wrap;}
@@ -504,6 +516,7 @@
     <button class="tab-btn active" data-view="call">New Call</button>
     <button class="tab-btn" data-view="log">Call Log</button>
     <button class="tab-btn" data-view="pipeline">Pipeline</button>
+    <button class="tab-btn" data-view="email">Email Status</button>
     <button class="tab-btn" data-view="partners">Partners</button>
     <button class="tab-btn" data-view="dashboard">Team Dashboard</button>
   </div>
@@ -837,6 +850,16 @@
         </form>
       </div>
     </div>
+  </div>
+
+  <!-- EMAIL STATUS VIEW -->
+  <div class="view" id="view-email">
+    <div class="pipeline-toolbar">
+      <div class="pipeline-search-wrap"><input type="text" id="emailStatusSearch" placeholder="Search agency or recipient email..."></div>
+      <button class="btn btn-ghost btn-sm" id="refreshEmailStatus">↻ Refresh</button>
+    </div>
+    <div class="kanban-board" id="emailStatusBoard"></div>
+    <p class="footnote">Double-click an agency name to open all details. Email status does not change the lead's pipeline stage.</p>
   </div>
 
   <!-- PARTNERS VIEW -->
@@ -1324,8 +1347,11 @@ async function loadDeals(options = {}){
     allDeals = deals;
     renderPipelineStats();
     renderPipeline();
+    renderEmailStatusBoard();
   }catch(e){
     board.innerHTML = '<div class="kanban-empty">Could not load the pipeline. Try refreshing.</div>';
+    const emailBoard = document.getElementById('emailStatusBoard');
+    if(emailBoard) emailBoard.innerHTML = '<div class="kanban-empty">Could not load email statuses. Try refreshing.</div>';
   }
 }
 
@@ -1529,6 +1555,56 @@ function renderPipeline(){
   }
 }
 
+function emailStatusFor(deal){
+  const recipient = String(deal.decisionMakerEmail || deal.answeredByEmail || '').trim();
+  if(!recipient) return 'no-email';
+  const status = String(deal.emailStatus || '').trim().toLowerCase();
+  if(status.includes('clicked')) return 'clicked';
+  if(status.includes('opened') || status === 'read') return 'opened';
+  if(status.includes('delivered')) return 'delivered';
+  if(status.includes('failed') || status.includes('undelivered')) return 'failed';
+  if(status.includes('no email')) return 'no-email';
+  return 'sent';
+}
+
+function renderEmailStatusBoard(){
+  const board = document.getElementById('emailStatusBoard');
+  if(!board) return;
+  const search = String(document.getElementById('emailStatusSearch').value || '').trim().toLowerCase();
+  const statuses = [
+    {key:'sent', label:'Sent'},
+    {key:'delivered', label:'Delivered'},
+    {key:'opened', label:'Opened'},
+    {key:'clicked', label:'Clicked'},
+    {key:'no-email', label:'No Email'},
+    {key:'failed', label:'Failed'},
+  ];
+  const filtered = allDeals.filter(deal=> !search || [deal.agencyName,deal.decisionMakerEmail,deal.answeredByEmail].join(' ').toLowerCase().includes(search));
+  board.innerHTML = statuses.map(status=>{
+    const deals = filtered.filter(deal=>emailStatusFor(deal) === status.key);
+    const cards = deals.map(deal=>{
+      const recipient = String(deal.decisionMakerEmail || deal.answeredByEmail || '').trim();
+      return `<div class="deal-card email-status-card" data-key="${escapeAttr(deal._key)}" tabindex="0" role="button" aria-label="${escapeAttr(deal.agencyName || 'Unnamed agency')}. Double-click to edit all details">
+        <div class="agency"><span class="agency-name">${escapeHtml(deal.agencyName || 'Unnamed agency')}</span></div>
+        <div class="email-recipient">${escapeHtml(recipient || 'No recipient email')}</div>
+      </div>`;
+    }).join('');
+    return `<div class="kanban-col email-status-col ${status.key}">
+      <div class="kanban-col-header"><span class="stage-name">${status.label}</span><span class="count">${deals.length}</span></div>
+      <div class="kanban-cards">${cards || '<div class="kanban-empty">No leads</div>'}</div>
+    </div>`;
+  }).join('');
+  board.querySelectorAll('.email-status-card').forEach(card=>{
+    const openDetails = ()=>openDealEditor(card.dataset.key);
+    card.addEventListener('dblclick', openDetails);
+    card.addEventListener('keydown', event=>{
+      if(event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      openDetails();
+    });
+  });
+}
+
 let editingDealKey = null;
 let editingDealOriginal = null;
 
@@ -1694,6 +1770,7 @@ document.getElementById('pipelineEditResend').addEventListener('click', async ()
     await store.set(deal._key, JSON.stringify(deal));
     await syncLatestCallRecordFromDeal(deal, editingDealOriginal || deal);
     document.getElementById('editLeadEmailStatus').value = deal.emailStatus;
+    renderEmailStatusBoard();
     showToast(`Email automation started again for ${result.recipientEmail || recipient}.`, 5200);
   }catch(error){
     validation.textContent = (error && error.message) ? error.message : 'The email could not be resent. Try again.';
@@ -2068,6 +2145,7 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
     document.getElementById('view-' + btn.dataset.view).classList.add('active');
     if(btn.dataset.view === 'log') loadLog();
     if(btn.dataset.view === 'pipeline') loadDeals();
+    if(btn.dataset.view === 'email') loadDeals();
     if(btn.dataset.view === 'partners') loadPartners();
     if(btn.dataset.view === 'dashboard') loadDashboard();
   });
@@ -2075,7 +2153,9 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
 
 setInterval(async ()=>{
   const pipelineView = document.getElementById('view-pipeline');
-  if(!pipelineView || !pipelineView.classList.contains('active') || !pipelineEditModal.hidden) return;
+  const emailView = document.getElementById('view-email');
+  const pipelineOrEmailActive = (pipelineView && pipelineView.classList.contains('active')) || (emailView && emailView.classList.contains('active'));
+  if(!pipelineOrEmailActive || !pipelineEditModal.hidden) return;
   const result = await synchronizePipelineFromHighLevel();
   if(result && result.updated > 0) await loadDeals({sync:false});
 }, 30000);
@@ -2563,6 +2643,8 @@ function renderLog(){
 document.getElementById('logSearch').addEventListener('input', renderLog);
 document.getElementById('pipelineSearch').addEventListener('input', renderPipeline);
 document.getElementById('refreshPipeline').addEventListener('click', loadDeals);
+document.getElementById('emailStatusSearch').addEventListener('input', renderEmailStatusBoard);
+document.getElementById('refreshEmailStatus').addEventListener('click', loadDeals);
 document.getElementById('pipelineFilter').addEventListener('change', renderPipeline);
 document.getElementById('pipelineSort').addEventListener('change', renderPipeline);
 
