@@ -2,12 +2,29 @@ import { env } from "cloudflare:workers";
 
 const API = "https://services.leadconnectorhq.com";
 
-const WORKFLOW_BY_STAGE: Record<string, string> = {
-  gatekeeper_only: "GUIDE Partner - 2.a Gatekeeper Only Email",
-  decision_maker_identified_email_sent: "GUIDE Partner - 2.b Decision Maker Identified Email",
-  decision_maker_appointment_scheduled: "GUIDE Partner - 2.c Appointment Scheduled Email",
-  decision_maker_appointment_not_scheduled: "GUIDE Partner - 2.d Appointment Not Scheduled Email",
-  not_interested: "GUIDE Partner - 2.e Not Interested Email",
+const PIPELINE_NAME = "GUIDE Partner Call Assistant";
+
+const EMAIL_STAGE_BY_KEY: Record<string, { stageName: string; workflowName: string }> = {
+  gatekeeper_only: {
+    stageName: "Gatekeeper Only – No Decision Maker Information",
+    workflowName: "GUIDE Partner - 2.a Gatekeeper Only Email",
+  },
+  decision_maker_identified_email_sent: {
+    stageName: "Decision Maker Identified – Email Provided",
+    workflowName: "GUIDE Partner - 2.b Decision Maker Identified Email",
+  },
+  decision_maker_appointment_scheduled: {
+    stageName: "Decision Maker Reached – Appointment Scheduled",
+    workflowName: "GUIDE Partner - 2.c Appointment Scheduled Email",
+  },
+  decision_maker_appointment_not_scheduled: {
+    stageName: "Decision Maker Reached – Appointment Not Scheduled",
+    workflowName: "GUIDE Partner - 2.d Appointment Not Scheduled Email",
+  },
+  not_interested: {
+    stageName: "Not Interested",
+    workflowName: "GUIDE Partner - 2.e Not Interested Email",
+  },
 };
 
 function text(value: unknown, maximum = 500) {
@@ -20,6 +37,10 @@ function validId(value: string) {
 
 function validEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function normalized(value: unknown) {
+  return text(value).replace(/[–—]/g, "-").replace(/\s+/g, " ").toLowerCase();
 }
 
 async function ghl(path: string, init: RequestInit = {}) {
@@ -46,13 +67,14 @@ export async function POST(request: Request) {
     const lead = await request.json() as Record<string, unknown>;
     const stage = text(lead.stage, 100);
     const contactId = text(lead.crmContactId, 100);
+    const opportunityId = text(lead.crmOpportunityId, 100);
     const dealKey = text(lead._key, 300);
-    const workflowName = WORKFLOW_BY_STAGE[stage];
+    const emailStage = EMAIL_STAGE_BY_KEY[stage];
 
-    if (!workflowName) {
+    if (!emailStage) {
       return Response.json({ error: "This pipeline stage does not have an email automation." }, { status: 400 });
     }
-    if (!contactId || !validId(contactId)) {
+    if (!contactId || !validId(contactId) || !opportunityId || !validId(opportunityId)) {
       return Response.json({ error: "Save this lead before resending its email." }, { status: 400 });
     }
     if (!dealKey.startsWith("deals:")) {
@@ -61,7 +83,7 @@ export async function POST(request: Request) {
 
     const savedRow = await env.DB.prepare("SELECT value FROM guide_store WHERE key = ?").bind(dealKey).first<{ value: string }>();
     const savedLead = savedRow?.value ? JSON.parse(savedRow.value) as Record<string, unknown> : null;
-    if (!savedLead || text(savedLead.crmContactId, 100) !== contactId || text(savedLead.stage, 100) !== stage) {
+    if (!savedLead || text(savedLead.crmContactId, 100) !== contactId || text(savedLead.crmOpportunityId, 100) !== opportunityId || text(savedLead.stage, 100) !== stage) {
       return Response.json({ error: "Refresh the pipeline before resending this email." }, { status: 409 });
     }
 
@@ -83,30 +105,53 @@ export async function POST(request: Request) {
       return Response.json({ error: "A valid recipient email is required for this stage." }, { status: 400 });
     }
 
-    const workflowResult = await ghl(`/workflows/?locationId=${encodeURIComponent(env.GHL_LOCATION_ID)}`);
-    const workflows = (workflowResult.workflows || []) as Array<{ id?: string; name?: string; status?: string }>;
-    const workflow = workflows.find((item) => text(item.name).toLowerCase() === workflowName.toLowerCase());
-    if (!workflow?.id) {
-      return Response.json({ error: `${workflowName} was not found in HighLevel.` }, { status: 404 });
-    }
-    if (text(workflow.status).toLowerCase() === "draft") {
-      return Response.json({ error: `${workflowName} is still a draft in HighLevel.` }, { status: 409 });
+    const pipelineResult = await ghl(`/opportunities/pipelines?locationId=${encodeURIComponent(env.GHL_LOCATION_ID)}`);
+    const pipelines = (pipelineResult.pipelines || []) as Array<{
+      id: string;
+      name: string;
+      stages: Array<{ id: string; name: string }>;
+    }>;
+    const pipeline = pipelines.find((item) => item.name === PIPELINE_NAME);
+    const newLeadStage = pipeline?.stages.find((item) => normalized(item.name) === "new lead");
+    const targetStage = pipeline?.stages.find((item) => normalized(item.name) === normalized(emailStage.stageName));
+    if (!pipeline || !newLeadStage || !targetStage) {
+      return Response.json({ error: "The required GUIDE pipeline stages were not found in HighLevel." }, { status: 404 });
     }
 
-    const workflowPath = `/contacts/${encodeURIComponent(contactId)}/workflow/${encodeURIComponent(workflow.id)}`;
-    await ghl(workflowPath, { method: "DELETE" }).catch(() => null);
-    const result = await ghl(workflowPath, {
-      method: "POST",
-      body: JSON.stringify({ eventStartTime: new Date().toISOString() }),
+    const opportunityResult = await ghl(`/opportunities/${encodeURIComponent(opportunityId)}`);
+    const opportunity = (opportunityResult.opportunity || opportunityResult) as {
+      pipelineId?: string;
+      pipelineStageId?: string;
+      status?: string;
+      assignedTo?: string;
+    };
+    if (opportunity.pipelineId !== pipeline.id || opportunity.pipelineStageId !== targetStage.id) {
+      return Response.json({ error: "Refresh the pipeline before resending this email." }, { status: 409 });
+    }
+
+    const updateStage = async (pipelineStageId: string) => ghl(`/opportunities/${encodeURIComponent(opportunityId)}`, {
+      method: "PUT",
+      body: JSON.stringify({
+        pipelineId: pipeline.id,
+        pipelineStageId,
+        name: `${text(lead.agencyName, 200)} — GUIDE Partnership`,
+        status: opportunity.status || "open",
+        ...(opportunity.assignedTo ? { assignedTo: opportunity.assignedTo } : {}),
+      }),
     });
-    if (result.succeeded === false || result.succeded === false) {
-      throw new Error("HighLevel did not start the email workflow.");
+
+    await updateStage(newLeadStage.id);
+    await new Promise((resolve) => setTimeout(resolve, 350));
+    try {
+      await updateStage(targetStage.id);
+    } catch {
+      await updateStage(targetStage.id);
     }
 
     await env.DB.prepare(`INSERT INTO guide_email_resends (deal_key, sent_at) VALUES (?, CURRENT_TIMESTAMP)
       ON CONFLICT(deal_key) DO UPDATE SET sent_at = CURRENT_TIMESTAMP`).bind(dealKey).run();
 
-    return Response.json({ ok: true, workflowName, recipientEmail, emailStatus: "Pending automation" });
+    return Response.json({ ok: true, workflowName: emailStage.workflowName, recipientEmail, emailStatus: "Pending automation" });
   } catch (error) {
     return Response.json({
       error: error instanceof Error ? error.message : "The email could not be resent.",
