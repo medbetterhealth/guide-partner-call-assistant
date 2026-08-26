@@ -803,16 +803,38 @@
             </div>
             <div class="field">
               <label for="editLeadEmailStatus">Email Status</label>
-              <input type="text" id="editLeadEmailStatus" list="pipelineEmailStatusOptions">
-              <datalist id="pipelineEmailStatusOptions">
-                <option value="Not sent"></option>
-                <option value="Pending automation"></option>
-                <option value="Sent"></option>
-                <option value="Delivered"></option>
-                <option value="Opened"></option>
-                <option value="Clicked"></option>
-                <option value="Failed"></option>
-              </datalist>
+              <input type="text" id="editLeadEmailStatus" readonly>
+              <span class="field-help">Updated automatically from HighLevel email events.</span>
+            </div>
+          </div>
+          <div class="row2">
+            <div class="field">
+              <label for="editLeadEmailSentAt">Last Sent</label>
+              <input type="text" id="editLeadEmailSentAt" readonly>
+            </div>
+            <div class="field">
+              <label for="editLeadEmailDeliveredAt">Delivered</label>
+              <input type="text" id="editLeadEmailDeliveredAt" readonly>
+            </div>
+          </div>
+          <div class="row2">
+            <div class="field">
+              <label for="editLeadEmailOpenedAt">First Opened</label>
+              <input type="text" id="editLeadEmailOpenedAt" readonly>
+            </div>
+            <div class="field">
+              <label for="editLeadEmailOpenCount">Open Count</label>
+              <input type="text" id="editLeadEmailOpenCount" readonly>
+            </div>
+          </div>
+          <div class="row2">
+            <div class="field">
+              <label for="editLeadEmailClickedAt">First Clicked</label>
+              <input type="text" id="editLeadEmailClickedAt" readonly>
+            </div>
+            <div class="field">
+              <label for="editLeadEmailClickCount">Click Count</label>
+              <input type="text" id="editLeadEmailClickCount" readonly>
             </div>
           </div>
           <div class="row2">
@@ -1156,9 +1178,14 @@ function upgradeCallRecord(record){
     emailStatus: record.emailStatus || 'Not sent',
     emailWarning: record.emailWarning || '',
     emailMessageId: record.emailMessageId || '',
+    emailSentAt: record.emailSentAt || '',
     emailDeliveredAt: record.emailDeliveredAt || '',
     emailOpenedAt: record.emailOpenedAt || '',
+    emailLastOpenedAt: record.emailLastOpenedAt || '',
+    emailOpenCount: Number(record.emailOpenCount || 0),
     emailClickedAt: record.emailClickedAt || '',
+    emailLastClickedAt: record.emailLastClickedAt || '',
+    emailClickCount: Number(record.emailClickCount || 0),
     crmContactId: record.crmContactId || '',
     crmOpportunityId: record.crmOpportunityId || '',
     manualNotes: removeMutualPatientWording(record.manualNotes || record.callNotes || ''),
@@ -1186,9 +1213,14 @@ function upgradeDealRecord(record){
     emailStatus: record.emailStatus || 'Not sent',
     emailWarning: record.emailWarning || '',
     emailMessageId: record.emailMessageId || '',
+    emailSentAt: record.emailSentAt || '',
     emailDeliveredAt: record.emailDeliveredAt || '',
     emailOpenedAt: record.emailOpenedAt || '',
+    emailLastOpenedAt: record.emailLastOpenedAt || '',
+    emailOpenCount: Number(record.emailOpenCount || 0),
     emailClickedAt: record.emailClickedAt || '',
+    emailLastClickedAt: record.emailLastClickedAt || '',
+    emailClickCount: Number(record.emailClickCount || 0),
     crmContactId: record.crmContactId || '',
     crmOpportunityId: record.crmOpportunityId || '',
     manualNotes: removeMutualPatientWording(record.manualNotes || record.callNotes || ''),
@@ -1616,6 +1648,15 @@ function editDateValue(value){
   return Number.isNaN(date.getTime()) ? '' : date.toISOString().slice(0,10);
 }
 
+function emailActivityDate(value){
+  if(!value) return 'Not recorded';
+  const date = new Date(value);
+  if(Number.isNaN(date.getTime())) return 'Not recorded';
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone:'America/New_York',year:'numeric',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'
+  }).format(date) + ' EST';
+}
+
 function syncEditDecisionMaker(){
   if(!document.getElementById('editLeadAnswererIsDecisionMaker').checked) return;
   document.getElementById('editLeadDecisionMakerName').value = document.getElementById('editLeadAnsweredBy').value;
@@ -1640,6 +1681,12 @@ function openDealEditor(key){
   document.getElementById('editLeadDecisionMakerSpokenTo').value = deal.decisionMakerSpokenTo || '';
   document.getElementById('editLeadOutreachOutcome').value = deal.outreachOutcome || '';
   document.getElementById('editLeadEmailStatus').value = deal.emailStatus || 'Not sent';
+  document.getElementById('editLeadEmailSentAt').value = emailActivityDate(deal.emailSentAt);
+  document.getElementById('editLeadEmailDeliveredAt').value = emailActivityDate(deal.emailDeliveredAt);
+  document.getElementById('editLeadEmailOpenedAt').value = emailActivityDate(deal.emailOpenedAt);
+  document.getElementById('editLeadEmailOpenCount').value = String(deal.emailOpenCount || 0);
+  document.getElementById('editLeadEmailClickedAt').value = emailActivityDate(deal.emailClickedAt);
+  document.getElementById('editLeadEmailClickCount').value = String(deal.emailClickCount || 0);
   document.getElementById('editLeadStage').value = stage ? stage.step + ' ' + stage.label : (deal.stage || 'New Lead');
   document.getElementById('editLeadAssignedSalesperson').value = deal.assignedSalesperson || '';
   document.getElementById('editLeadLastContactDate').value = editDateValue(deal.lastContactDate) || new Date().toISOString().slice(0,10);
@@ -1702,6 +1749,14 @@ async function syncLatestCallRecordFromDeal(deal, original){
       ['outreach' + 'Outcome']: deal.outreachOutcome,
       outreachPathway: deal.outreachPathway,
       emailStatus: deal.emailStatus,
+      emailSentAt: deal.emailSentAt,
+      emailDeliveredAt: deal.emailDeliveredAt,
+      emailOpenedAt: deal.emailOpenedAt,
+      emailLastOpenedAt: deal.emailLastOpenedAt,
+      emailOpenCount: deal.emailOpenCount,
+      emailClickedAt: deal.emailClickedAt,
+      emailLastClickedAt: deal.emailLastClickedAt,
+      emailClickCount: deal.emailClickCount,
       manualNotes: deal.manualNotes,
       counties: deal.counties,
       crmContactId: deal.crmContactId,
