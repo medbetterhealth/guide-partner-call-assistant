@@ -363,14 +363,6 @@
   .deal-card .quick-details .v{color:var(--ink);min-width:0;word-break:normal;overflow-wrap:break-word;}
   .deal-card .quick-details .v.email-value{overflow-wrap:anywhere;}
   .deal-card .quick-details .v.missing{color:#98A3AD;font-style:italic;}
-  .copyable-value{
-    cursor:copy;user-select:text;-webkit-user-select:text;border-radius:4px;padding:1px 3px;margin:-1px -3px;
-    transition:background-color .15s ease,box-shadow .15s ease;
-  }
-  .copyable-value:hover,.copyable-value:focus-visible{
-    background:#E8F1FB;box-shadow:0 0 0 2px #CFE1F4;outline:none;
-  }
-  .copyable-value.copied{background:#E7F5EC;box-shadow:0 0 0 2px #BFE3CC;}
   .deal-card .quick-delete{position:absolute;right:7px;top:7px;width:24px;height:24px;border:1px solid #E4BFC2;border-radius:6px;background:#fff;color:var(--red-dark);font-size:16px;line-height:1;cursor:pointer;padding:0;}
   .deal-card .quick-delete:hover,.deal-card .quick-delete:focus-visible{background:#FCEAEA;outline:none;}
   .pipeline-status{
@@ -1344,66 +1336,6 @@ function renderPipelineStats(){
   document.getElementById('statActive').textContent = inStage('active_partner');
 }
 
-async function writeReusableText(value){
-  if(navigator.clipboard && window.isSecureContext){
-    await navigator.clipboard.writeText(value);
-    return;
-  }
-  const helper = document.createElement('textarea');
-  helper.value = value;
-  helper.setAttribute('readonly','');
-  helper.style.position = 'fixed';
-  helper.style.opacity = '0';
-  document.body.appendChild(helper);
-  helper.select();
-  const copied = document.execCommand('copy');
-  helper.remove();
-  if(!copied) throw new Error('Copy was blocked');
-}
-
-async function copyPipelineValue(element){
-  const value = element.dataset.copy || '';
-  if(!value) return;
-  try{
-    await writeReusableText(value);
-    element.classList.add('copied');
-    setTimeout(()=>element.classList.remove('copied'),900);
-    showToast('Copied ' + (element.dataset.copyLabel || 'detail') + '.');
-  }catch(e){
-    showToast('Could not copy automatically. Select the text and press Ctrl+C.');
-  }
-}
-
-async function copyAllDealDetails(key){
-  const deal = allDeals.find(item=>item._key === key);
-  if(!deal) return;
-  const stageLabel = (STAGES.find(stage=>stage.key === deal.stage) || {}).label || deal.stage || 'New Lead';
-  const lines = [
-    ['Agency Name', deal.agencyName],
-    ['Agency Phone', deal.agencyPhoneNumber],
-    ['Answered By', deal.answeredBy],
-    ['Answered By Email', deal.answeredByEmail],
-    ['Decision Maker Name', deal.decisionMakerName],
-    ['Decision Maker Phone', deal.decisionMakerPhone],
-    ['Decision Maker Email', deal.decisionMakerEmail],
-    ['Decision Maker Spoken To', deal.decisionMakerSpokenTo || 'Not selected'],
-    ['Current Stage', stageLabel],
-    ['Outreach Path', deal.outreachPathway || 'Follow-Up Needed'],
-    ['Email Status', deal.emailStatus || 'Not sent'],
-    ['Assigned Salesperson', deal.assignedSalesperson],
-    ['Last Contact Date', deal.lastContactDate],
-    ['Next Follow-Up Date', deal.nextFollowUpDate],
-    ['Notes', deal.manualNotes],
-    ['Counties', deal.counties],
-  ].map(([label,value])=>`${label}: ${String(value || 'Not provided').trim()}`);
-  try{
-    await writeReusableText(lines.join('\n'));
-    showToast('All lead details copied.');
-  }catch(e){
-    showToast('Could not copy automatically. Try copying the individual values.');
-  }
-}
-
 function renderPipeline(){
   const board = document.getElementById('kanbanBoard');
   const search = document.getElementById('pipelineSearch').value.toLowerCase();
@@ -1423,67 +1355,11 @@ function renderPipeline(){
     return new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0);
   });
 
-  const formatPipelineDate = (value)=> value ? new Intl.DateTimeFormat('en-US', {
-    timeZone:'America/New_York',year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'
-  }).format(new Date(value)) : 'Not provided';
-
-  const copyableText = (value, fallback, label, extraClass = '')=>{
-    const supplied = String(value ?? '').trim();
-    const classes = [extraClass, supplied ? 'copyable-value' : 'missing'].filter(Boolean).join(' ');
-    const attrs = supplied
-      ? ` tabindex="0" role="button" data-copy="${escapeAttr(supplied)}" data-copy-label="${escapeAttr(label)}" aria-label="Copy ${escapeAttr(label)}" title="Click to copy ${escapeAttr(label)}"`
-      : '';
-    return `<span class="${classes}"${attrs}>${escapeHtml(supplied || fallback)}</span>`;
-  };
-
-  const cardHtml = (d)=>{
-    const updated = formatPipelineDate(d.updatedAt);
-    const historyHtml = (d.history || []).slice().reverse().map(h=>{
-      const when = h.ts ? formatPipelineDate(h.ts) : '';
-      const line = `${when}${when && h.note ? ': ' : ''}${h.note || ''}`;
-      return `<div class="history-line">${copyableText(line, 'No history details', 'history entry')}</div>`;
-    }).join('');
-    const moveOptions = STAGES.map(s=>`<option value="${s.key}" ${s.key===d.stage?'selected':''}>${escapeHtml(s.label)}</option>`).join('');
-    const stageLabel = (STAGES.find(s=>s.key===d.stage) || {}).label || d.stage || 'New Lead';
-    const emailStatus = d.emailStatus || 'Not sent';
-    return `
-      <div class="deal-card" data-key="${d._key}" draggable="true" tabindex="0" role="button" aria-expanded="false" aria-label="${escapeAttr(d.agencyName || 'Unnamed agency')}. Double-click to view all details">
-        <div class="agency"><span class="drag-grip" aria-hidden="true">⠿</span> <span class="agency-name">${escapeHtml(d.agencyName || 'Unnamed agency')}</span></div>
-        <div class="expand">
-          <div class="detail-row"><span class="k">Agency Name</span>${copyableText(d.agencyName, 'Unnamed agency', 'agency name', 'v')}</div>
-          <div class="detail-row"><span class="k">Updated</span>${copyableText(updated, 'Not provided', 'updated date', 'v')}</div>
-          <div class="detail-row"><span class="k">Agency Phone</span>${copyableText(d.agencyPhoneNumber, 'Not yet provided', 'agency phone', 'v mono')}</div>
-          <div class="detail-row"><span class="k">Gatekeeper</span>${copyableText(d.answeredBy, 'Not yet provided', 'gatekeeper name', 'v')}</div>
-          <div class="detail-row"><span class="k">Gatekeeper Email</span>${copyableText(d.answeredByEmail, 'Not yet provided', 'gatekeeper email', 'v')}</div>
-          <div class="detail-row"><span class="k">Decision Maker</span>${copyableText(d.decisionMakerName, 'Not yet provided', 'decision maker name', 'v')}</div>
-          <div class="detail-row"><span class="k">Decision Maker Phone</span>${copyableText(d.decisionMakerPhone, 'Not yet provided', 'decision maker phone', 'v mono')}</div>
-          <div class="detail-row"><span class="k">Decision Maker Email</span>${copyableText(d.decisionMakerEmail, 'Not yet provided', 'decision maker email', 'v')}</div>
-          <div class="detail-row"><span class="k">DM Spoken To</span>${copyableText(d.decisionMakerSpokenTo, 'Not selected', 'decision maker spoken status', 'v')}</div>
-          <div class="detail-row"><span class="k">Current Stage</span>${copyableText(stageLabel, 'New Lead', 'current stage', 'v')}</div>
-          <div class="detail-row"><span class="k">Outreach Path</span>${copyableText(d.outreachPathway || 'Follow-Up Needed', 'Follow-Up Needed', 'outreach path', 'v')}</div>
-          <div class="detail-row"><span class="k">Email Status</span>${copyableText(emailStatus, 'Not sent', 'email status', 'v')}</div>
-          <div class="detail-row"><span class="k">Assigned Salesperson</span>${copyableText(d.assignedSalesperson, 'Not yet provided', 'assigned salesperson', 'v')}</div>
-          <div class="detail-row"><span class="k">Last Contact Date</span>${copyableText(d.lastContactDate, 'Not yet provided', 'last contact date', 'v')}</div>
-          <div class="detail-row"><span class="k">Next Follow-Up Date</span>${copyableText(d.nextFollowUpDate, 'Not yet provided', 'next follow-up date', 'v')}</div>
-          <div class="detail-row"><span class="k">Last Opened</span>${copyableText(d.emailOpenedAt ? new Date(d.emailOpenedAt).toLocaleString() : '', 'Not recorded', 'last opened date', 'v')}</div>
-          <div class="detail-row"><span class="k">Last Clicked</span>${copyableText(d.emailClickedAt ? new Date(d.emailClickedAt).toLocaleString() : '', 'Not recorded', 'last clicked date', 'v')}</div>
-          <div class="detail-row"><span class="k">Notes</span>${copyableText(d.manualNotes, 'Not yet provided', 'notes', 'v')}</div>
-          <div class="detail-row"><span class="k">Counties</span>${copyableText(d.counties, 'Not yet provided', 'counties', 'v')}</div>
-          <div style="margin-top:8px;margin-bottom:4px;font-weight:700;font-size:11.5px;color:var(--navy);">History</div>
-          ${historyHtml || '<div class="history-line">No history yet.</div>'}
-          <div class="record-actions">
-            <div class="card-move" style="width:100%;margin-top:0;text-align:left;">
-              <label class="card-move-label">Move to stage</label>
-              <select class="card-move-select" data-key="${d._key}">${moveOptions}</select>
-            </div>
-            <button class="btn btn-outline btn-sm deal-copy-all-btn" data-key="${escapeAttr(d._key)}">Copy all details</button>
-            <button class="btn btn-primary btn-sm deal-edit-btn" data-key="${escapeAttr(d._key)}">Edit all details</button>
-            <button class="btn btn-danger-outline btn-sm deal-delete-btn" data-key="${escapeAttr(d._key)}">Delete saved details</button>
-          </div>
-        </div>
-      </div>
-    `;
-  };
+  const cardHtml = (d)=>`
+    <div class="deal-card" data-key="${d._key}" draggable="true" tabindex="0" role="button" aria-label="${escapeAttr(d.agencyName || 'Unnamed agency')}. Double-click to edit all details">
+      <div class="agency"><span class="drag-grip" aria-hidden="true">⠿</span> <span class="agency-name">${escapeHtml(d.agencyName || 'Unnamed agency')}</span></div>
+    </div>
+  `;
 
   const stageNameHtml = (stage, label)=>{
     const description = stage.description || '';
@@ -1581,42 +1457,21 @@ function renderPipeline(){
     });
   });
 
-  board.querySelectorAll('.deal-copy-all-btn').forEach(btn=>{
-    btn.addEventListener('click', async (e)=>{
-      e.stopPropagation();
-      await copyAllDealDetails(btn.dataset.key);
-    });
-  });
-
-  board.querySelectorAll('.copyable-value[data-copy]').forEach(value=>{
-    value.addEventListener('click', async (e)=>{
-      e.stopPropagation();
-      await copyPipelineValue(value);
-    });
-    value.addEventListener('keydown', async (e)=>{
-      if(e.key !== 'Enter' && e.key !== ' ') return;
-      e.preventDefault();
-      e.stopPropagation();
-      await copyPipelineValue(value);
-    });
-  });
-
   board.querySelectorAll('.deal-card').forEach(card=>{
     let dragStarted = false;
 
-    const toggleCardDetails = ()=>{
+    const openCardDetails = ()=>{
       if(dragStarted){ dragStarted = false; return; }
-      card.classList.toggle('open');
-      card.setAttribute('aria-expanded', String(card.classList.contains('open')));
+      openDealEditor(card.dataset.key);
     };
     card.addEventListener('dblclick', (e)=>{
-      if(e.target.closest('.record-actions, .deal-edit-btn, .deal-copy-all-btn, .copyable-value, select, button')) return;
-      toggleCardDetails();
+      if(e.target.closest('select, button')) return;
+      openCardDetails();
     });
     card.addEventListener('keydown', (e)=>{
       if(e.target !== card || (e.key !== 'Enter' && e.key !== ' ')) return;
       e.preventDefault();
-      toggleCardDetails();
+      openCardDetails();
     });
     card.addEventListener('dragstart', (e)=>{
       dragStarted = true;
