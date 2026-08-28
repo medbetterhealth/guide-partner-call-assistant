@@ -33,39 +33,61 @@
   h1,h2,h3,.display{font-family:'Manrope',system-ui,sans-serif;}
   .mono{font-family:'IBM Plex Mono',monospace;}
 
-  /* Header */
-  .topbar{
-    background:linear-gradient(135deg,var(--navy) 0%,var(--navy-dark) 100%);
-    color:#fff;
-    padding:20px 28px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    flex-wrap:wrap;
-    gap:14px;
+  /* App shell: fixed left sidebar + fluid main content, like a CRM workspace */
+  .app-shell{display:flex;min-height:100vh;align-items:stretch;}
+  .sidebar{
+    width:236px;flex:0 0 236px;
+    background:linear-gradient(180deg,var(--navy) 0%,var(--navy-dark) 100%);
+    color:#fff;display:flex;flex-direction:column;
+    padding:20px 14px;position:sticky;top:0;height:100vh;overflow-y:auto;
   }
-  .brand{display:flex;align-items:center;gap:14px;}
+  .brand{display:flex;align-items:center;gap:12px;padding:0 8px;margin-bottom:22px;}
   .brand-mark{
-    width:42px;height:42px;border-radius:10px;
+    width:38px;height:38px;border-radius:9px;
     background:var(--red);
     display:flex;align-items:center;justify-content:center;
-    font-family:'Manrope';font-weight:800;font-size:15px;
+    font-family:'Manrope';font-weight:800;font-size:14px;
     letter-spacing:0.5px;
     flex-shrink:0;
   }
-  .brand-text h1{margin:0;font-size:19px;font-weight:800;letter-spacing:0.2px;}
-  .brand-text p{margin:2px 0 0;font-size:12.5px;color:#B9C6D6;}
-  .tabs{display:flex;flex-wrap:wrap;gap:6px;background:rgba(255,255,255,0.08);padding:4px;border-radius:10px;}
+  .brand-text h1{margin:0;font-size:15.5px;font-weight:800;letter-spacing:0.2px;line-height:1.25;}
+  .brand-text p{margin:2px 0 0;font-size:11px;color:#B9C6D6;line-height:1.3;}
+  .tabs{display:flex;flex-direction:column;gap:2px;}
   .tab-btn{
-    border:none;background:transparent;color:#CFDAE6;
-    padding:9px 16px;border-radius:8px;font-size:13.5px;font-weight:600;
-    cursor:pointer;font-family:'Inter';transition:all .15s;
+    display:flex;align-items:center;gap:11px;
+    border:none;background:transparent;color:#CFDAE6;text-align:left;width:100%;
+    padding:10px 12px;border-radius:8px;font-size:13.5px;font-weight:600;
+    cursor:pointer;font-family:'Inter';transition:background .15s,color .15s;
   }
-  .tab-btn.active{background:#fff;color:var(--navy);}
+  .tab-btn:hover{background:rgba(255,255,255,0.08);color:#fff;}
+  .tab-btn.active{background:rgba(255,255,255,0.14);color:#fff;box-shadow:inset 3px 0 0 var(--red);}
+  .tab-btn .tab-icon{flex:0 0 18px;width:18px;height:18px;opacity:.85;}
+  .tab-btn.active .tab-icon{opacity:1;}
+  .sidebar-footer{margin-top:auto;padding:12px 8px 0;font-size:10.5px;color:#8FA1B8;line-height:1.5;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;}
 
-  .wrap{max-width:1180px;margin:0 auto;padding:24px 20px 60px;}
+  .main-content{flex:1 1 auto;min-width:0;}
+  .wrap{max-width:1400px;padding:24px 28px 60px;}
   .view{display:none;}
   .view.active{display:block;}
+
+  @media(max-width:900px){
+    .app-shell{flex-direction:column;}
+    .sidebar{
+      width:auto;flex:0 0 auto;position:relative;top:auto;height:auto;
+      flex-direction:row;align-items:center;padding:14px 16px;overflow-x:auto;
+    }
+    .brand{margin-bottom:0;flex:0 0 auto;}
+    .brand-text p{display:none;}
+    .tabs{flex-direction:row;flex-wrap:nowrap;margin-left:14px;gap:4px;}
+    .tab-btn{width:auto;white-space:nowrap;padding:10px;justify-content:center;}
+    .tab-btn span{
+      position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+      clip:rect(0,0,0,0);white-space:nowrap;border:0;
+    }
+    .tab-btn.active{box-shadow:none;background:#fff;color:var(--navy);}
+    .sidebar-footer{display:none;}
+    .wrap{padding:18px 16px 40px;}
+  }
 
   .grid{display:grid;grid-template-columns:1.05fr 1fr;gap:20px;align-items:start;}
   @media(max-width:900px){.grid{grid-template-columns:1fr;}}
@@ -73,9 +95,9 @@
   .card{
     background:var(--card);
     border:1px solid var(--border);
-    border-radius:14px;
-    padding:22px 22px 24px;
-    margin-bottom:20px;
+    border-radius:12px;
+    padding:18px 20px 20px;
+    margin-bottom:16px;
   }
   .card h2{margin:0 0 4px;font-size:15px;letter-spacing:0.3px;color:var(--navy);}
   .card .sub{margin:0 0 18px;font-size:12.5px;color:var(--muted);}
@@ -176,8 +198,6 @@
   .stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;}
   .stat .num{font-family:'Manrope';font-weight:800;font-size:26px;color:var(--navy);}
   .stat .lbl{font-size:11.5px;color:var(--muted);font-weight:600;letter-spacing:0.3px;text-transform:uppercase;margin-top:2px;}
-  #view-pipeline.active{position:relative;left:50%;width:calc(100vw - 40px);transform:translateX(-50%);}
-  #view-email.active{position:relative;left:50%;width:calc(100vw - 40px);transform:translateX(-50%);}
   #pipelineStats .stat{display:flex;align-items:center;gap:14px;padding:13px 16px;min-height:70px;}
   .pipeline-kpi-icon{
     width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;
@@ -355,16 +375,6 @@
   .deal-card .drag-grip{color:var(--muted);font-size:11px;letter-spacing:-1px;margin-right:2px;}
   .deal-card .agency{font-family:'Manrope';font-weight:800;font-size:14px;line-height:1.35;color:var(--ink);padding-right:3px;}
   .deal-card .agency-name{word-break:normal;overflow-wrap:anywhere;}
-  .email-status-card{cursor:pointer;padding:13px 14px;}
-  .email-status-card:active{cursor:pointer;}
-  .email-status-card .agency{display:flex;align-items:center;justify-content:space-between;gap:10px;}
-  .email-status-card .email-recipient{margin-top:5px;color:var(--muted);font-size:10.5px;overflow-wrap:anywhere;}
-  .email-status-col.sent{background:#F3F8FE;border-color:#CFE1F4;}
-  .email-status-col.delivered{background:#F7F3FD;border-color:#DED1F2;}
-  .email-status-col.opened{background:#FFF8EE;border-color:#F2D7AC;}
-  .email-status-col.clicked{background:#F1FAF5;border-color:#C6E7D3;}
-  .email-status-col.no-email{background:#F4F6F8;border-color:#DDE3E8;}
-  .email-status-col.failed{background:#FFF3F3;border-color:#ECC7CA;}
   .deal-card .meta{font-size:11px;color:var(--muted);margin-top:3px;}
   .deal-card .quick-details{
     display:grid;grid-template-columns:minmax(96px,108px) minmax(0,1fr);
@@ -451,10 +461,6 @@
   .pipeline-edit-validation{font-size:12px;color:var(--red-dark);margin-right:auto;align-self:center;display:none;}
   .pipeline-edit-validation.show{display:block;}
   body.pipeline-modal-open{overflow:hidden;}
-  @media(max-width:1180px){
-    #view-pipeline.active{left:auto;width:100%;transform:none;}
-    #view-email.active{left:auto;width:100%;transform:none;}
-  }
   @media(max-width:760px){
     .pipeline-toolbar{flex-wrap:wrap;}
     .pipeline-search-wrap{flex-basis:100%;}
@@ -483,11 +489,13 @@
   .dash-table-wrap{overflow-x:auto;}
   .dash-table{width:100%;border-collapse:collapse;font-size:13.5px;}
   .dash-table th{
-    text-align:left;padding:13px 16px;font-size:11px;font-weight:700;letter-spacing:0.3px;
+    text-align:left;padding:10px 16px;font-size:11px;font-weight:700;letter-spacing:0.3px;
     text-transform:uppercase;color:var(--muted);border-bottom:1.5px solid var(--border);white-space:nowrap;
   }
   .dash-table th:not(:first-child), .dash-table td:not(:first-child){text-align:center;}
-  .dash-table td{padding:13px 16px;border-bottom:1px solid var(--border);color:var(--ink);}
+  .dash-table th.checkbox-col + th, .dash-table td.checkbox-col + td{text-align:left !important;}
+  .dash-table td{padding:10px 16px;border-bottom:1px solid var(--border);color:var(--ink);}
+  .dash-table tbody tr:hover td{background:#FAFBFD;}
   .dash-table tbody tr:last-child td{border-bottom:none;}
   .dash-table .rep-name{font-weight:700;font-family:'Manrope';color:var(--navy);}
   .dash-table .big{font-family:'Manrope';font-weight:800;font-size:16px;}
@@ -500,28 +508,119 @@
   .rate-pill{display:inline-block;padding:3px 10px;border-radius:20px;font-weight:700;font-size:12.5px;}
   .dash-empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:14px;}
 
+  /* Board / List view toggle */
+  .view-toggle{display:flex;gap:4px;background:#EDF1F5;padding:4px;border-radius:9px;flex:0 0 auto;}
+  .view-toggle-btn{border:none;background:transparent;color:var(--muted);padding:9px 14px;border-radius:7px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Inter';}
+  .view-toggle-btn.active{background:#fff;color:var(--navy);box-shadow:0 1px 3px rgba(9,35,61,.08);}
+
+  /* Kanban column pagination */
+  .kanban-show-more{
+    width:100%;margin-top:8px;padding:9px;border:1.5px dashed var(--border);border-radius:8px;
+    background:transparent;color:var(--navy);font:700 12px 'Inter';cursor:pointer;
+  }
+  .kanban-show-more:hover{background:#EDF1F5;}
+
+  /* Sortable / selectable data tables (Pipeline list view + Partners) */
+  .dash-table th.sortable{cursor:pointer;user-select:none;}
+  .dash-table th.sortable:hover{color:var(--navy);}
+  .dash-table th.sortable .sort-arrow{margin-left:3px;opacity:0.55;}
+  .dash-table th.sortable.sorted .sort-arrow{opacity:1;}
+  .dash-table th.checkbox-col, .dash-table td.checkbox-col{width:34px;text-align:center !important;padding-left:14px;padding-right:0;}
+  .dash-table input[type="checkbox"]{width:16px;height:16px;accent-color:var(--navy);cursor:pointer;}
+
+  .bulk-action-bar{
+    display:none;align-items:center;gap:12px;flex-wrap:wrap;background:#EAF3FE;border:1px solid #D0E2F8;
+    border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:12.5px;color:var(--navy);
+  }
+  .bulk-action-bar.show{display:flex;}
+  .bulk-action-bar .bulk-count{font-weight:800;}
+  .bulk-action-bar select{padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-size:12.5px;font-family:'Inter';background:#fff;color:var(--ink);}
+  .bulk-action-bar .btn{height:32px;padding:0 12px;}
+
+  .table-pager{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 16px;border-top:1px solid var(--border);font-size:12.5px;color:var(--muted);}
+  .table-pager select{padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12.5px;font-family:'Inter';}
+  .table-pager .pager-btns{display:flex;align-items:center;gap:8px;}
+  .table-pager .btn{height:30px;padding:0 12px;}
+
+  .pipeline-list-view{display:none;}
+  .pipeline-list-view.active{display:block;}
+  #kanbanBoard.hidden-view{display:none;}
+
+  /* Stage pill: colored badge reused for stage labels in tables/lists */
+  .stage-pill{
+    display:inline-block;padding:3px 10px;border-radius:20px;font-weight:700;font-size:11.5px;
+    white-space:nowrap;background:#EDF1F5;color:var(--muted);
+  }
+  .stage-pill.stage-new{background:#EDF1F5;color:var(--muted);}
+  .stage-pill.stage-gatekeeper{background:#F1F3F5;color:#5B6B7F;}
+  .stage-pill.stage-identified{background:#E8F1FB;color:#286BA6;}
+  .stage-pill.stage-pending{background:#FBF0DD;color:#8A5A00;}
+  .stage-pill.stage-scheduled{background:#E7F5EE;color:#1E8E5A;}
+  .stage-pill.stage-declined{background:#FBECEC;color:#A43D46;}
+  .stage-pill.stage-progress{background:#F2ECFD;color:#6F4AA0;}
+  .stage-pill.stage-win{background:var(--success-bg);color:var(--success);}
+
+  /* Avatar-initials: small colored circle for a person's name */
+  .avatar{
+    display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;
+    width:24px;height:24px;border-radius:50%;color:#fff;font:800 10.5px 'Manrope';
+    letter-spacing:0.2px;vertical-align:middle;
+  }
+  .avatar-row{display:inline-flex;align-items:center;gap:8px;}
+  .avatar.lg{width:30px;height:30px;font-size:12px;}
+
+  /* Pipeline email-engagement filter chips (replaces the old Email Status tab) */
+  .filter-chip-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px;}
+  .filter-chip{
+    border:1.5px solid var(--border);background:#fff;color:var(--muted);
+    padding:6px 13px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter';
+    display:inline-flex;align-items:center;gap:6px;transition:all .12s;
+  }
+  .filter-chip:hover{border-color:#C7D0DA;}
+  .filter-chip.active{background:var(--navy);border-color:var(--navy);color:#fff;}
+  .filter-chip .chip-count{
+    background:rgba(0,0,0,.08);border-radius:10px;padding:1px 7px;font-size:11px;
+  }
+  .filter-chip.active .chip-count{background:rgba(255,255,255,.22);}
+
 </style>
 </head>
 <body>
 
-<div class="topbar">
+<div class="app-shell">
+<div class="sidebar">
   <div class="brand">
     <div class="brand-mark">MBH</div>
     <div class="brand-text">
-      <h1>GUIDE Partner Call Assistant</h1>
-      <p>Home care agency outreach, live on the call</p>
+      <h1>GUIDE Partner Call</h1>
+      <p>Home care agency outreach</p>
     </div>
   </div>
   <div class="tabs">
-    <button class="tab-btn active" data-view="call">New Call</button>
-    <button class="tab-btn" data-view="log">Call Log</button>
-    <button class="tab-btn" data-view="pipeline">Pipeline</button>
-    <button class="tab-btn" data-view="email">Email Status</button>
-    <button class="tab-btn" data-view="partners">Partners</button>
-    <button class="tab-btn" data-view="dashboard">Team Dashboard</button>
+    <button class="tab-btn active" data-view="call">
+      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.34 1.79.65 2.65a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.43-1.27a2 2 0 0 1 2.11-.45c.86.31 1.75.53 2.65.65A2 2 0 0 1 22 16.92z"/></svg>
+      <span>New Call</span>
+    </button>
+    <button class="tab-btn" data-view="log">
+      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+      <span>Call Log</span>
+    </button>
+    <button class="tab-btn" data-view="pipeline">
+      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="5" height="16" rx="1"/><rect x="10" y="4" width="5" height="10" rx="1"/><rect x="17" y="4" width="4" height="7" rx="1"/></svg>
+      <span>Pipeline</span>
+    </button>
+    <button class="tab-btn" data-view="partners">
+      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span>Partners</span>
+    </button>
+    <button class="tab-btn" data-view="dashboard">
+      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+      <span>Team Dashboard</span>
+    </button>
   </div>
+  <div class="sidebar-footer">Home care agency outreach, live on the call</div>
 </div>
-
+<div class="main-content">
 <div class="wrap">
 
   <!-- NEW CALL VIEW -->
@@ -529,6 +628,7 @@
 
     <div class="caller-bar">
       <span>Logged by</span>
+      <span class="avatar" id="callerAvatar" style="display:none;background:#B7C0CB;"></span>
       <input type="text" id="callerName" placeholder="Your name">
       <span class="saved-tick" id="callerSavedTick">saved</span>
     </div>
@@ -683,6 +783,10 @@
 
     <div class="pipeline-toolbar">
       <div class="pipeline-search-wrap"><input type="text" id="pipelineSearch" placeholder="Search agency, gatekeeper, or decision maker..."></div>
+      <div class="view-toggle" role="group" aria-label="Pipeline view">
+        <button class="view-toggle-btn active" id="pipelineViewBoard" aria-pressed="true">▤ Board</button>
+        <button class="view-toggle-btn" id="pipelineViewList" aria-pressed="false">☰ List</button>
+      </div>
       <button class="btn btn-ghost btn-sm" id="pipelineFilterToggle" aria-expanded="false">☷ Filters</button>
       <button class="btn btn-ghost btn-sm" id="pipelineSortToggle" aria-expanded="false">⇅ Sort</button>
       <button class="btn btn-ghost btn-sm" id="refreshPipeline">↻ Refresh</button>
@@ -709,6 +813,16 @@
       </div>
     </div>
 
+    <div class="filter-chip-row" id="emailFilterChips">
+      <button class="filter-chip active" data-email-filter="all">All <span class="chip-count" id="chipCountAll">0</span></button>
+      <button class="filter-chip" data-email-filter="sent">Sent <span class="chip-count" id="chipCountSent">0</span></button>
+      <button class="filter-chip" data-email-filter="delivered">Delivered <span class="chip-count" id="chipCountDelivered">0</span></button>
+      <button class="filter-chip" data-email-filter="opened">Opened <span class="chip-count" id="chipCountOpened">0</span></button>
+      <button class="filter-chip" data-email-filter="clicked">Clicked <span class="chip-count" id="chipCountClicked">0</span></button>
+      <button class="filter-chip" data-email-filter="failed">Failed <span class="chip-count" id="chipCountFailed">0</span></button>
+      <button class="filter-chip" data-email-filter="no-email">No email <span class="chip-count" id="chipCountNoEmail">0</span></button>
+    </div>
+
     <div class="card" id="addLeadForm" style="display:none;">
       <div class="field">
         <label>Agency name</label>
@@ -721,6 +835,36 @@
     </div>
 
     <div class="kanban-board" id="kanbanBoard"></div>
+
+    <div class="pipeline-list-view" id="pipelineListView">
+      <div class="bulk-action-bar" id="pipelineBulkBar">
+        <span><span class="bulk-count" id="pipelineBulkCount">0</span> selected</span>
+        <select id="pipelineBulkStage">
+          <option value="">Move to stage...</option>
+        </select>
+        <button class="btn btn-primary btn-sm" id="pipelineBulkMoveBtn">Move</button>
+        <button class="btn btn-danger-outline btn-sm" id="pipelineBulkDeleteBtn">Delete selected</button>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div class="dash-table-wrap">
+          <table class="dash-table" id="pipelineListTable">
+            <thead>
+              <tr>
+                <th class="checkbox-col"><input type="checkbox" id="pipelineListSelectAll" aria-label="Select all leads"></th>
+                <th class="sortable" data-sort="agencyName">Agency<span class="sort-arrow">↕</span></th>
+                <th class="sortable" data-sort="decisionMakerName">Decision Maker<span class="sort-arrow">↕</span></th>
+                <th class="sortable" data-sort="stage">Stage<span class="sort-arrow">↕</span></th>
+                <th class="sortable" data-sort="emailStatus">Email status<span class="sort-arrow">↕</span></th>
+                <th class="sortable" data-sort="updatedAt">Last updated<span class="sort-arrow">↕</span></th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="pipelineListTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <div class="pipeline-legend" aria-label="Pipeline status legend">
       <strong>Legend:</strong>
       <div class="pipeline-legend-group"><span>DM Spoken To</span><span class="pipeline-status yes">Yes</span><span class="pipeline-status no">No</span><span class="pipeline-status neutral">Not Selected</span></div>
@@ -874,16 +1018,6 @@
     </div>
   </div>
 
-  <!-- EMAIL STATUS VIEW -->
-  <div class="view" id="view-email">
-    <div class="pipeline-toolbar">
-      <div class="pipeline-search-wrap"><input type="text" id="emailStatusSearch" placeholder="Search agency or recipient email..."></div>
-      <button class="btn btn-ghost btn-sm" id="refreshEmailStatus">↻ Refresh</button>
-    </div>
-    <div class="kanban-board" id="emailStatusBoard"></div>
-    <p class="footnote">Double-click an agency name to open all details. Email status does not change the lead's pipeline stage.</p>
-  </div>
-
   <!-- PARTNERS VIEW -->
   <div class="view" id="view-partners">
     <div class="stats" id="partnerStats"></div>
@@ -899,12 +1033,46 @@
       </select>
       <button class="btn btn-ghost btn-sm" id="refreshPartners">Refresh</button>
     </div>
+    <div class="bulk-action-bar" id="partnersBulkBar">
+      <span><span class="bulk-count" id="partnersBulkCount">0</span> selected</span>
+      <select id="partnersBulkStage">
+        <option value="">Move to stage...</option>
+      </select>
+      <button class="btn btn-primary btn-sm" id="partnersBulkMoveBtn">Move</button>
+      <button class="btn btn-danger-outline btn-sm" id="partnersBulkDeleteBtn">Delete selected</button>
+    </div>
     <div class="card" style="padding:0;overflow:hidden;">
       <div class="dash-table-wrap">
         <table class="dash-table">
-          <thead><tr><th>Agency</th><th>Decision Maker</th><th>Salesperson</th><th>Stage</th><th>Partner status</th><th>Referrals</th><th>Approval rate</th><th>Last contact</th><th>Next follow-up</th><th>Actions</th></tr></thead>
+          <thead><tr>
+            <th class="checkbox-col"><input type="checkbox" id="partnersSelectAll" aria-label="Select all partners"></th>
+            <th class="sortable" data-sort="agencyName">Agency<span class="sort-arrow">↕</span></th>
+            <th class="sortable" data-sort="decisionMakerName">Decision Maker<span class="sort-arrow">↕</span></th>
+            <th class="sortable" data-sort="assignedSalesperson">Salesperson<span class="sort-arrow">↕</span></th>
+            <th class="sortable" data-sort="stage">Stage<span class="sort-arrow">↕</span></th>
+            <th>Partner status</th>
+            <th class="sortable" data-sort="totalReferrals">Referrals<span class="sort-arrow">↕</span></th>
+            <th>Approval rate</th>
+            <th class="sortable" data-sort="lastContactDate">Last contact<span class="sort-arrow">↕</span></th>
+            <th class="sortable" data-sort="nextFollowUpDate">Next follow-up<span class="sort-arrow">↕</span></th>
+            <th>Actions</th>
+          </tr></thead>
           <tbody id="partnersTableBody"></tbody>
         </table>
+        <div class="table-pager" id="partnersPager">
+          <div>Rows per page
+            <select id="partnersPageSize">
+              <option value="25">25</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+          </div>
+          <div id="partnersPagerSummary">Showing 0 of 0</div>
+          <div class="pager-btns">
+            <button class="btn btn-ghost btn-sm" id="partnersPagerPrev">‹ Prev</button>
+            <button class="btn btn-ghost btn-sm" id="partnersPagerNext">Next ›</button>
+          </div>
+        </div>
       </div>
     </div>
     <p class="footnote">Approval rate = approved referrals ÷ valid submitted referrals. Incomplete or invalid records are excluded. Delete saved details affects this assistant only and leaves GoHighLevel unchanged.</p>
@@ -953,6 +1121,8 @@
     <p class="footnote" id="dashNote"></p>
   </div>
 
+</div>
+</div>
 </div>
 
 <script>
@@ -1340,6 +1510,20 @@ async function upsertDealFromCall(callRecord){
 let allDeals = [];
 let highlightDealKey = null;
 
+// ---------- Board/List scaling state (Phase 1 CRM-style views) ----------
+const KANBAN_PAGE_SIZE = 25;
+const expandedStages = new Set();
+let pipelineViewMode = (function(){
+  try{ return localStorage.getItem('pipelineViewMode') === 'list' ? 'list' : 'board'; }catch(e){ return 'board'; }
+})();
+let pipelineListSort = {column:'updatedAt', dir:'desc'};
+const pipelineListSelected = new Set();
+let pipelineEmailFilter = 'all';
+let partnersSort = {column:'updatedAt', dir:'desc'};
+const partnersSelected = new Set();
+let partnersPage = 1;
+let partnersPageSize = 25;
+
 async function synchronizePipelineFromHighLevel(){
   try{
     const response = await fetch('/api/sync-pipeline', {method:'POST'});
@@ -1378,12 +1562,9 @@ async function loadDeals(options = {}){
     deals.sort((a,b)=> new Date(b.updatedAt) - new Date(a.updatedAt));
     allDeals = deals;
     renderPipelineStats();
-    renderPipeline();
-    renderEmailStatusBoard();
+    renderPipelineActiveView();
   }catch(e){
     board.innerHTML = '<div class="kanban-empty">Could not load the pipeline. Try refreshing.</div>';
-    const emailBoard = document.getElementById('emailStatusBoard');
-    if(emailBoard) emailBoard.innerHTML = '<div class="kanban-empty">Could not load email statuses. Try refreshing.</div>';
   }
 }
 
@@ -1395,11 +1576,9 @@ function renderPipelineStats(){
   document.getElementById('statActive').textContent = inStage('active_partner');
 }
 
-function renderPipeline(){
-  const board = document.getElementById('kanbanBoard');
+function getSearchAndStageFilteredDeals(){
   const search = document.getElementById('pipelineSearch').value.toLowerCase();
   const filterMode = document.getElementById('pipelineFilter').value;
-  const sortMode = document.getElementById('pipelineSort').value;
   let filtered = allDeals.filter(d=> !search || [d.agencyName,d.agencyPhoneNumber,d.answeredBy,d.answeredByEmail,d.decisionMakerName,d.decisionMakerPhone,d.decisionMakerEmail,d.manualNotes].join(' ').toLowerCase().includes(search));
   filtered = filtered.filter(d=>{
     if(filterMode === 'decision-maker') return Boolean(d.decisionMakerName || d.decisionMakerEmail || d.decisionMakerPhone);
@@ -1407,12 +1586,66 @@ function renderPipeline(){
     if(filterMode === 'follow-up') return d.stage === 'gatekeeper_only' || d.stage === 'decision_maker_appointment_not_scheduled';
     return true;
   });
+  return filtered;
+}
+
+function getFilteredSortedDeals(){
+  const sortMode = document.getElementById('pipelineSort').value;
+  let filtered = getSearchAndStageFilteredDeals();
+  if(pipelineEmailFilter !== 'all'){
+    filtered = filtered.filter(d=> emailStatusFor(d) === pipelineEmailFilter);
+  }
   filtered.sort((a,b)=>{
     if(sortMode === 'updated-asc') return new Date(a.updatedAt || 0) - new Date(b.updatedAt || 0);
     if(sortMode === 'agency-asc') return String(a.agencyName || '').localeCompare(String(b.agencyName || ''));
     if(sortMode === 'agency-desc') return String(b.agencyName || '').localeCompare(String(a.agencyName || ''));
     return new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0);
   });
+  return filtered;
+}
+
+function renderEmailFilterChips(){
+  const row = document.getElementById('emailFilterChips');
+  if(!row) return;
+  const base = getSearchAndStageFilteredDeals();
+  const counts = {all: base.length, sent:0, delivered:0, opened:0, clicked:0, failed:0, 'no-email':0};
+  base.forEach(d=>{
+    const status = emailStatusFor(d);
+    if(counts[status] !== undefined) counts[status]++;
+  });
+  document.getElementById('chipCountAll').textContent = counts.all;
+  document.getElementById('chipCountSent').textContent = counts.sent;
+  document.getElementById('chipCountDelivered').textContent = counts.delivered;
+  document.getElementById('chipCountOpened').textContent = counts.opened;
+  document.getElementById('chipCountClicked').textContent = counts.clicked;
+  document.getElementById('chipCountFailed').textContent = counts.failed;
+  document.getElementById('chipCountNoEmail').textContent = counts['no-email'];
+  row.querySelectorAll('.filter-chip').forEach(chip=>{
+    chip.classList.toggle('active', chip.dataset.emailFilter === pipelineEmailFilter);
+  });
+}
+
+function switchPipelineView(mode){
+  pipelineViewMode = mode === 'list' ? 'list' : 'board';
+  try{ localStorage.setItem('pipelineViewMode', pipelineViewMode); }catch(e){}
+  document.getElementById('pipelineViewBoard').classList.toggle('active', pipelineViewMode === 'board');
+  document.getElementById('pipelineViewBoard').setAttribute('aria-pressed', String(pipelineViewMode === 'board'));
+  document.getElementById('pipelineViewList').classList.toggle('active', pipelineViewMode === 'list');
+  document.getElementById('pipelineViewList').setAttribute('aria-pressed', String(pipelineViewMode === 'list'));
+  document.getElementById('kanbanBoard').classList.toggle('hidden-view', pipelineViewMode === 'list');
+  document.getElementById('pipelineListView').classList.toggle('active', pipelineViewMode === 'list');
+  renderPipelineActiveView();
+}
+
+function renderPipelineActiveView(){
+  renderEmailFilterChips();
+  if(pipelineViewMode === 'list') renderPipelineListView();
+  else renderPipeline();
+}
+
+function renderPipeline(){
+  const board = document.getElementById('kanbanBoard');
+  const filtered = getFilteredSortedDeals();
 
   const cardHtml = (d)=>`
     <div class="deal-card" data-key="${d._key}" draggable="true" tabindex="0" role="button" aria-label="${escapeAttr(d.agencyName || 'Unnamed agency')}. Double-click to edit all details">
@@ -1427,14 +1660,24 @@ function renderPipeline(){
     return `<span class="stage-name${helpClass}"${helpAttrs}>${escapeHtml(label)}</span>`;
   };
 
+  const cardsWithShowMoreHtml = (stageKey, dealsInStage)=>{
+    const expanded = expandedStages.has(stageKey);
+    const visible = expanded ? dealsInStage : dealsInStage.slice(0, KANBAN_PAGE_SIZE);
+    const remaining = dealsInStage.length - visible.length;
+    const cards = visible.map(cardHtml).join('') || '<div class="kanban-empty">No leads yet</div>';
+    const showMore = remaining > 0
+      ? `<button class="kanban-show-more" type="button" data-stage="${escapeAttr(stageKey)}">Show ${remaining} more</button>`
+      : '';
+    return cards + showMore;
+  };
+
   const colHtml = (stage, label)=>{
     const dealsInStage = filtered.filter(d=>d.stage === stage.key);
     const colClass = stage.terminal === 'win' ? 'win' : (stage.side ? 'side' : '');
-    const cards = dealsInStage.map(cardHtml).join('');
     return `
       <div class="kanban-col kanban-stage-target ${colClass}" data-stage="${stage.key}">
         <div class="kanban-col-header">${stageNameHtml(stage, label)}<span class="count">${dealsInStage.length}</span></div>
-        <div class="kanban-cards" data-stage="${stage.key}">${cards || '<div class="kanban-empty">No leads yet</div>'}</div>
+        <div class="kanban-cards" data-stage="${stage.key}">${cardsWithShowMoreHtml(stage.key, dealsInStage)}</div>
       </div>
     `;
   };
@@ -1446,7 +1689,6 @@ function renderPipeline(){
     const totalDeals = stages.reduce((total, stage)=> total + filtered.filter((deal)=>deal.stage === stage.key).length, 0);
     const substages = stages.map((stage)=>{
       const dealsInStage = filtered.filter((deal)=>deal.stage === stage.key);
-      const cards = dealsInStage.map(cardHtml).join('');
       return `
         <div class="kanban-substage kanban-stage-target outreach-${escapeAttr(stage.tone || 'default')}" data-stage="${stage.key}">
           <div class="kanban-col-header kanban-substage-header">
@@ -1454,7 +1696,7 @@ function renderPipeline(){
             ${stageNameHtml(stage, stage.step + ' ' + stage.label)}
             <span class="count">${dealsInStage.length}</span>
           </div>
-          <div class="kanban-cards" data-stage="${stage.key}">${cards || '<div class="kanban-empty">No leads yet</div>'}</div>
+          <div class="kanban-cards" data-stage="${stage.key}">${cardsWithShowMoreHtml(stage.key, dealsInStage)}</div>
         </div>
       `;
     }).join('');
@@ -1476,6 +1718,13 @@ function renderPipeline(){
   }, '');
 
   board.innerHTML = mainHtml;
+
+  board.querySelectorAll('.kanban-show-more').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      expandedStages.add(btn.dataset.stage);
+      renderPipeline();
+    });
+  });
 
   let draggedKey = null;
 
@@ -1587,6 +1836,149 @@ function renderPipeline(){
   }
 }
 
+// ---------- Shared bulk-action helpers (Pipeline list view + Partners table) ----------
+function bulkStageOptionsHtml(){
+  return '<option value="">Move to stage...</option>' +
+    STAGES.map(s=> `<option value="${escapeAttr(s.key)}">${escapeHtml(s.step + ' ' + s.label)}</option>`).join('');
+}
+
+function updateBulkBar(barId, countId, selectedSet){
+  const bar = document.getElementById(barId);
+  document.getElementById(countId).textContent = String(selectedSet.size);
+  bar.classList.toggle('show', selectedSet.size > 0);
+}
+
+async function applyBulkMove(selectedSet, stageKey, renderFn){
+  if(!stageKey || !selectedSet.size) return;
+  const keys = Array.from(selectedSet);
+  const stageLabel = (STAGES.find(s=>s.key===stageKey) || {}).label || stageKey;
+  let succeeded = 0;
+  for(const key of keys){
+    const ok = await moveDeal(key, stageKey, {skipReload:true, silent:true});
+    if(ok){ succeeded++; selectedSet.delete(key); }
+  }
+  await loadDeals();
+  renderFn();
+  if(succeeded === keys.length){
+    showToast(`Moved ${succeeded} lead${succeeded===1?'':'s'} to ${stageLabel}.`);
+  }else if(succeeded === 0){
+    showToast(`Could not move ${keys.length} lead${keys.length===1?'':'s'} to ${stageLabel}. Check that each has a recipient email if the stage requires one.`, 6000);
+  }else{
+    showToast(`Moved ${succeeded} of ${keys.length} leads to ${stageLabel}. ${keys.length - succeeded} failed and stayed selected — check they have a recipient email if the stage requires one.`, 6500);
+  }
+}
+
+async function applyBulkDelete(selectedSet, renderFn){
+  if(!selectedSet.size) return;
+  const count = selectedSet.size;
+  const confirmed = window.confirm(`Delete ${count} lead${count===1?'':'s'}?\n\nThese will be permanently removed from the Call Assistant. GoHighLevel contacts/opportunities are not affected.`);
+  if(!confirmed) return;
+  const keys = Array.from(selectedSet);
+  for(const key of keys){
+    await deleteDealCore(key);
+  }
+  selectedSet.clear();
+  await loadDeals();
+  await loadLog();
+  renderFn();
+  showToast(`Deleted ${count} lead${count===1?'':'s'} from the Call Assistant.`, 5200);
+}
+
+function sortDealsBy(deals, sort){
+  const {column, dir} = sort;
+  const mult = dir === 'asc' ? 1 : -1;
+  const stageLabel = (d)=> (STAGES.find(s=>s.key===d.stage) || {}).label || d.stage || '';
+  const value = (d)=>{
+    if(column === 'stage') return stageLabel(d);
+    if(column === 'emailStatus') return emailStatusFor(d);
+    if(column === 'updatedAt' || column === 'lastContactDate' || column === 'nextFollowUpDate'){
+      const raw = column === 'updatedAt' ? d.updatedAt : d[column];
+      return raw ? new Date(raw).getTime() : 0;
+    }
+    if(column === 'totalReferrals') return Number(d.totalReferrals || 0);
+    return String(d[column] || '').toLowerCase();
+  };
+  return [...deals].sort((a,b)=>{
+    const av = value(a), bv = value(b);
+    if(av < bv) return -1 * mult;
+    if(av > bv) return 1 * mult;
+    return 0;
+  });
+}
+
+function wireSortableHeaders(tableEl, sortState, onSort){
+  // The <thead> is static markup reused across renders (only <tbody> is
+  // regenerated), so each th is cloned first to drop listeners from prior
+  // renders — otherwise clicks accumulate duplicate handlers over time.
+  tableEl.querySelectorAll('th.sortable').forEach(th=>{
+    const column = th.dataset.sort;
+    const freshTh = th.cloneNode(true);
+    th.replaceWith(freshTh);
+    freshTh.classList.toggle('sorted', sortState.column === column);
+    const arrow = freshTh.querySelector('.sort-arrow');
+    if(arrow) arrow.textContent = sortState.column === column ? (sortState.dir === 'asc' ? '↑' : '↓') : '↕';
+    freshTh.addEventListener('click', ()=>{
+      if(sortState.column === column){
+        sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc';
+      }else{
+        sortState.column = column;
+        sortState.dir = 'asc';
+      }
+      onSort();
+    });
+  });
+}
+
+function renderPipelineListView(){
+  const filtered = sortDealsBy(getFilteredSortedDeals(), pipelineListSort);
+  const table = document.getElementById('pipelineListTable');
+  const body = document.getElementById('pipelineListTableBody');
+
+  if(!filtered.length){
+    body.innerHTML = '<tr><td colspan="7" class="dash-empty">No leads match these filters.</td></tr>';
+  }else{
+    body.innerHTML = filtered.map(d=>{
+      const status = emailStatusFor(d);
+      const updated = d.updatedAt ? new Date(d.updatedAt).toLocaleString() : '—';
+      const checked = pipelineListSelected.has(d._key) ? 'checked' : '';
+      return `<tr data-key="${escapeAttr(d._key)}">` +
+        `<td class="checkbox-col"><input type="checkbox" class="pipeline-list-check" data-key="${escapeAttr(d._key)}" ${checked} aria-label="Select ${escapeAttr(d.agencyName || 'lead')}"></td>` +
+        `<td><strong>${escapeHtml(d.agencyName || 'Unnamed agency')}</strong></td>` +
+        `<td>${escapeHtml(d.decisionMakerName || d.answeredBy || '—')}</td>` +
+        `<td>${stagePillHtml(d.stage)}</td>` +
+        `<td><span class="pipeline-status ${escapeAttr(status)}">${escapeHtml(status.replace('-', ' '))}</span></td>` +
+        `<td>${escapeHtml(updated)}</td>` +
+        `<td><button class="btn btn-ghost btn-sm pipeline-list-edit-btn" data-key="${escapeAttr(d._key)}">Edit</button> <button class="btn btn-danger-outline btn-sm pipeline-list-delete-btn" data-key="${escapeAttr(d._key)}">Delete</button></td>` +
+        `</tr>`;
+    }).join('');
+  }
+
+  wireSortableHeaders(table, pipelineListSort, renderPipelineListView);
+
+  body.querySelectorAll('.pipeline-list-edit-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=> openDealEditor(btn.dataset.key));
+  });
+  body.querySelectorAll('.pipeline-list-delete-btn').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      await deleteDealFromAssistant(btn.dataset.key, btn);
+      renderPipelineListView();
+    });
+  });
+  body.querySelectorAll('.pipeline-list-check').forEach(cb=>{
+    cb.addEventListener('change', ()=>{
+      if(cb.checked) pipelineListSelected.add(cb.dataset.key);
+      else pipelineListSelected.delete(cb.dataset.key);
+      updateBulkBar('pipelineBulkBar', 'pipelineBulkCount', pipelineListSelected);
+      document.getElementById('pipelineListSelectAll').checked =
+        filtered.length > 0 && filtered.every(d=>pipelineListSelected.has(d._key));
+    });
+  });
+
+  document.getElementById('pipelineListSelectAll').checked =
+    filtered.length > 0 && filtered.every(d=>pipelineListSelected.has(d._key));
+  updateBulkBar('pipelineBulkBar', 'pipelineBulkCount', pipelineListSelected);
+}
+
 function emailStatusFor(deal){
   const recipient = String(deal.decisionMakerEmail || deal.answeredByEmail || '').trim();
   if(!recipient) return 'no-email';
@@ -1597,44 +1989,6 @@ function emailStatusFor(deal){
   if(status.includes('failed') || status.includes('undelivered')) return 'failed';
   if(status.includes('no email')) return 'no-email';
   return 'sent';
-}
-
-function renderEmailStatusBoard(){
-  const board = document.getElementById('emailStatusBoard');
-  if(!board) return;
-  const search = String(document.getElementById('emailStatusSearch').value || '').trim().toLowerCase();
-  const statuses = [
-    {key:'sent', label:'Sent'},
-    {key:'delivered', label:'Delivered'},
-    {key:'opened', label:'Opened'},
-    {key:'clicked', label:'Clicked'},
-    {key:'no-email', label:'No Email'},
-    {key:'failed', label:'Failed'},
-  ];
-  const filtered = allDeals.filter(deal=> !search || [deal.agencyName,deal.decisionMakerEmail,deal.answeredByEmail].join(' ').toLowerCase().includes(search));
-  board.innerHTML = statuses.map(status=>{
-    const deals = filtered.filter(deal=>emailStatusFor(deal) === status.key);
-    const cards = deals.map(deal=>{
-      const recipient = String(deal.decisionMakerEmail || deal.answeredByEmail || '').trim();
-      return `<div class="deal-card email-status-card" data-key="${escapeAttr(deal._key)}" tabindex="0" role="button" aria-label="${escapeAttr(deal.agencyName || 'Unnamed agency')}. Double-click to edit all details">
-        <div class="agency"><span class="agency-name">${escapeHtml(deal.agencyName || 'Unnamed agency')}</span></div>
-        <div class="email-recipient">${escapeHtml(recipient || 'No recipient email')}</div>
-      </div>`;
-    }).join('');
-    return `<div class="kanban-col email-status-col ${status.key}">
-      <div class="kanban-col-header"><span class="stage-name">${status.label}</span><span class="count">${deals.length}</span></div>
-      <div class="kanban-cards">${cards || '<div class="kanban-empty">No leads</div>'}</div>
-    </div>`;
-  }).join('');
-  board.querySelectorAll('.email-status-card').forEach(card=>{
-    const openDetails = ()=>openDealEditor(card.dataset.key);
-    card.addEventListener('dblclick', openDetails);
-    card.addEventListener('keydown', event=>{
-      if(event.key !== 'Enter' && event.key !== ' ') return;
-      event.preventDefault();
-      openDetails();
-    });
-  });
 }
 
 let editingDealKey = null;
@@ -1825,7 +2179,7 @@ document.getElementById('pipelineEditResend').addEventListener('click', async ()
     await store.set(deal._key, JSON.stringify(deal));
     await syncLatestCallRecordFromDeal(deal, editingDealOriginal || deal);
     document.getElementById('editLeadEmailStatus').value = deal.emailStatus;
-    renderEmailStatusBoard();
+    renderEmailFilterChips();
     showToast(`Email automation started again for ${result.recipientEmail || recipient}.`, 5200);
   }catch(error){
     validation.textContent = (error && error.message) ? error.message : 'The email could not be resent. Try again.';
@@ -1911,9 +2265,9 @@ document.getElementById('pipelineEditForm').addEventListener('submit', async (ev
   }
 });
 
-async function moveDeal(key, newStageKey){
+async function moveDeal(key, newStageKey, options = {}){
   const deal = allDeals.find(d=>d._key === key);
-  if(!deal) return;
+  if(!deal) return false;
   const stageLabel = (STAGES.find(s=>s.key===newStageKey) || {}).label || newStageKey;
   const callerName = (document.getElementById('callerName').value || '').trim();
   // The dashboard and GoHighLevel now use the same five outreach stage names.
@@ -1936,10 +2290,12 @@ async function moveDeal(key, newStageKey){
     if(result.opportunityId) deal.crmOpportunityId = result.opportunityId;
     if(result.emailStatus) deal.emailStatus = result.emailStatus;
     await store.set(deal._key, JSON.stringify(deal));
-    showToast('Moved to ' + stageLabel + ' in the dashboard and GoHighLevel.');
-    await loadDeals();
+    if(!options.silent) showToast('Moved to ' + stageLabel + ' in the dashboard and GoHighLevel.');
+    if(!options.skipReload) await loadDeals();
+    return true;
   }catch(e){
-    showToast((e && e.message) ? e.message : 'Could not update the pipeline. Try again.');
+    if(!options.silent) showToast((e && e.message) ? e.message : 'Could not update the pipeline. Try again.');
+    return false;
   }
 }
 
@@ -1949,6 +2305,27 @@ function normalizeRecordName(value){
 
 function normalizeRecordPhone(value){
   return String(value || '').replace(/\D/g, '');
+}
+
+async function deleteDealCore(key){
+  const deal = allDeals.find(d=>d._key === key);
+  if(!deal) return;
+  await store.delete(key);
+  const targetName = normalizeRecordName(deal.agencyName);
+  const targetPhone = normalizeRecordPhone(deal.agencyPhoneNumber);
+  const keysRes = await store.list('calls:');
+  const callKeys = (keysRes && keysRes.keys) ? keysRes.keys : [];
+  for(const callKey of callKeys){
+    try{
+      const response = await store.get(callKey);
+      if(!response || !response.value) continue;
+      const call = upgradeCallRecord(JSON.parse(response.value));
+      const sameName = targetName && normalizeRecordName(call.agencyName) === targetName;
+      const callPhone = normalizeRecordPhone(call.agencyPhoneNumber);
+      const sameRecord = sameName && (!targetPhone || !callPhone || callPhone === targetPhone);
+      if(sameRecord) await store.delete(callKey);
+    }catch(e){ /* leave unreadable or unrelated call entries untouched */ }
+  }
 }
 
 async function deleteDealFromAssistant(key, button){
@@ -1964,22 +2341,7 @@ async function deleteDealFromAssistant(key, button){
   }
 
   try{
-    await store.delete(key);
-    const targetName = normalizeRecordName(deal.agencyName);
-    const targetPhone = normalizeRecordPhone(deal.agencyPhoneNumber);
-    const keysRes = await store.list('calls:');
-    const callKeys = (keysRes && keysRes.keys) ? keysRes.keys : [];
-    for(const callKey of callKeys){
-      try{
-        const response = await store.get(callKey);
-        if(!response || !response.value) continue;
-        const call = upgradeCallRecord(JSON.parse(response.value));
-        const sameName = targetName && normalizeRecordName(call.agencyName) === targetName;
-        const callPhone = normalizeRecordPhone(call.agencyPhoneNumber);
-        const sameRecord = sameName && (!targetPhone || !callPhone || callPhone === targetPhone);
-        if(sameRecord) await store.delete(callKey);
-      }catch(e){ /* leave unreadable or unrelated call entries untouched */ }
-    }
+    await deleteDealCore(key);
     await loadDeals();
     await loadLog();
     renderPartners();
@@ -2200,7 +2562,6 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
     document.getElementById('view-' + btn.dataset.view).classList.add('active');
     if(btn.dataset.view === 'log') loadLog();
     if(btn.dataset.view === 'pipeline') loadDeals();
-    if(btn.dataset.view === 'email') loadDeals();
     if(btn.dataset.view === 'partners') loadPartners();
     if(btn.dataset.view === 'dashboard') loadDashboard();
   });
@@ -2208,9 +2569,8 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
 
 setInterval(async ()=>{
   const pipelineView = document.getElementById('view-pipeline');
-  const emailView = document.getElementById('view-email');
-  const pipelineOrEmailActive = (pipelineView && pipelineView.classList.contains('active')) || (emailView && emailView.classList.contains('active'));
-  if(!pipelineOrEmailActive || !pipelineEditModal.hidden) return;
+  const pipelineActive = pipelineView && pipelineView.classList.contains('active');
+  if(!pipelineActive || !pipelineEditModal.hidden) return;
   const result = await synchronizePipelineFromHighLevel();
   if(result && result.updated > 0) await loadDeals({sync:false});
 }, 30000);
@@ -2263,14 +2623,25 @@ async function openScheduler(){
 
 // ---------- Caller name (personal setting) ----------
 const callerInput = document.getElementById('callerName');
+function updateCallerAvatar(){
+  const avatar = document.getElementById('callerAvatar');
+  const name = callerInput.value.trim();
+  if(!name){ avatar.style.display = 'none'; return; }
+  avatar.style.display = 'inline-flex';
+  avatar.style.background = avatarColor(name);
+  avatar.textContent = initials(name);
+  avatar.title = name;
+}
 (async function loadCallerName(){
   try{
     const res = await store.get('caller_name');
     if(res && res.value) callerInput.value = res.value;
   }catch(e){ /* no saved name yet */ }
+  updateCallerAvatar();
 })();
 let callerSaveTimer;
 callerInput.addEventListener('input', ()=>{
+  updateCallerAvatar();
   clearTimeout(callerSaveTimer);
   callerSaveTimer = setTimeout(async ()=>{
     try{
@@ -2342,6 +2713,50 @@ function escapeHtml(str){
 }
 function escapeAttr(str){
   return escapeHtml(str).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// ---------- Stage pills + avatar initials (visual redesign) ----------
+function stagePillClass(stageKey){
+  const map = {
+    new_lead: 'stage-new',
+    gatekeeper_only: 'stage-gatekeeper',
+    decision_maker_identified_email_sent: 'stage-identified',
+    decision_maker_appointment_not_scheduled: 'stage-pending',
+    decision_maker_appointment_scheduled: 'stage-scheduled',
+    not_interested: 'stage-declined',
+    active_partner: 'stage-win',
+  };
+  return map[stageKey] || 'stage-progress';
+}
+function stagePillHtml(stageKey){
+  const stage = STAGES.find(s=>s.key===stageKey);
+  const label = stage ? stage.label : (stageKey || 'New Lead');
+  return `<span class="stage-pill ${stagePillClass(stageKey)}">${escapeHtml(label)}</span>`;
+}
+
+function initials(name){
+  const trimmed = String(name || '').trim();
+  if(!trimmed) return '?';
+  const parts = trimmed.split(/\s+/).filter(Boolean);
+  if(parts.length === 1) return parts[0].slice(0,2).toUpperCase();
+  return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+}
+const AVATAR_COLORS = ['#0F2A46','#176FD1','#7A3BD0','#1E8E5A','#B47A1F','#9E1A26','#2D8A5B','#4278B8'];
+function avatarColor(name){
+  const str = String(name || '');
+  let hash = 0;
+  for(let i=0;i<str.length;i++) hash = (hash*31 + str.charCodeAt(i)) >>> 0;
+  return AVATAR_COLORS[hash % AVATAR_COLORS.length];
+}
+function avatarHtml(name, extraClass){
+  const label = String(name || '').trim();
+  const cls = 'avatar' + (extraClass ? ' ' + extraClass : '');
+  if(!label) return `<span class="${cls}" style="background:#B7C0CB;">?</span>`;
+  return `<span class="${cls}" style="background:${avatarColor(label)};" title="${escapeAttr(label)}">${escapeHtml(initials(label))}</span>`;
+}
+function avatarRowHtml(name, fallback){
+  const label = String(name || '').trim();
+  return `<span class="avatar-row">${avatarHtml(label)}<span>${escapeHtml(label || fallback || 'Unassigned')}</span></span>`;
 }
 
 document.getElementById('recToggle').addEventListener('click', ()=>{
@@ -2696,12 +3111,44 @@ function renderLog(){
 }
 
 document.getElementById('logSearch').addEventListener('input', renderLog);
-document.getElementById('pipelineSearch').addEventListener('input', renderPipeline);
+document.getElementById('pipelineSearch').addEventListener('input', renderPipelineActiveView);
 document.getElementById('refreshPipeline').addEventListener('click', loadDeals);
-document.getElementById('emailStatusSearch').addEventListener('input', renderEmailStatusBoard);
-document.getElementById('refreshEmailStatus').addEventListener('click', loadDeals);
-document.getElementById('pipelineFilter').addEventListener('change', renderPipeline);
-document.getElementById('pipelineSort').addEventListener('change', renderPipeline);
+document.getElementById('pipelineFilter').addEventListener('change', renderPipelineActiveView);
+document.getElementById('pipelineSort').addEventListener('change', renderPipelineActiveView);
+
+document.getElementById('pipelineViewBoard').addEventListener('click', ()=>switchPipelineView('board'));
+document.getElementById('pipelineViewList').addEventListener('click', ()=>switchPipelineView('list'));
+
+document.querySelectorAll('#emailFilterChips .filter-chip').forEach(chip=>{
+  chip.addEventListener('click', ()=>{
+    pipelineEmailFilter = chip.dataset.emailFilter;
+    renderPipelineActiveView();
+  });
+});
+
+document.getElementById('pipelineBulkStage').innerHTML = bulkStageOptionsHtml();
+document.getElementById('pipelineListSelectAll').addEventListener('change', (e)=>{
+  const filtered = getFilteredSortedDeals();
+  if(e.target.checked) filtered.forEach(d=>pipelineListSelected.add(d._key));
+  else filtered.forEach(d=>pipelineListSelected.delete(d._key));
+  renderPipelineListView();
+});
+document.getElementById('pipelineBulkMoveBtn').addEventListener('click', async ()=>{
+  const stage = document.getElementById('pipelineBulkStage').value;
+  await applyBulkMove(pipelineListSelected, stage, renderPipelineListView);
+  document.getElementById('pipelineBulkStage').value = '';
+});
+document.getElementById('pipelineBulkDeleteBtn').addEventListener('click', async ()=>{
+  await applyBulkDelete(pipelineListSelected, renderPipelineListView);
+});
+
+// Sync the Board/List toggle to the saved preference before any data loads.
+document.getElementById('pipelineViewBoard').classList.toggle('active', pipelineViewMode === 'board');
+document.getElementById('pipelineViewBoard').setAttribute('aria-pressed', String(pipelineViewMode === 'board'));
+document.getElementById('pipelineViewList').classList.toggle('active', pipelineViewMode === 'list');
+document.getElementById('pipelineViewList').setAttribute('aria-pressed', String(pipelineViewMode === 'list'));
+document.getElementById('kanbanBoard').classList.toggle('hidden-view', pipelineViewMode === 'list');
+document.getElementById('pipelineListView').classList.toggle('active', pipelineViewMode === 'list');
 
 function togglePipelineOptions(){
   const options = document.getElementById('pipelineOptions');
@@ -2834,12 +3281,12 @@ function partnerStatusFor(deal){
 
 async function loadPartners(){
   const body = document.getElementById('partnersTableBody');
-  body.innerHTML = '<tr><td colspan="10" class="dash-empty">Loading partners...</td></tr>';
+  body.innerHTML = '<tr><td colspan="11" class="dash-empty">Loading partners...</td></tr>';
   await loadDeals();
   renderPartners();
 }
 
-function renderPartners(){
+function getFilteredSortedPartners(){
   const search = document.getElementById('partnerSearch').value.toLowerCase();
   const stageFilter = document.getElementById('partnerStage').value;
   const statusFilter = document.getElementById('partnerStatus').value;
@@ -2848,45 +3295,115 @@ function renderPartners(){
     const haystack = [d.agencyName,d.answeredBy,d.decisionMakerName,d.agencyPhoneNumber,d.decisionMakerPhone,d.decisionMakerEmail].join(' ').toLowerCase();
     return (!search || haystack.includes(search)) && (!stageFilter || d.stage === stageFilter) && (!statusFilter || status.key === statusFilter);
   });
+  return sortDealsBy(filtered, partnersSort);
+}
+
+function renderPartners(){
+  const filtered = getFilteredSortedPartners();
+
   const active = allDeals.filter(d=>partnerStatusFor(d).key === 'active').length;
   const overdue = allDeals.filter(d=>partnerStatusFor(d).key === 'followup').length;
   document.getElementById('partnerStats').innerHTML =
     '<div class="stat"><div class="num">' + allDeals.length + '</div><div class="lbl">Agencies</div></div>' +
     '<div class="stat"><div class="num">' + active + '</div><div class="lbl">Active partners</div></div>' +
     '<div class="stat"><div class="num">' + overdue + '</div><div class="lbl">Follow-ups overdue</div></div>';
+
   const body = document.getElementById('partnersTableBody');
-  if(!filtered.length){ body.innerHTML = '<tr><td colspan="10" class="dash-empty">No partners match these filters.</td></tr>'; return; }
-  body.innerHTML = filtered.map(d=>{
-    const status = partnerStatusFor(d);
-    const total = Number(d.totalReferrals || 0);
-    const submitted = Number(d.submittedReferrals || 0);
-    const approved = Number(d.approvedReferrals || 0);
-    const rate = submitted > 0 ? Math.round((approved / submitted) * 100) + '%' : '—';
-    const stage = (STAGES.find(s=>s.key === d.stage) || {}).label || d.stage || 'New Lead';
-    const date = value=> value ? new Date(value).toLocaleDateString() : '—';
-    return '<tr>' +
-      '<td><strong>' + escapeHtml(d.agencyName || 'Unnamed agency') + '</strong><br><span class="muted">' + escapeHtml(d.agencyPhoneNumber || '') + '</span></td>' +
-      '<td>' + escapeHtml(d.decisionMakerName || '—') + '</td>' +
-      '<td>' + escapeHtml(d.assignedSalesperson || 'Unassigned') + '</td>' +
-      '<td>' + escapeHtml(stage) + '</td>' +
-      '<td><span class="rate-pill">' + escapeHtml(status.label) + '</span></td>' +
-      '<td>' + total + '</td><td>' + rate + '</td>' +
-      '<td>' + date(d.lastContactDate || d.updatedAt) + '</td><td>' + date(d.nextFollowUpDate) + '</td>' +
-      '<td><button class="btn btn-danger-outline btn-sm partner-delete-btn" data-key="' + escapeAttr(d._key) + '">Delete</button></td></tr>';
-  }).join('');
+  const totalPages = Math.max(1, Math.ceil(filtered.length / partnersPageSize));
+  partnersPage = Math.min(partnersPage, totalPages);
+  const pageStart = (partnersPage - 1) * partnersPageSize;
+  const pageItems = filtered.slice(pageStart, pageStart + partnersPageSize);
+
+  if(!filtered.length){
+    body.innerHTML = '<tr><td colspan="11" class="dash-empty">No partners match these filters.</td></tr>';
+  }else{
+    body.innerHTML = pageItems.map(d=>{
+      const status = partnerStatusFor(d);
+      const total = Number(d.totalReferrals || 0);
+      const submitted = Number(d.submittedReferrals || 0);
+      const approved = Number(d.approvedReferrals || 0);
+      const rate = submitted > 0 ? Math.round((approved / submitted) * 100) + '%' : '—';
+      const date = value=> value ? new Date(value).toLocaleDateString() : '—';
+      const checked = partnersSelected.has(d._key) ? 'checked' : '';
+      return '<tr>' +
+        '<td class="checkbox-col"><input type="checkbox" class="partner-check" data-key="' + escapeAttr(d._key) + '" ' + checked + ' aria-label="Select ' + escapeAttr(d.agencyName || 'partner') + '"></td>' +
+        '<td><strong>' + escapeHtml(d.agencyName || 'Unnamed agency') + '</strong><br><span class="muted">' + escapeHtml(d.agencyPhoneNumber || '') + '</span></td>' +
+        '<td>' + escapeHtml(d.decisionMakerName || '—') + '</td>' +
+        '<td>' + avatarRowHtml(d.assignedSalesperson, 'Unassigned') + '</td>' +
+        '<td>' + stagePillHtml(d.stage) + '</td>' +
+        '<td><span class="rate-pill">' + escapeHtml(status.label) + '</span></td>' +
+        '<td>' + total + '</td><td>' + rate + '</td>' +
+        '<td>' + date(d.lastContactDate || d.updatedAt) + '</td><td>' + date(d.nextFollowUpDate) + '</td>' +
+        '<td><button class="btn btn-danger-outline btn-sm partner-delete-btn" data-key="' + escapeAttr(d._key) + '">Delete</button></td></tr>';
+    }).join('');
+  }
+
+  wireSortableHeaders(document.querySelector('#view-partners .dash-table'), partnersSort, ()=>{ partnersPage = 1; renderPartners(); });
+
   body.querySelectorAll('.partner-delete-btn').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       await deleteDealFromAssistant(btn.dataset.key, btn);
     });
   });
+  body.querySelectorAll('.partner-check').forEach(cb=>{
+    cb.addEventListener('change', ()=>{
+      if(cb.checked) partnersSelected.add(cb.dataset.key);
+      else partnersSelected.delete(cb.dataset.key);
+      updateBulkBar('partnersBulkBar', 'partnersBulkCount', partnersSelected);
+      document.getElementById('partnersSelectAll').checked =
+        pageItems.length > 0 && pageItems.every(d=>partnersSelected.has(d._key));
+    });
+  });
+
+  document.getElementById('partnersSelectAll').checked =
+    pageItems.length > 0 && pageItems.every(d=>partnersSelected.has(d._key));
+  updateBulkBar('partnersBulkBar', 'partnersBulkCount', partnersSelected);
+
+  document.getElementById('partnersPagerSummary').textContent =
+    filtered.length ? `Showing ${pageStart + 1}–${Math.min(pageStart + partnersPageSize, filtered.length)} of ${filtered.length}` : 'Showing 0 of 0';
+  document.getElementById('partnersPagerPrev').disabled = partnersPage <= 1;
+  document.getElementById('partnersPagerNext').disabled = partnersPage >= totalPages;
 }
 
 const partnerStage = document.getElementById('partnerStage');
 STAGES.forEach(s=>{ const option=document.createElement('option'); option.value=s.key; option.textContent=s.label; partnerStage.appendChild(option); });
-document.getElementById('partnerSearch').addEventListener('input', renderPartners);
-document.getElementById('partnerStage').addEventListener('change', renderPartners);
-document.getElementById('partnerStatus').addEventListener('change', renderPartners);
+function renderPartnersFromFilterChange(){ partnersPage = 1; renderPartners(); }
+document.getElementById('partnerSearch').addEventListener('input', renderPartnersFromFilterChange);
+document.getElementById('partnerStage').addEventListener('change', renderPartnersFromFilterChange);
+document.getElementById('partnerStatus').addEventListener('change', renderPartnersFromFilterChange);
 document.getElementById('refreshPartners').addEventListener('click', loadPartners);
+
+document.getElementById('partnersBulkStage').innerHTML = bulkStageOptionsHtml();
+document.getElementById('partnersSelectAll').addEventListener('change', (e)=>{
+  const filtered = getFilteredSortedPartners();
+  const pageStart = (partnersPage - 1) * partnersPageSize;
+  const pageItems = filtered.slice(pageStart, pageStart + partnersPageSize);
+  if(e.target.checked) pageItems.forEach(d=>partnersSelected.add(d._key));
+  else pageItems.forEach(d=>partnersSelected.delete(d._key));
+  renderPartners();
+});
+document.getElementById('partnersBulkMoveBtn').addEventListener('click', async ()=>{
+  const stage = document.getElementById('partnersBulkStage').value;
+  await applyBulkMove(partnersSelected, stage, renderPartners);
+  document.getElementById('partnersBulkStage').value = '';
+});
+document.getElementById('partnersBulkDeleteBtn').addEventListener('click', async ()=>{
+  await applyBulkDelete(partnersSelected, renderPartners);
+});
+document.getElementById('partnersPageSize').value = String(partnersPageSize);
+document.getElementById('partnersPageSize').addEventListener('change', (e)=>{
+  partnersPageSize = Number(e.target.value) || 25;
+  partnersPage = 1;
+  renderPartners();
+});
+document.getElementById('partnersPagerPrev').addEventListener('click', ()=>{
+  partnersPage = Math.max(1, partnersPage - 1);
+  renderPartners();
+});
+document.getElementById('partnersPagerNext').addEventListener('click', ()=>{
+  partnersPage = partnersPage + 1;
+  renderPartners();
+});
 
 // ---------- Team Dashboard ----------
 let dashRange = 'today';
@@ -3008,7 +3525,7 @@ async function loadDashboard(){
       </div>` : '<span style="color:var(--muted);">—</span>';
     return `
       <tr>
-        <td class="rep-name">${escapeHtml(r.name)}</td>
+        <td class="rep-name">${avatarRowHtml(r.name)}</td>
         <td class="big">${r.calls}</td>
         <td>${quotaCell}</td>
         <td class="big">${r.meetings}</td>
