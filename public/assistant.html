@@ -422,13 +422,6 @@
   .record-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:10px;padding-top:9px;border-top:1px solid var(--border);}
   .history-line{color:var(--muted);margin-bottom:4px;line-height:1.5;}
   .kanban-empty{font-size:12px;color:var(--muted);text-align:center;padding:16px 4px;border:1px dashed var(--border);border-radius:8px;}
-  .pipeline-legend{
-    display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-top:4px;padding:10px 14px;
-    background:#fff;border:1px solid var(--border);border-radius:10px;color:#5F6E7D;font-size:11px;
-  }
-  .pipeline-legend strong{color:var(--navy);}
-  .pipeline-legend-group{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
-  .pipeline-legend-time{margin-left:auto;color:#718093;white-space:nowrap;}
   .pipeline-edit-modal{
     position:fixed;inset:0;z-index:1000;background:rgba(7,27,49,.58);padding:28px 18px;
     display:flex;align-items:center;justify-content:center;
@@ -465,7 +458,6 @@
     .pipeline-toolbar{flex-wrap:wrap;}
     .pipeline-search-wrap{flex-basis:100%;}
     .pipeline-toolbar .btn{flex:1;min-width:74px;}
-    .pipeline-legend-time{width:100%;margin-left:0;}
   }
   @media(max-width:520px){
     .kanban-col{flex-basis:305px;width:305px;min-width:305px;}
@@ -865,12 +857,6 @@
       </div>
     </div>
 
-    <div class="pipeline-legend" aria-label="Pipeline status legend">
-      <strong>Legend:</strong>
-      <div class="pipeline-legend-group"><span>DM Spoken To</span><span class="pipeline-status yes">Yes</span><span class="pipeline-status no">No</span><span class="pipeline-status neutral">Not Selected</span></div>
-      <div class="pipeline-legend-group"><span>Email Status</span><span class="pipeline-status sent">Sent</span><span class="pipeline-status delivered">Delivered</span><span class="pipeline-status opened">Opened</span><span class="pipeline-status clicked">Clicked</span><span class="pipeline-status no-email">No Email</span></div>
-      <span class="pipeline-legend-time">All times shown in EST</span>
-    </div>
     <p class="footnote">Delete saved details removes the agency and its saved call entries from this assistant only. It does not delete the GoHighLevel contact or opportunity.</p>
 
     <div class="pipeline-edit-modal" id="pipelineEditModal" hidden>
