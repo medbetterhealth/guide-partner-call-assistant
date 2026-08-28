@@ -158,7 +158,7 @@ export async function POST(request: Request) {
       : path.key === "decision_maker_identified"
         ? ["Decision Maker Identified – Email Provided", "Decision Maker Identified – Email Sent", "Email Sent"]
         : path.key === "decision_maker_reached_scheduled"
-          ? ["Decision Maker Reached – Appointment Scheduled", "Meeting Scheduled"]
+          ? ["Decision Maker Reached – Appointment Scheduled"]
           : path.key === "decision_maker_reached_not_scheduled"
             ? ["Decision Maker Reached – Appointment Not Scheduled", "Decision Maker Contacted", "Decision Maker Contacted – Email Sent"]
             : path.key === "not_interested"

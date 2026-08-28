@@ -18,9 +18,10 @@ const DESIRED_STAGES = [
   },
   {
     name: "Decision Maker Reached – Appointment Scheduled",
-    sources: ["Decision Maker Reached – Appointment Scheduled", "Meeting Scheduled"],
+    sources: ["Decision Maker Reached – Appointment Scheduled"],
   },
   { name: "Not Interested", sources: ["Not Interested"] },
+  { name: "Meeting Scheduled", sources: ["Meeting Scheduled"] },
   { name: "Meeting Held", sources: ["Meeting Held"] },
   {
     name: "Onboarding Documents Signed",
@@ -37,7 +38,7 @@ const REQUIRED_EXISTING_SOURCE_GROUPS = [
   ["New Lead"],
   ["Gatekeeper Only – No Decision Maker Information", "Outreach Made"],
   ["Decision Maker Identified – Email Provided", "Decision Maker Identified – Email Sent", "Email Sent"],
-  ["Decision Maker Reached – Appointment Scheduled", "Meeting Scheduled"],
+  ["Decision Maker Reached – Appointment Scheduled"],
   ["Decision Maker Reached – Appointment Not Scheduled", "Decision Maker Contacted", "Decision Maker Contacted – Email Sent"],
   ["Not Interested"],
   ["Meeting Held"],

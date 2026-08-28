@@ -30,6 +30,7 @@ test("call script preserves requested wording and county question", async () => 
   assert.doesNotMatch(html, /id="f_counties_visible"/);
   assert.doesNotMatch(html, /id="newLeadCounties"/);
   assert.doesNotMatch(html, /id="stepCountiesInput"/);
+  assert.doesNotMatch(html, />Counties Served</i);
 });
 
 test("New Call does not expose five pipeline stages and final step has only simple end statuses", async () => {
@@ -87,11 +88,10 @@ test("UI validates scheduled and reached decision-maker routes without a five-st
   assert.match(html, /Decision Maker Name and Decision Maker Email are required when the decision maker was reached/);
 });
 
-test("dashboard metrics use new appointment-scheduled stage", async () => {
+test("dashboard metrics use the separate calendar-booked meeting stage", async () => {
   const html = await read("public/assistant.html");
-  assert.match(html, /statMeetings'\)\.textContent = inStage\('decision_maker_appointment_scheduled'\)/);
-  assert.doesNotMatch(html, /statMeetings'\)\.textContent = inStage\('meeting_scheduled'\)/);
-  assert.match(html, /h\.stage === 'decision_maker_appointment_scheduled'\)\{ rep\(who\)\.meetings\+\+/);
+  assert.match(html, /statMeetings'\)\.textContent = inStage\('meeting_scheduled'\)/);
+  assert.match(html, /h\.stage === 'meeting_scheduled'\)\{ rep\(who\)\.meetings\+\+/);
 });
 
 test("outreach classifier supports all five selected outcomes", async () => {
@@ -101,23 +101,23 @@ test("outreach classifier supports all five selected outcomes", async () => {
   assert.match(outreach, /follow_up_needed:[\s\S]*?shouldEmail: false/);
 });
 
-test("email draft source removes Dementia Times and uses approved GUIDE Team wording", async () => {
+test("email draft source removes Dementia Times and uses teammate wording", async () => {
   const outreach = await read("app/api/outreach.ts");
-  assert.match(outreach, /I'm copying our CEO, Dr\. Erik Ilyayev/);
-  assert.match(outreach, /Ekaterina Sbitneva-Bixler's existing/);
+  assert.match(outreach, /A member of my team recently spoke with you/);
+  assert.match(outreach, /I understand you recently spoke with a member of my team/);
   assert.match(outreach, /\$34\.50 per hour/);
   assert.doesNotMatch(outreach, /Dementia Times/i);
-  assert.match(outreach, /Great Speaking With You Today \| GUIDE Model Private Duty Partnership Opportunity/);
-  assert.match(outreach, /subject = `\$\{firstName\} – GUIDE Model Private Duty Partnership & Revenue Opportunity`/);
-  assert.match(outreach, /signatureMode: "existing_guideteam2_outlook_graphical"/);
+  assert.doesNotMatch(outreach, /great speaking with you today/i);
+  assert.match(outreach, /subject = `\$\{greeting\} – GUIDE Model Private Duty Partnership & Revenue Opportunity`/);
+  assert.match(outreach, /signatureMode: "existing_outlook_graphical"/);
   assert.match(outreach, /OUTREACH_BROCHURE_PATH/);
   assert.doesNotMatch(outreach, /function signature\(/);
 });
 
-test("all email metadata uses GuideTeam2 sender and Dr. Erik CC", async () => {
+test("all email metadata carries GuideTeam2 CC", async () => {
   const outreach = await read("app/api/outreach.ts");
-  assert.match(outreach, /OUTREACH_EMAIL_CC = "dr\.erik@medbetterhealth\.org"/);
-  assert.match(outreach, /OUTREACH_FROM_EMAIL = "GuideTeam2@medbetterhealth\.org"/);
+  assert.match(outreach, /OUTREACH_EMAIL_CC = "GuideTeam2@medbetterhealth\.org"/);
+  assert.match(outreach, /OUTREACH_FROM_EMAIL = "dr\.erik@medbetterhealth\.org"/);
   assert.match(outreach, /cc: OUTREACH_EMAIL_CC/);
   assert.match(outreach, /from: OUTREACH_FROM_EMAIL/);
 });
@@ -146,7 +146,7 @@ test("manual stage move refuses missing recipients and marks automation pending"
   assert.match(route, /emailStatus: nextEmailStatus/);
 });
 
-test("pipeline migration uses the exact five-stage order and protects active opportunities", async () => {
+test("pipeline migration adds Meeting Scheduled after the five outreach outcomes", async () => {
   const route = await read("app/api/admin-pipeline/route.ts");
   const block = route.slice(route.indexOf("const DESIRED_STAGES = ["), route.indexOf("] as const;", route.indexOf("const DESIRED_STAGES = [")));
   const names = [...block.matchAll(/name: "([^"]+)"/g)].map(m=>m[1]);
@@ -158,8 +158,23 @@ test("pipeline migration uses the exact five-stage order and protects active opp
     "Decision Maker Reached – Appointment Scheduled",
     "Not Interested",
   ]);
+  assert.equal(names[6], "Meeting Scheduled");
+  assert.equal(names[7], "Meeting Held");
   assert.match(route, /Cannot safely remove legacy stages with active opportunities/);
   assert.match(route, /Another HighLevel pipeline changed unexpectedly/);
+});
+
+test("pipeline sync mirrors the real HighLevel stage without duplicating a deal", async () => {
+  const [html, route] = await Promise.all([
+    read("public/assistant.html"),
+    read("app/api/sync-pipeline/route.ts"),
+  ]);
+  assert.match(html, /fetch\('\/api\/sync-pipeline', \{method:'POST'\}\)/);
+  assert.match(html, /if\(options\.sync !== false\) await synchronizePipelineFromHighLevel\(\)/);
+  assert.match(route, /\["meeting scheduled", "meeting_scheduled"\]/);
+  assert.match(route, /crmOpportunityId/);
+  assert.match(route, /UPDATE guide_store SET value/);
+  assert.doesNotMatch(route, /INSERT INTO guide_store/);
 });
 
 test("calendar endpoint uses configured URL or live Dr. Erik HighLevel calendar", async () => {
@@ -169,4 +184,50 @@ test("calendar endpoint uses configured URL or live Dr. Erik HighLevel calendar"
   assert.match(route, /drErikScore/);
   const html = await read("public/assistant.html");
   assert.match(html, /The active Dr\. Erik calendar could not be found in GoHighLevel/);
+});
+
+test("pipeline cards can edit follow-up details without changing the real stage", async () => {
+  const [html, updateRoute] = await Promise.all([
+    readFile(new URL("public/assistant.html", root), "utf8"),
+    readFile(new URL("app/api/update-lead/route.ts", root), "utf8"),
+  ]);
+
+  for (const id of [
+    "editLeadAgency",
+    "editLeadAgencyPhone",
+    "editLeadAnsweredBy",
+    "editLeadAnsweredByEmail",
+    "editLeadAnswererIsDecisionMaker",
+    "editLeadDecisionMakerName",
+    "editLeadDecisionMakerPhone",
+    "editLeadDecisionMakerEmail",
+    "editLeadDecisionMakerSpokenTo",
+    "editLeadOutreachOutcome",
+    "editLeadEmailStatus",
+    "editLeadAssignedSalesperson",
+    "editLeadLastContactDate",
+    "editLeadNextFollowUpDate",
+    "editLeadNotes",
+  ]) assert.match(html, new RegExp(`id="${id}"`));
+
+  assert.match(html, /class="card-menu-action deal-edit-btn"/);
+  assert.match(html, /class="pipeline-edit-scroll"/);
+  assert.match(html, /\.pipeline-edit-scroll\{[\s\S]*?overflow-y:auto/);
+  assert.match(html, /\.pipeline-edit-actions\{[\s\S]*?flex:0 0 auto/);
+  assert.match(html, /document\.body\.appendChild\(pipelineEditModal\)/);
+  assert.match(html, /class="card-menu-action deal-copy-all-btn"/);
+  assert.match(html, /data-copy="\$\{escapeAttr\(supplied\)\}"/);
+  assert.match(html, /async function copyPipelineValue\(element\)/);
+  assert.match(html, /async function copyAllDealDetails\(key\)/);
+  assert.match(html, /All lead details copied\./);
+  assert.match(html, /fetch\('\/api\/update-lead'/);
+  assert.match(html, /Follow-up details updated/);
+  assert.match(html, /Stage unchanged\./);
+  assert.match(html, /syncLatestCallRecordFromDeal\(deal, original\)/);
+  assert.match(updateRoute, /PUT/);
+  assert.match(updateRoute, /\/contacts\/\$\{encodeURIComponent\(contactId\)\}/);
+  assert.match(updateRoute, /\/opportunities\/\$\{encodeURIComponent\(opportunityId\)\}/);
+  assert.match(updateRoute, /pipelineStageId: current\.pipelineStageId/);
+  assert.match(updateRoute, /stagePreserved: true/);
+  assert.doesNotMatch(updateRoute, /pipelineStageId: lead\./);
 });
