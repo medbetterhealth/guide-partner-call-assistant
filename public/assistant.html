@@ -77,8 +77,13 @@
       flex-direction:row;align-items:center;padding:14px 16px;overflow-x:auto;
     }
     .brand{margin-bottom:0;flex:0 0 auto;}
-    .tabs{flex-direction:row;flex-wrap:nowrap;margin-left:14px;}
-    .tab-btn{width:auto;white-space:nowrap;}
+    .brand-text p{display:none;}
+    .tabs{flex-direction:row;flex-wrap:nowrap;margin-left:14px;gap:4px;}
+    .tab-btn{width:auto;white-space:nowrap;padding:10px;justify-content:center;}
+    .tab-btn span{
+      position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+      clip:rect(0,0,0,0);white-space:nowrap;border:0;
+    }
     .tab-btn.active{box-shadow:none;background:#fff;color:var(--navy);}
     .sidebar-footer{display:none;}
     .wrap{padding:18px 16px 40px;}
