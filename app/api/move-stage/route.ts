@@ -78,10 +78,12 @@ export async function POST(request: Request) {
     const recipientEmail = isGatekeeperStage
       ? String(deal.answeredByEmail || "").trim()
       : String(deal.decisionMakerEmail || deal.answeredByEmail || "").trim();
-    if (isEmailOutcome && !recipientEmail) {
-      return Response.json({ error: `A recipient email is required before moving to ${deal.stageName}` }, { status: 400 });
-    }
-    const nextEmailStatus = isEmailOutcome ? "Pending automation" : deal.emailStatus;
+    // A manual pipeline move must not be blocked just because the lead has no
+    // email address. HighLevel remains the source of truth for the stage; the
+    // email status simply records whether the stage-entry automation can send.
+    const nextEmailStatus = isEmailOutcome
+      ? (recipientEmail ? "Pending automation" : "No email")
+      : deal.emailStatus;
     const outreachPathway = [
       "gatekeeper only - no decision maker information",
       "decision maker identified - email provided",
@@ -155,7 +157,13 @@ export async function POST(request: Request) {
     });
     const opportunity = (opportunityResult.opportunity || opportunityResult) as { id?: string };
 
-    return Response.json({ ok: true, stage: stage.name, opportunityId: opportunity.id || "", emailStatus: nextEmailStatus || "" });
+    return Response.json({
+      ok: true,
+      stage: stage.name,
+      opportunityId: opportunity.id || "",
+      emailStatus: nextEmailStatus || "",
+      emailSkipped: Boolean(isEmailOutcome && !recipientEmail),
+    });
   } catch (error) {
     return Response.json({ error: error instanceof Error ? error.message : "Stage update failed" }, { status: 502 });
   }
