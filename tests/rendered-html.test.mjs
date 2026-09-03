@@ -139,11 +139,20 @@ test("submit-call refuses an email stage with no recipient and keeps CRM writes"
   assert.match(route, /Pending automation/);
 });
 
-test("manual stage move refuses missing recipients and marks automation pending", async () => {
+test("manual stage move is not blocked by a missing recipient and reports skipped email", async () => {
   const route = await read("app/api/move-stage/route.ts");
-  assert.match(route, /isEmailOutcome && !recipientEmail/);
-  assert.match(route, /nextEmailStatus = isEmailOutcome \? "Pending automation"/);
+  assert.doesNotMatch(route, /return Response\.json\(\{ error: `A recipient email is required before moving/);
+  assert.match(route, /recipientEmail \? "Pending automation" : "No email"/);
+  assert.match(route, /emailSkipped: Boolean\(isEmailOutcome && !recipientEmail\)/);
   assert.match(route, /emailStatus: nextEmailStatus/);
+});
+
+test("drag-and-drop carries the deal key through dataTransfer and stops nested drops", async () => {
+  const html = await read("public/assistant.html");
+  assert.match(html, /event\.dataTransfer\.getData\('text\/plain'\)/);
+  assert.match(html, /const key = transferredKey \|\| draggedKey/);
+  assert.match(html, /e\.stopPropagation\(\);\s*await handleDrop\(colEl, e\)/);
+  assert.match(html, /result\.emailSkipped/);
 });
 
 test("pipeline migration adds Meeting Scheduled after the five outreach outcomes", async () => {

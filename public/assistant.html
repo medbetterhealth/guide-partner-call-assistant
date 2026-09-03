@@ -1782,8 +1782,12 @@ function renderPipeline(){
     });
   });
 
-  const handleDrop = async (colEl)=>{
-    const key = draggedKey;
+  const handleDrop = async (colEl, event)=>{
+    let transferredKey = '';
+    if(event && event.dataTransfer){
+      try{ transferredKey = event.dataTransfer.getData('text/plain'); }catch(err){}
+    }
+    const key = transferredKey || draggedKey;
     const targetStage = colEl.dataset.stage;
     draggedKey = null;
     colEl.classList.remove('drop-active');
@@ -1804,7 +1808,8 @@ function renderPipeline(){
     });
     colEl.addEventListener('drop', async (e)=>{
       e.preventDefault();
-      await handleDrop(colEl);
+      e.stopPropagation();
+      await handleDrop(colEl, e);
     });
   });
 
@@ -2276,7 +2281,10 @@ async function moveDeal(key, newStageKey, options = {}){
     if(result.opportunityId) deal.crmOpportunityId = result.opportunityId;
     if(result.emailStatus) deal.emailStatus = result.emailStatus;
     await store.set(deal._key, JSON.stringify(deal));
-    if(!options.silent) showToast('Moved to ' + stageLabel + ' in the dashboard and GoHighLevel.');
+    if(!options.silent){
+      const emailNote = result.emailSkipped ? ' No email was sent because this lead has no recipient email.' : '';
+      showToast('Moved to ' + stageLabel + ' in the dashboard and GoHighLevel.' + emailNote, result.emailSkipped ? 6000 : 3600);
+    }
     if(!options.skipReload) await loadDeals();
     return true;
   }catch(e){
